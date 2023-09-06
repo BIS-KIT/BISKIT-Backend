@@ -5,9 +5,10 @@ ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 ENV DEBIAN_FRONTEND=noninteractive
 
-COPY ./app /app
+COPY ./apps /apps
+COPY ./requirements /apps/requirements
 
-WORKDIR /app
+WORKDIR /apps
 
 # Install dependencies
 RUN python -m venv /py && \
@@ -16,8 +17,8 @@ RUN python -m venv /py && \
     apt-get clean -y && \
     apt-get clean -y && \
     apt-get update -y && \
-    apt-get install -y pkg-config libmariadb-dev libmariadbclient-dev build-essential && \
-    /py/bin/pip install -r /app/requirements.txt
+    apt-get install -y pkg-config libmariadb-dev-compat libmariadb-dev build-essential libpq-dev python3-dev && \
+    /py/bin/pip install -r /apps/requirements/requirements.txt
 
 # Expose port
 EXPOSE 8000

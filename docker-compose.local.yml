@@ -1,6 +1,7 @@
 version: '3'
 services:
-  lobster:
+  backends:
+    container_name: backends
     build:
       context: .
     ports:
@@ -13,10 +14,11 @@ services:
     env_file:
       - ".env"
     depends_on:
-      - db
+      - maindb
 
-  db:
-    image: arm64v8/postgres:16
+  maindb:
+    container_name: maindb
+    image: arm64v8/postgres:16rc1
     restart: always
     volumes:
       - app-db-data:/var/lib/postgresql/data
@@ -28,7 +30,7 @@ services:
       - POSTGRES_USER=postgres
       - BISKIT_USER=${BISKIT_USER}
       - BISKIT_USER_PW=${BISKIT_USER_PW}
-      - POSTGRES_DB=${POSTGRES_DB}ㅣㅣ
+      - POSTGRES_DB=${POSTGRES_DB}
     ports:
       - "5432:5432"
 
