@@ -1,0 +1,8 @@
+fastapi==0.102.0
+black
+pydantic==2.1.1
+sqlalchemy
+python-dotenv
+alembic
+firebase_admin
+psycopg2
