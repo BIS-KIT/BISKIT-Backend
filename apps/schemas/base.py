@@ -1,23 +1,10 @@
 from pydantic import BaseModel, Field
 from typing import Optional, Union, Literal, Any, Type, ClassVar
-from apps.database.base import ModelBase
+from apps.models.base import ModelBase
 
 
 class CoreSchema(BaseModel):
     id: Optional[Any]
-    model_cls: ClassVar[Type[ModelBase]] = None
-    model: Type[ModelBase] = None
-
-    def to_model(self):
-        it = self.dict()
-        it = {i: it[i] for i in it if type(it[i]) != dict}
-        return self.model_cls(**it)
-
-    def refresh_model(self, session):
-        self.model = (
-            session.query(self.model_cls).filter(self.model_cls.id == self.id).first()
-        )
-        return self.model
 
     def dict(
         self,
