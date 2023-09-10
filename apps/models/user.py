@@ -13,9 +13,9 @@ class User(ModelBase):
     university = Column(String, nullable=True)
     department = Column(String, nullable=True)
     gender = Column(String)
-    is_graduated = Column(Boolean)
-    is_active = Column(Boolean)
-    is_admin = Column(Boolean)
+    is_graduated = Column(Boolean, default=False)
+    is_active = Column(Boolean, default=False)
+    is_admin = Column(Boolean, default=False)
 
 
 class Consent(ModelBase):
