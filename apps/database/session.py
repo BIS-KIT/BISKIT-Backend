@@ -2,7 +2,7 @@ from typing import Generator
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from apps.core.config import settings
+from core.config import settings
 
 # 환경 변수나 설정에서 정보 가져오기
 # 이 예제에서는 .env 파일에서 가져왔다고 가정

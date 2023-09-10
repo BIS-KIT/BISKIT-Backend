@@ -2,10 +2,10 @@ from typing import Any, Dict, Optional, Union
 
 from sqlalchemy.orm import Session
 
-from apps.core.security import get_password_hash, verify_password
-from apps.crud.base import CRUDBase
-from apps.models.user import User
-from apps.schemas.user import UserCreate, UserUpdate
+from core.security import get_password_hash, verify_password
+from crud.base import CRUDBase
+from models.user import User
+from schemas.user import UserCreate, UserUpdate
 
 
 class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
@@ -37,7 +37,8 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         Returns:
             Created User instance.
         """
-        obj_in.password = get_password_hash(obj_in.password)
+        if "password" in obj_in:
+            obj_in.password = get_password_hash(obj_in.password)
         db_obj = User(**obj_in.dict())
         db.add(db_obj)
         db.commit()

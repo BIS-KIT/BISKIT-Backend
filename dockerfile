@@ -4,6 +4,7 @@ FROM amd64/python:3.10-slim
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONPATH /apps:$PYTHONPATH
 
 COPY ./apps /apps
 COPY ./requirements /apps/requirements

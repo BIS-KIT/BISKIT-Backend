@@ -1,9 +1,9 @@
-from apps.schemas.base import CoreSchema
+from schemas.base import CoreSchema
 from datetime import date
 from pydantic import EmailStr, BaseModel
 from enum import Enum
 from typing import Optional
-from apps.models.user import User, Verification, Consent
+from models.user import User, Verification, Consent
 
 
 class UserBase(CoreSchema):
@@ -101,3 +101,12 @@ class FirebaseAuthResponse(FirebaseAuthBase):
 
     class Config:
         orm_mode = True
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+
+class TokenData(BaseModel):
+    email: str = None

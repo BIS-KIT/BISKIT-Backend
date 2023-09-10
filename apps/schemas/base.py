@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional, Union, Literal, Any, Type, ClassVar
-from apps.models.base import ModelBase
+from models.base import ModelBase
 
 
 class CoreSchema(BaseModel):

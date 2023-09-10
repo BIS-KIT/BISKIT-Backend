@@ -1,4 +1,4 @@
-from apps.models.base import ModelBase
+from models.base import ModelBase
 from sqlalchemy import Column, Integer, String, Boolean, Date, Enum, ForeignKey
 from sqlalchemy.orm import relationship
 

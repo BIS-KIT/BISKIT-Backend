@@ -4,7 +4,7 @@ from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from apps.models.base import ModelBase
+from models.base import ModelBase
 
 ModelType = TypeVar("ModelType", bound=ModelBase)
 CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)
