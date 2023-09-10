@@ -1,6 +1,7 @@
 alembic==1.12.0
 annotated-types==0.5.0
 anyio==4.0.0
+bcrypt==4.0.1
 black==23.7.0
 CacheControl==0.13.1
 cachetools==5.3.1
@@ -9,6 +10,7 @@ cffi==1.15.1
 charset-normalizer==3.2.0
 click==8.1.7
 cryptography==41.0.3
+ecdsa==0.18.0
 exceptiongroup==1.1.3
 fastapi==0.102.0
 firebase-admin==6.2.0
@@ -25,13 +27,17 @@ googleapis-common-protos==1.60.0
 greenlet==2.0.2
 grpcio==1.57.0
 grpcio-status==1.57.0
+h11==0.14.0
 httplib2==0.22.0
+httptools==0.6.0
 idna==3.4
+jose==1.0.0
 Mako==1.2.4
 MarkupSafe==2.1.3
 msgpack==1.0.5
 mypy-extensions==1.0.0
 packaging==23.1
+passlib==1.7.4
 pathspec==0.11.2
 platformdirs==3.10.0
 proto-plus==1.22.3
@@ -45,6 +51,8 @@ pydantic_core==2.4.0
 PyJWT==2.8.0
 pyparsing==3.1.1
 python-dotenv==1.0.0
+python-jose==3.3.0
+PyYAML==6.0.1
 requests==2.31.0
 rsa==4.9
 six==1.16.0
@@ -56,3 +64,9 @@ typing==3.7.4.3
 typing_extensions==4.7.1
 uritemplate==4.1.1
 urllib3==1.26.16
+uvicorn==0.23.2
+uvloop==0.17.0
+watchfiles==0.20.0
+websockets==11.0.3
+pydantic-settings
+pydantic[email]
