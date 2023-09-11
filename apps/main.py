@@ -1,11 +1,15 @@
 import base64, json
 from dotenv import load_dotenv
+from typing import Annotated
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from starlette.middleware.cors import CORSMiddleware
 from firebase_admin import credentials, initialize_app
+from fastapi.openapi.docs import get_swagger_ui_html
 
 from core.config import settings
+from core.security import get_admin
 from api.v1.router import api_router as v1_router
 
 
@@ -20,9 +24,19 @@ initialize_app(cred)
 
 load_dotenv()
 
-app = FastAPI(title=settings.PROJECT_NAME)
+app = FastAPI(
+    title=settings.PROJECT_NAME,
+    docs_url=None,
+)
 
 app.include_router(v1_router, prefix="/v1")
+
+
+@app.get("/docs", include_in_schema=False)
+async def get_documentation(username: str = Depends(get_admin)):
+    return get_swagger_ui_html(openapi_url="/openapi.json", title="docs")
+
+
 # Set all CORS enabled origins
 if settings.CORS_ORIGINS:
     app.add_middleware(
