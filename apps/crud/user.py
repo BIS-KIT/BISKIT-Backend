@@ -1,11 +1,42 @@
 from typing import Any, Dict, Optional, Union
 
 from sqlalchemy.orm import Session
+from passlib.context import CryptContext
 
-from core.security import get_password_hash, verify_password
+
 from crud.base import CRUDBase
 from models.user import User
 from schemas.user import UserCreate, UserUpdate
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """
+    주어진 패스워드와 해시된 패스워드가 일치하는지 확인한다.
+
+    Args:
+    - plain_password: 검증할 패스워드.
+    - hashed_password: 해시된 패스워드.
+
+    Returns:
+    - 패스워드가 일치하면 True, 그렇지 않으면 False.
+    """
+    ...
+    return pwd_context.verify(plain_password, hashed_password)
+
+
+def get_password_hash(password: str) -> str:
+    """
+    패스워드를 해싱한다.
+
+    Args:
+    - password: 해싱할 패스워드.
+
+    Returns:
+    - 해싱된 패스워드 문자열.
+    """
+    return pwd_context.hash(password)
 
 
 class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):

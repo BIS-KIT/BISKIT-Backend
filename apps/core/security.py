@@ -1,11 +1,16 @@
 from datetime import datetime, timedelta
 from typing import Any, Union, Optional, Annotated
+import secrets
 
 from jose import jwt, JWTError
 from firebase_admin import auth
-from passlib.context import CryptContext
-from fastapi import HTTPException, Header, status, Depends
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi import HTTPException, Header, status, Depends, Security
+from fastapi.security import (
+    HTTPBasic,
+    HTTPBasicCredentials,
+    HTTPBearer,
+    HTTPAuthorizationCredentials,
+)
 
 import crud
 from database.session import get_db
@@ -13,8 +18,8 @@ from schemas.user import Token, TokenData
 from models.user import User
 from core.config import settings
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+security = HTTPBasic()
+bearer_security = HTTPBearer()
 
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
@@ -41,34 +46,6 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
         to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM
     )
     return encoded_jwt
-
-
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """
-    주어진 패스워드와 해시된 패스워드가 일치하는지 확인한다.
-
-    Args:
-    - plain_password: 검증할 패스워드.
-    - hashed_password: 해시된 패스워드.
-
-    Returns:
-    - 패스워드가 일치하면 True, 그렇지 않으면 False.
-    """
-    ...
-    return pwd_context.verify(plain_password, hashed_password)
-
-
-def get_password_hash(password: str) -> str:
-    """
-    패스워드를 해싱한다.
-
-    Args:
-    - password: 해싱할 패스워드.
-
-    Returns:
-    - 해싱된 패스워드 문자열.
-    """
-    return pwd_context.hash(password)
 
 
 def verify_id_token(token: str) -> dict:
@@ -104,7 +81,6 @@ def get_user_by_fb(authorization: Optional[str] = Header(None)) -> dict:
     """
     if not authorization:
         raise HTTPException(status_code=403, detail="Unauthorized")
-
     # Bearer 토큰에서 실제 토큰 분리
     token_prefix, firebase_token = authorization.split(" ")
     if token_prefix != "Bearer":
@@ -115,7 +91,7 @@ def get_user_by_fb(authorization: Optional[str] = Header(None)) -> dict:
     return verify_id_token(firebase_token)
 
 
-async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
+async def get_current_user(token: str):
     """
     현재의 JWT 토큰을 사용하여 사용자 정보를 검색한다.
 
@@ -178,3 +154,15 @@ def get_current_token(authorization: str = Header(...)) -> str:
     if token_prefix != "Bearer":
         raise HTTPException(status_code=403, detail="Invalid token format")
     return token
+
+
+def get_admin(credentials: Annotated[HTTPBasicCredentials, Depends(security)]):
+    correct_username = secrets.compare_digest(credentials.username, "user")
+    correct_password = secrets.compare_digest(credentials.password, "password")
+    if not (correct_username and correct_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password",
+            headers={"WWW-Authenticate": "Basic"},
+        )
+    return credentials.username
