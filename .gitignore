@@ -161,3 +161,4 @@ cython_debug/
 
 encoded_key.txt
 *.json
+apps/alembic/versions/*
