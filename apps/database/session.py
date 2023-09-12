@@ -1,12 +1,12 @@
 from typing import Generator
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from core.config import settings
 
 # 환경 변수나 설정에서 정보 가져오기
 # 이 예제에서는 .env 파일에서 가져왔다고 가정
-DATABASE_URL = f"postgresql+psycopg2://{settings.BISKIT_USER}:{settings.BISKIT_USER_PW}@maindb:5432/{settings.POSTGRES_DB}"
+DATABASE_URL = f"postgresql+psycopg2://postgres:{settings.DB_ROOT_PASSWORD}@maindb:5432/{settings.POSTGRES_DB}"
 
 # SQLAlchemy 설정
 engine = create_engine(DATABASE_URL)
@@ -25,3 +25,17 @@ def get_db() -> Generator:
         yield db
     finally:
         db.close()
+
+
+def create_table():
+    from models.user import User, Consent, Verification, FirebaseAuth
+    from models.profile import Profile
+
+    inspector = inspect(engine)
+    tables = [User, Consent, Verification, FirebaseAuth, Profile]
+
+    for table in tables:
+        if inspector.has_table(table.__tablename__):
+            pass
+        else:
+            table.__table__.create(engine)

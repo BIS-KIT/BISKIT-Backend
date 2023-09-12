@@ -11,30 +11,17 @@ class User(ModelBase):
     profile = relationship("Profile", back_populates="user", uselist=False)
 
 
-class Profile(ModelBase):
-    user_id = Column(Integer, ForeignKey("user.id"))
-    first_name = Column(String)
-    last_name = Column(String)
-    birth = Column(Date)
-    nationality = Column(String)
-    university = Column(String, nullable=True)
-    department = Column(String, nullable=True)
-    gender = Column(String)
-    is_graduated = Column(Boolean, default=False)
-    user = relationship("User", back_populates="profile")
-
-
 class Consent(ModelBase):
     terms_mandatory = Column(Boolean, nullable=True)  # 필수 약관 동의
     terms_optional = Column(Boolean, default=False, nullable=True)  # 선택 약관 동의
     terms_push = Column(Boolean, nullable=True)
 
-    user_id = Column(Integer, ForeignKey("users.id"))
+    user_id = Column(Integer, ForeignKey("user.id"))
     user = relationship("User", back_populates="consents")
 
 
 class Verification(ModelBase):
-    user_id = Column(Integer, ForeignKey("users.id"), primary_key=True)
+    user_id = Column(Integer, ForeignKey("user.id"), primary_key=True)
     user = relationship("User", back_populates="verification")
 
     # 학생증 사진의 파일 경로나 URL을 저장하는 필드
@@ -43,7 +30,7 @@ class Verification(ModelBase):
 
 
 class FirebaseAuth(ModelBase):
-    user_id = Column(Integer, ForeignKey("users.id"), primary_key=True)
+    user_id = Column(Integer, ForeignKey("user.id"), primary_key=True)
     user = relationship("User", backref="firebase_auth")
 
     provider_id = Column(String, nullable=True)  # 예: 'google.com', 'kakao.com'
