@@ -3,20 +3,11 @@ from datetime import date
 from pydantic import EmailStr, BaseModel
 from enum import Enum
 from typing import Optional
-from models.user import User, Verification, Consent
 
 
 class UserBase(CoreSchema):
     email: EmailStr
     password: str
-    first_name: str
-    last_name: str
-    birth: date
-    nationality: str
-    gender: str
-    is_graduated: bool
-    university: Optional[str] = None
-    department: Optional[str] = None
 
 
 class UserWithStatus(UserBase):

@@ -6,6 +6,13 @@ from sqlalchemy.orm import relationship
 class User(ModelBase):
     email = Column(String, unique=True, index=True)
     password = Column(String)
+    is_active = Column(Boolean, default=False)
+    is_admin = Column(Boolean, default=False)
+    profile = relationship("Profile", back_populates="user", uselist=False)
+
+
+class Profile(ModelBase):
+    user_id = Column(Integer, ForeignKey("user.id"))
     first_name = Column(String)
     last_name = Column(String)
     birth = Column(Date)
@@ -14,8 +21,7 @@ class User(ModelBase):
     department = Column(String, nullable=True)
     gender = Column(String)
     is_graduated = Column(Boolean, default=False)
-    is_active = Column(Boolean, default=False)
-    is_admin = Column(Boolean, default=False)
+    user = relationship("User", back_populates="profile")
 
 
 class Consent(ModelBase):
