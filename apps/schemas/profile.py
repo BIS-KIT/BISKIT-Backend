@@ -14,6 +14,8 @@ class ProfileBase(CoreSchema):
     is_graduated: bool
     university: Optional[str] = None
     department: Optional[str] = None
+    profile_photo: Optional[str] = None  # 이미지 URL 저장
+
 
 
 # 프로필 생성을 위한 스키마
@@ -31,6 +33,7 @@ class ProfileUpdate(ProfileBase):
     is_graduated: Optional[bool] = None
     university: Optional[str] = None
     department: Optional[str] = None
+    profile_photo: Optional[str] = None
 
 
 class ProfileResponse(ProfileBase):

@@ -4,7 +4,6 @@ from sqlalchemy.orm import relationship
 
 
 class Profile(ModelBase):
-    user_id = Column(Integer, ForeignKey("user.id"))
     first_name = Column(String)
     last_name = Column(String)
     birth = Column(Date)
@@ -13,4 +12,7 @@ class Profile(ModelBase):
     department = Column(String, nullable=True)
     gender = Column(String)
     is_graduated = Column(Boolean, default=False)
+    profile_photo = Column(String, nullable=True)  # 이미지 URL 저장
+
+    user_id = Column(Integer, ForeignKey("user.id"))
     user = relationship("User", back_populates="profile")
