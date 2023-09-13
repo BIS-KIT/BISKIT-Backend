@@ -167,7 +167,6 @@ def login_for_access_token(login_obj: UserCreate, db: Session = Depends(get_db))
 
     Parameters:
     - db (Session): 데이터베이스 세션 객체.
-    - form_data (OAuth2PasswordRequestForm): 사용자로부터 받은 로그인 폼 데이터. 이메일과 비밀번호를 포함
 
     Returns:
     - dict: 엑세스 토큰과 토큰 유형을 포함
@@ -181,7 +180,7 @@ def login_for_access_token(login_obj: UserCreate, db: Session = Depends(get_db))
     if not user:
         raise HTTPException(status_code=400, detail="Incorrect email")
     # 비밀번호 검증
-    if crud.verify_password(login_obj.password, user.password):
+    if not crud.verify_password(login_obj.password, user.password):
         raise HTTPException(status_code=400, detail="Incorrect password")
 
     # 토큰 생성 및 반환
