@@ -38,7 +38,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
     else:
-        expire = datetime.datetime.utcnow() + datetime.timedelta(
+        expire = datetime.utcnow() + timedelta(
             minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
         )
     to_encode.update({"exp": expire})
@@ -141,13 +141,16 @@ async def get_current_active_user(
 
 def get_current_token(authorization: str = Header(...)) -> str:
     """
-    현재 Bearer 토큰을 추출한다.
+    헤더에서 JWT 토큰을 추출합니다.
 
     Args:
-    - authorization: 헤더에서 가져온 인증 정보.
+    - authorization (str): 'Bearer [토큰]' 형식의 인증 헤더.
 
     Returns:
-    - 추출된 JWT 토큰 문자열.
+    - str: 추출된 JWT 토큰 문자열.
+
+    헤더 예시:
+    Authorization: Bearer [YOUR_JWT_TOKEN]
     """
 
     token_prefix, token = authorization.split(" ")
@@ -157,8 +160,8 @@ def get_current_token(authorization: str = Header(...)) -> str:
 
 
 def get_admin(credentials: Annotated[HTTPBasicCredentials, Depends(security)]):
-    correct_username = secrets.compare_digest(credentials.username, "user")
-    correct_password = secrets.compare_digest(credentials.password, "password")
+    correct_username = secrets.compare_digest(credentials.username, settings.docs_user)
+    correct_password = secrets.compare_digest(credentials.password, settings.docs_pw)
     if not (correct_username and correct_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
