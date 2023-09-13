@@ -1,8 +1,6 @@
 from typing import Any, Dict, Optional, Union
 
 from sqlalchemy.orm import Session
-from passlib.context import CryptContext
-
 
 from crud.base import CRUDBase
 from models.profile import Profile
@@ -17,7 +15,7 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
     def get_by_user_id(self, db: Session, *, user_id: str) -> Optional[Profile]:
         return db.query(Profile).filter(Profile.user_id == user_id).first()
 
-    def create(self, db: Session, *, obj_in: ProfileCreate) -> Profile:
+    def create(self, db: Session, *, obj_in: ProfileCreate, user_id: int) -> Profile:
         """
         Create a new user.
 
@@ -28,10 +26,10 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
         Returns:
             Created User instance.
         """
-        if not "user_id" in obj_in:
+        if not user_id:
             raise ValueError("There is no user_id")
 
-        db_obj = Profile(**obj_in.dict())
+        db_obj = Profile(**obj_in.dict(), user_id=user_id)
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)

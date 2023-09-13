@@ -6,6 +6,7 @@ from sqlalchemy.orm import relationship
 class Profile(ModelBase):
     first_name = Column(String)
     last_name = Column(String)
+    nick_name = Column(String)
     birth = Column(Date)
     nationality = Column(String)
     university = Column(String, nullable=True)
