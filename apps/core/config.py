@@ -12,6 +12,9 @@ class Setting(BaseSettings):
     SECRET_KEY: str
     ALGORITHM: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int
+    nickname_api: str
+    docs_user: str
+    docs_pw: str
 
     @property
     def cors_origins_list(self) -> List[str]:

@@ -69,4 +69,7 @@ uvloop==0.17.0
 watchfiles==0.20.0
 websockets==11.0.3
 pydantic-settings
+email-validator
 pydantic[email]
+httpx
+python-multipart
