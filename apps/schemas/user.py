@@ -11,13 +11,14 @@ class UserBase(CoreSchema):
 
 
 class UserWithStatus(UserBase):
-    is_active: bool = False
+    is_active: bool = True
     is_admin: bool = False
 
 
 # 유저 생성을 위한 스키마
-class UserCreate(UserBase):
-    pass
+class UserCreate(BaseModel):
+    email: EmailStr
+    password: str
 
 
 # 유저 업데이트를 위한 스키마
@@ -26,8 +27,9 @@ class UserUpdate(UserBase):
 
 
 # 유저 응답을 위한 스키마
-class UserResponse(UserBase):
+class UserResponse(BaseModel):
     id: int
+    email: EmailStr
 
     class Config:
         orm_mode = True

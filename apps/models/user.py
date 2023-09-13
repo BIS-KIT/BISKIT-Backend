@@ -6,9 +6,12 @@ from sqlalchemy.orm import relationship
 class User(ModelBase):
     email = Column(String, unique=True, index=True)
     password = Column(String)
-    is_active = Column(Boolean, default=False)
+    is_active = Column(Boolean, default=True)
     is_admin = Column(Boolean, default=False)
+
     profile = relationship("Profile", back_populates="user", uselist=False)
+    consents = relationship("Consent", back_populates="user")
+    verification = relationship("Verification", back_populates="user")
 
 
 class Consent(ModelBase):
@@ -36,6 +39,3 @@ class FirebaseAuth(ModelBase):
     provider_id = Column(String, nullable=True)  # 예: 'google.com', 'kakao.com'
     uid = Column(String, unique=True, index=True)  # Firebase에서 제공하는 고유 사용자 ID
     firebase_token = Column(String, nullable=True)  # Firebase 인증 토큰 (주기적으로 갱신됨)
-
-
-User.Verification = relationship("Verification", uselist=False, back_populates="user")
