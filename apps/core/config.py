@@ -15,6 +15,8 @@ class Setting(BaseSettings):
     nickname_api: str
     docs_user: str
     docs_pw: str
+    REFRESH_SECRET_KEY: str
+    REFRESH_TOKEN_EXPIRE_MINUTES: int
 
     @property
     def cors_origins_list(self) -> List[str]:
