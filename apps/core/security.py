@@ -48,6 +48,26 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     return encoded_jwt
 
 
+def create_refresh_token(data: dict):
+    """
+    JWT 리프레시 토큰을 생성한다.
+
+    Args:
+    - data: JWT에 포함될 정보.
+
+    Returns:
+    - 생성된 JWT 리프레시 토큰 문자열.
+    """
+    ...
+    to_encode = data.copy()
+    expire = datetime.utcnow() + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(
+        to_encode, settings.REFRESH_SECRET_KEY, algorithm=settings.ALGORITHM
+    )
+    return encoded_jwt
+
+
 def verify_id_token(token: str) -> dict:
     """
     Firebase 토큰을 검증한다.
@@ -91,7 +111,35 @@ def get_user_by_fb(authorization: Optional[str] = Header(None)) -> dict:
     return verify_id_token(firebase_token)
 
 
-async def get_current_user(token: str):
+def get_current_token(authorization: str = Header(...)) -> str:
+    """
+    헤더에서 JWT 토큰을 추출합니다.
+
+    Args:
+    - authorization (str): 'Bearer [토큰]' 형식의 인증 헤더.
+
+    Returns:
+    - str: 추출된 JWT 토큰 문자열.
+
+    헤더 예시:
+    Authorization: Bearer [YOUR_JWT_TOKEN]
+    """
+
+    if not authorization:
+        raise HTTPException(status_code=403, detail="Token is missing")
+
+    token_parts = authorization.split(" ")
+    if len(token_parts) != 2:
+        raise HTTPException(status_code=403, detail="Invalid token format")
+
+    token_prefix, token = token_parts
+    if token_prefix != "Bearer":
+        raise HTTPException(status_code=403, detail="Invalid token prefix")
+
+    return token
+
+
+def get_current_user(token: str = Depends(get_current_token)):
     """
     현재의 JWT 토큰을 사용하여 사용자 정보를 검색한다.
 
@@ -114,49 +162,12 @@ async def get_current_user(token: str):
         if email is None:
             raise credentials_exception
         token_data = TokenData(email=email)
-    except JWTError:
+    except (JWTError, ValueError):
         raise credentials_exception
     user = crud.user.get_by_email(db=get_db(), email=token_data.email)
     if user is None:
         raise credentials_exception
     return user
-
-
-async def get_current_active_user(
-    current_user: Annotated[User, Depends(get_current_user)]
-):
-    """
-    현재 활성화된 사용자를 반환한다.
-
-    Args:
-    - current_user: 검증된 현재 사용자 객체.
-
-    Returns:
-    - 활성화된 사용자의 정보를 포함하는 User 객체.
-    """
-    if current_user.disabled:
-        raise HTTPException(status_code=400, detail="Inactive user")
-    return current_user
-
-
-def get_current_token(authorization: str = Header(...)) -> str:
-    """
-    헤더에서 JWT 토큰을 추출합니다.
-
-    Args:
-    - authorization (str): 'Bearer [토큰]' 형식의 인증 헤더.
-
-    Returns:
-    - str: 추출된 JWT 토큰 문자열.
-
-    헤더 예시:
-    Authorization: Bearer [YOUR_JWT_TOKEN]
-    """
-
-    token_prefix, token = authorization.split(" ")
-    if token_prefix != "Bearer":
-        raise HTTPException(status_code=403, detail="Invalid token format")
-    return token
 
 
 def get_admin(credentials: Annotated[HTTPBasicCredentials, Depends(security)]):

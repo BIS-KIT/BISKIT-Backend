@@ -41,6 +41,10 @@ class PasswordChange(CoreSchema):
     new_password_check: str
 
 
+class PasswordUpdate(BaseModel):
+    password: str
+
+
 class ConsentBase(CoreSchema):
     terms_mandatory: Optional[bool]
     terms_optional: Optional[bool] = False
@@ -98,7 +102,12 @@ class FirebaseAuthResponse(FirebaseAuthBase):
 
 class Token(BaseModel):
     access_token: str
+    refresh_token: str
     token_type: str
+
+
+class RefreshToken(BaseModel):
+    refresh_token: str
 
 
 class TokenData(BaseModel):

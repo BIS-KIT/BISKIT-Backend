@@ -4,16 +4,24 @@ from datetime import timedelta
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi import APIRouter, Body, Depends, HTTPException, Header
 from sqlalchemy.orm import Session
-from firebase_admin import auth
+from jose import jwt, JWTError
 
 import crud
-from schemas.user import Token, UserCreate, UserResponse
+from schemas.user import (
+    Token,
+    UserCreate,
+    UserResponse,
+    RefreshToken,
+    PasswordChange,
+    PasswordUpdate,
+)
 from models.user import User
 from core.security import (
-    get_current_active_user,
     get_current_token,
     create_access_token,
     get_user_by_fb,
+    create_refresh_token,
+    get_current_user,
 )
 from database.session import get_db
 from core.config import settings
@@ -53,7 +61,7 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/users/me", response_model=Dict[str, Any])
-async def read_users_me(current_user: User = Depends(get_current_active_user)):
+async def read_users_me(current_user: User = Depends(get_current_user)):
     """
     현재 사용자의 정보를 가져옵니다.
 
@@ -169,7 +177,7 @@ def login_for_access_token(login_obj: UserCreate, db: Session = Depends(get_db))
     - db (Session): 데이터베이스 세션 객체.
 
     Returns:
-    - dict: 엑세스 토큰과 토큰 유형을 포함
+    - dict: 엑세스 토큰,리프레쉬 토큰과 토큰 유형을 포함
 
     Raises:
     - HTTPException: 사용자 정보가 잘못되었거나, 해당 사용자가 데이터베이스에 없는 경우 발생.
@@ -188,21 +196,43 @@ def login_for_access_token(login_obj: UserCreate, db: Session = Depends(get_db))
     access_token = create_access_token(
         data={"sub": user.email}, expires_delta=access_token_expires
     )
-    return {"access_token": access_token, "token_type": "bearer"}
+    refresh_token = create_refresh_token(data={"sub": user.email})
+
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "refresh_token": refresh_token,
+    }
 
 
 @router.post("/token/refresh/", response_model=Token)
-def refresh_token(token: str = Depends(get_current_token)):
+async def refresh_token(token: str = Depends(get_current_token)):
     """
     기존 토큰을 새로고침합니다.
 
     인자:
-    - token (str): 현재 토큰.
+    - token (str): 현재 refresh_token.
 
     반환값:
     - Token: 새로고침된 토큰.
     """
-    access_token = create_access_token(data={"email": "user@example.com"})
+    try:
+        payload = jwt.decode(
+            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+        )
+        email = payload.get("sub")
+        if email is None:
+            raise HTTPException(
+                status_code=400, detail="Could not validate credentials"
+            )
+        token_expired = payload.get("exp")
+        if token_expired:
+            raise HTTPException(status_code=400, detail="Token has expired")
+    except JWTError:
+        raise HTTPException(status_code=400, detail="Could not validate credentials")
+
+    # 새로운 access_token 생성
+    access_token = create_access_token(data={"email": email})
     return {"access_token": access_token, "token_type": "bearer"}
 
 
@@ -218,53 +248,56 @@ def validate_token(token: str = Depends(get_current_token)):
     - dict: 토큰의 검증 상태.
     """
 
+    try:
+        payload = jwt.decode(
+            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+        )
+        email: str = payload.get("sub")
+        if email is None:
+            credentials_exception = HTTPException(
+                status_code=401,
+                detail="Could not validate credentials",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+            raise credentials_exception
+    except JWTError:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid authentication credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    # 토큰이 유효하면 아래 메시지 반환
     return {"detail": "Token is valid"}
-
-
-@router.post("/logout/")
-def logout(token: str = Depends(get_current_token)):
-    """
-    사용자를 로그아웃합니다.
-
-    인자:
-    - token (str): 'Bearer [토큰]' 형식의 인증 헤더.
-
-    반환값:
-    - dict: 로그아웃 상태 메시지.
-    """
-
-    return {"detail": "Logged out successfully"}
 
 
 @router.post("/change-password/")
 def change_password(
-    old_password: str,
-    new_password: str,
+    password_data: PasswordChange,
     db: Session = Depends(get_db),
-    current_user_email: str = Depends(get_current_token),
+    current_user: User = Depends(get_current_user),
 ):
     """
     사용자의 비밀번호를 변경합니다.
 
     인자:
-    - old_password (str): 사용자의 현재 비밀번호.
-    - new_password (str): 사용자의 새 비밀번호.
+    - password_data (PasswordChange): 변경하려는 비밀번호에 대한 데이터.
     - db (Session): 데이터베이스 세션.
-    - current_user_email (str): 현재 인증된 사용자의 이메일.
+    - current_user (User): 현재 인증된 사용자.
 
     반환값:
     - dict: 비밀번호 변경 상태 메시지.
     """
-    user = crud.user.get_by_email(db, email=current_user_email)
-    if not user:
+    if not current_user:
         raise HTTPException(status_code=400, detail="User not found")
 
-    if not crud.verify_password(old_password, user.password):
+    if password_data.new_password != password_data.new_password_check:
+        raise HTTPException(status_code=400, detail="New passwords do not match")
+
+    if not crud.verify_password(password_data.old_password, current_user.password):
         raise HTTPException(status_code=400, detail="Incorrect old password")
 
-    hashed_new_password = crud.user.get_password_hash(new_password)
-    user.password = hashed_new_password
-    db.add(user)
-    db.commit()
+    user_in = PasswordUpdate(password=password_data.new_password)
+    updated_user = crud.user.update(db, db_obj=current_user, obj_in=user_in)
 
     return {"detail": "Password changed successfully"}
