@@ -20,12 +20,17 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def send_email(certification: int, receiver_email: EmailStr, language_code: str):
-    BODY = f"Your certification code is: {certification}"
+    if language_code == "kr":
+        BODY = f"이메일 인증 번호: {certification}"
+        SUBJECT = "BISKIT 이메일 인증"
+    else:
+        BODY = f"The certification code is: {certification}"
+        SUBJECT = "BISKIT Email Certification"
 
     msg = MIMEMultipart()
     msg["From"] = settings.SMTP_USER
     msg["To"] = receiver_email
-    msg["Subject"] = "BISKIT 이메일 인증"
+    msg["Subject"] = SUBJECT
     msg.attach(MIMEText(BODY, "plain"))
 
     try:
