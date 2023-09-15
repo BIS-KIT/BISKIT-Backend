@@ -11,6 +11,7 @@ from fastapi.security import (
     HTTPBearer,
     HTTPAuthorizationCredentials,
 )
+from sqlalchemy.orm import Session
 
 import crud
 from database.session import get_db
@@ -60,7 +61,7 @@ def create_refresh_token(data: dict):
     """
     ...
     to_encode = data.copy()
-    expire = datetime.utcnow() + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+    expire = datetime.utcnow() + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(
         to_encode, settings.REFRESH_SECRET_KEY, algorithm=settings.ALGORITHM
@@ -139,7 +140,7 @@ def get_current_token(authorization: str = Header(...)) -> str:
     return token
 
 
-def get_current_user(token: str = Depends(get_current_token)):
+def get_current_user(token: str = Depends(get_current_token),db: Session = Depends(get_db)):
     """
     현재의 JWT 토큰을 사용하여 사용자 정보를 검색한다.
 
@@ -158,13 +159,14 @@ def get_current_user(token: str = Depends(get_current_token)):
         payload = jwt.decode(
             token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
         )
-        email: str = payload.get("email")
+        print(payload)
+        email: str = payload.get("sub")
         if email is None:
             raise credentials_exception
         token_data = TokenData(email=email)
     except (JWTError, ValueError):
         raise credentials_exception
-    user = crud.user.get_by_email(db=get_db(), email=token_data.email)
+    user = crud.user.get_by_email(db=db, email=token_data.email)
     if user is None:
         raise credentials_exception
     return user
