@@ -1,4 +1,5 @@
 from typing import Any, List, Optional, Dict
+from random import randint
 from datetime import timedelta
 
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -14,6 +15,8 @@ from schemas.user import (
     RefreshToken,
     PasswordChange,
     PasswordUpdate,
+    EmailCertificationIn,
+    EmailCertificationCheck,
 )
 from models.user import User
 from core.security import (
@@ -300,3 +303,36 @@ def change_password(
     updated_user = crud.user.update(db, db_obj=current_user, obj_in=user_in)
 
     return {"detail": "Password changed successfully"}
+
+
+@router.post("/certificate/")
+async def certificate_email(
+    cert_in: EmailCertificationIn, db: Session = Depends(get_db)
+):
+    certification = str(randint(100000, 999999))
+    user_cert = EmailCertificationIn(email=cert_in.email, certification=certification)
+
+    # DB에 인증 데이터 저장
+    crud.user.create_email_certification(db, obj_in=user_cert)
+
+    if crud.send_email(certification, cert_in.email):
+        return {
+            "result": "success",
+            "email": cert_in.email,
+            "certification": certification,
+        }
+    return {"result": "fail"}
+
+
+@router.post("/certificate/check/")
+async def certificate_check(
+    cert_check: EmailCertificationCheck, db: Session = Depends(get_db)
+):
+    user_cert = crud.user.get_email_certification(
+        db, email=cert_check.email, certification=cert_check.certification
+    )
+    if user_cert:
+        db.delete(user_cert)
+        db.commit()
+        return {"result": "success", "email": cert_check.email}
+    return {"result": "fail"}

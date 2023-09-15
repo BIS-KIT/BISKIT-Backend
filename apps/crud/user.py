@@ -1,14 +1,48 @@
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional, Union, EmailStr
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 
-
+from core.config import settings
 from crud.base import CRUDBase
 from models.user import User
-from schemas.user import UserCreate, UserUpdate
+from schemas.user import (
+    UserCreate,
+    UserUpdate,
+    EmailCertificationIn,
+    EmailCertificationCheck,
+)
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
+def send_email(certification: int, receiver_email: EmailStr, language_code: str):
+    if language_code == "kr":
+        BODY = f"이메일 인증 번호: {certification}"
+        SUBJECT = "BISKIT 이메일 인증"
+    else:
+        BODY = f"The certification code is: {certification}"
+        SUBJECT = "BISKIT Email Certification"
+
+    msg = MIMEMultipart()
+    msg["From"] = settings.SMTP_USER
+    msg["To"] = receiver_email
+    msg["Subject"] = SUBJECT
+    msg.attach(MIMEText(BODY, "plain"))
+
+    try:
+        with smtplib.SMTP(settings.SMTP_SERVER, settings.SMTP_PORT) as server:
+            # TLS(전송 계층 보안)를 사용하여 현재의 무안전한 연결을 보호하도록 업그레이드
+            server.starttls()
+            server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+            server.sendmail(settings.SMTP_USER, receiver_email, msg.as_string())
+        return True
+    except Exception as e:
+        print(f"Error occurred while sending email: {e}")
+        return False
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -43,6 +77,48 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
     """
     CRUD operations for User model.
     """
+
+    def create_email_certification(
+        self, db: Session, *, obj_in: EmailCertificationIn
+    ) -> EmailCertificationCheck:
+        """
+        Create a new email certification entry.
+
+        Args:
+            db: Database session instance.
+            obj_in: EmailCertificationIn instance containing email and certification.
+
+        Returns:
+            Created EmailCertificationCheck instance.
+        """
+        db_obj = EmailCertificationCheck(**obj_in.dict())
+        db.add(db_obj)
+        db.commit()
+        db.refresh(db_obj)
+        return db_obj
+
+    def get_email_certification(
+        self, db: Session, *, email: str, certification: str
+    ) -> Optional[EmailCertificationCheck]:
+        """
+        Retrieve an email certification entry by email and certification.
+
+        Args:
+            db: Database session instance.
+            email: Email associated with the certification.
+            certification: Certification code.
+
+        Returns:
+            EmailCertificationCheck instance if found, else None.
+        """
+        return (
+            db.query(EmailCertificationCheck)
+            .filter(
+                EmailCertificationCheck.email == email,
+                EmailCertificationCheck.certification == certification,
+            )
+            .first()
+        )
 
     def get_by_email(self, db: Session, *, email: str) -> Optional[User]:
         """

@@ -14,6 +14,12 @@ class User(ModelBase):
     verification = relationship("Verification", back_populates="user")
 
 
+class EmailCertification(ModelBase):
+    id = Column(Integer, primary_key=True, index=True)
+    certification = Column(String, index=True)
+    email = Column(String, unique=True, index=True)
+
+
 class Consent(ModelBase):
     terms_mandatory = Column(Boolean, nullable=True)  # 필수 약관 동의
     terms_optional = Column(Boolean, default=False, nullable=True)  # 선택 약관 동의

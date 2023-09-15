@@ -17,6 +17,8 @@ class Setting(BaseSettings):
     docs_pw: str
     REFRESH_SECRET_KEY: str
     REFRESH_TOKEN_EXPIRE_MINUTES: int
+    SMTP_SERVER: str
+    SMTP_PORT: int
 
     @property
     def cors_origins_list(self) -> List[str]:
