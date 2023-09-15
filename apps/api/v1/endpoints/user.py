@@ -60,7 +60,7 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
     return crud.user.remove(db, id=user_id)
 
 
-@router.get("/users/me", response_model=Dict[str, Any])
+@router.get("/users/me", response_model=UserResponse)
 async def read_users_me(current_user: User = Depends(get_current_user)):
     """
     현재 사용자의 정보를 가져옵니다.
@@ -72,7 +72,6 @@ async def read_users_me(current_user: User = Depends(get_current_user)):
     - dict: 인증된 사용자의 정보.
     """
     return current_user
-
 
 @router.post("/register/", response_model=dict)
 def register_user(
@@ -223,7 +222,7 @@ async def refresh_token(token: str = Depends(get_current_token)):
         email = payload.get("sub")
         if email is None:
             raise HTTPException(
-                status_code=400, detail="Could not validate credentials"
+                status_code=400, detail="Could not validate email"
             )
         token_expired = payload.get("exp")
         if token_expired:
