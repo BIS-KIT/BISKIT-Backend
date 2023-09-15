@@ -112,3 +112,12 @@ class RefreshToken(BaseModel):
 
 class TokenData(BaseModel):
     email: str = None
+
+
+class EmailCertificationIn(BaseModel):
+    email: str
+
+
+class EmailCertificationCheck(BaseModel):
+    email: str
+    certification: str
