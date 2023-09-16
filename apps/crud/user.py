@@ -36,7 +36,6 @@ def send_email(certification: int, receiver_email: EmailStr, language_code: str 
 
     try:
         with smtplib.SMTP(settings.SMTP_SERVER, settings.SMTP_PORT) as server:
-            # TLS(전송 계층 보안)를 사용하여 현재의 무안전한 연결을 보호하도록 업그레이드
             server.starttls()
             server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
             server.sendmail(settings.SMTP_USER, receiver_email, msg.as_string())
