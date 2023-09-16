@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 from typing import Annotated
 
 from fastapi import FastAPI, Depends
+from fastapi.staticfiles import StaticFiles
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from starlette.middleware.cors import CORSMiddleware
 from firebase_admin import credentials, initialize_app
@@ -28,6 +29,7 @@ app = FastAPI(
     title=settings.PROJECT_NAME,
     docs_url=None,
 )
+app.mount("/media", StaticFiles(directory="media"), name="media")
 
 app.include_router(v1_router, prefix="/v1")
 
