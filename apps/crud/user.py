@@ -1,4 +1,5 @@
-from typing import Any, Dict, Optional, Union, EmailStr
+from typing import Any, Dict, Optional, Union
+from pydantic.networks import EmailStr
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -8,7 +9,7 @@ from passlib.context import CryptContext
 
 from core.config import settings
 from crud.base import CRUDBase
-from models.user import User
+from models.user import User, EmailCertification
 from schemas.user import (
     UserCreate,
     UserUpdate,
@@ -19,7 +20,7 @@ from schemas.user import (
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-def send_email(certification: int, receiver_email: EmailStr, language_code: str):
+def send_email(certification: int, receiver_email: EmailStr, language_code: str = "kr"):
     if language_code == "kr":
         BODY = f"이메일 인증 번호: {certification}"
         SUBJECT = "BISKIT 이메일 인증"
@@ -78,6 +79,21 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
     CRUD operations for User model.
     """
 
+    def remove_email_certification(
+        self, db: Session, *, db_obj: EmailCertificationCheck
+    ):
+        obj = (
+            db.query(EmailCertification)
+            .filter(
+                EmailCertification.email == db_obj.email,
+                EmailCertification.certification == db_obj.certification,
+            )
+            .first()
+        )
+        db.delete(obj)
+        db.commit()
+        return obj
+
     def create_email_certification(
         self, db: Session, *, obj_in: EmailCertificationIn
     ) -> EmailCertificationCheck:
@@ -91,7 +107,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         Returns:
             Created EmailCertificationCheck instance.
         """
-        db_obj = EmailCertificationCheck(**obj_in.dict())
+        db_obj = EmailCertification(**obj_in.dict())
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)
@@ -112,10 +128,10 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             EmailCertificationCheck instance if found, else None.
         """
         return (
-            db.query(EmailCertificationCheck)
+            db.query(EmailCertification)
             .filter(
-                EmailCertificationCheck.email == email,
-                EmailCertificationCheck.certification == certification,
+                EmailCertification.email == email,
+                EmailCertification.certification == certification,
             )
             .first()
         )
