@@ -309,7 +309,9 @@ async def certificate_email(
     cert_in: EmailCertificationIn, db: Session = Depends(get_db)
 ):
     certification = str(randint(100000, 999999))
-    user_cert = EmailCertificationIn(email=cert_in.email, certification=certification)
+    user_cert = EmailCertificationCheck(
+        email=cert_in.email, certification=certification
+    )
 
     # DB에 인증 데이터 저장
     certi = crud.user.create_email_certification(db, obj_in=user_cert)
