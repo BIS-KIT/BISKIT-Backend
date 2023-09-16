@@ -76,6 +76,7 @@ async def read_users_me(current_user: User = Depends(get_current_user)):
     """
     return current_user
 
+
 @router.post("/register/", response_model=dict)
 def register_user(
     user_in: UserCreate,
@@ -224,9 +225,7 @@ async def refresh_token(token: str = Depends(get_current_token)):
         )
         email = payload.get("sub")
         if email is None:
-            raise HTTPException(
-                status_code=400, detail="Could not validate email"
-            )
+            raise HTTPException(status_code=400, detail="Could not validate email")
         token_expired = payload.get("exp")
         if token_expired:
             raise HTTPException(status_code=400, detail="Token has expired")
@@ -313,15 +312,18 @@ async def certificate_email(
     user_cert = EmailCertificationIn(email=cert_in.email, certification=certification)
 
     # DB에 인증 데이터 저장
-    crud.user.create_email_certification(db, obj_in=user_cert)
-
-    if crud.send_email(certification, cert_in.email):
-        return {
-            "result": "success",
-            "email": cert_in.email,
-            "certification": certification,
-        }
-    return {"result": "fail"}
+    certi = crud.user.create_email_certification(db, obj_in=user_cert)
+    try:
+        if crud.send_email(certification, cert_in.email):
+            return {
+                "result": "success",
+                "email": cert_in.email,
+                "certification": certification,
+            }
+    except Exception as e:
+        print(e)
+        crud.user.remove_email_certification(db, db_obj=certi)
+        return {"result": "fail"}
 
 
 @router.post("/certificate/check/")
