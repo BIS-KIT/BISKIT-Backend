@@ -144,3 +144,23 @@ def delete_profile_by_user(user_id: int, db: Session = Depends(get_db)):
             status_code=404, detail="Profile not found for the given user_id"
         )
     return crud.profile.remove(db, id=profile.id)
+
+
+@router.post("/profile/{user_id}/photo")
+async def upload_profile_photo(
+    user_id: int, photo: UploadFile = File(...), db: Session = Depends(get_db)
+):
+    profile = crud.profile.get_by_user_id(db, user_id=user_id)
+    if not profile:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    return crud.profile.upload_profile_photo(db=db, user_id=user_id, photo=photo)
+
+
+@router.delete("/profile/{user_id}/photo")
+async def delete_profile_photo(user_id: int, db: Session = Depends(get_db)):
+    profile = crud.profile.get_by_user_id(db, user_id=user_id)
+    if not profile:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    return crud.profile.remove_profile_photo(db=db, user_id=user_id)

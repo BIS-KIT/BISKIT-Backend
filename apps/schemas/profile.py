@@ -54,3 +54,7 @@ class ProfileResponse(ProfileBase):
 
     class Config:
         orm_mode = True
+
+
+class ProfilePhoto(BaseModel):
+    profile_photo: str
