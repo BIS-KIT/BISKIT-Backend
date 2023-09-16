@@ -19,6 +19,8 @@ class Setting(BaseSettings):
     REFRESH_TOKEN_EXPIRE_MINUTES: int
     SMTP_SERVER: str
     SMTP_PORT: int
+    SMTP_USER: str
+    SMTP_PASSWORD: str
 
     @property
     def cors_origins_list(self) -> List[str]:
