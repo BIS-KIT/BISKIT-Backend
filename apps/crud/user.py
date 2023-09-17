@@ -1,6 +1,7 @@
 from typing import Any, Dict, Optional, Union
 from pydantic.networks import EmailStr
 import smtplib
+from jinja2 import Environment, FileSystemLoader
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
@@ -20,19 +21,27 @@ from schemas.user import (
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
+def render_template(filename: str, **kwargs):
+    env = Environment(loader=FileSystemLoader("templates"))
+    template = env.get_template(filename)
+    return template.render(**kwargs)
+
+
 def send_email(certification: int, receiver_email: EmailStr, language_code: str = "kr"):
     if language_code == "kr":
-        BODY = f"이메일 인증 번호: {certification}"
+        body_template = "templates/email_kr"
         SUBJECT = "BISKIT 이메일 인증"
     else:
-        BODY = f"The certification code is: {certification}"
+        body_template = "templates/email_kr"
         SUBJECT = "BISKIT Email Certification"
+
+    BODY = render_template(body_template, certification=certification)
 
     msg = MIMEMultipart()
     msg["From"] = settings.SMTP_USER
     msg["To"] = receiver_email
     msg["Subject"] = SUBJECT
-    msg.attach(MIMEText(BODY, "plain"))
+    msg.attach(MIMEText(BODY, "html"))
 
     try:
         with smtplib.SMTP(settings.SMTP_SERVER, settings.SMTP_PORT) as server:
