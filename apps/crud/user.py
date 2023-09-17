@@ -29,10 +29,10 @@ def render_template(filename: str, **kwargs):
 
 def send_email(certification: int, receiver_email: EmailStr, language_code: str = "kr"):
     if language_code == "kr":
-        body_template = "templates/email_kr"
+        body_template = "email_kr.html"
         SUBJECT = "BISKIT 이메일 인증"
     else:
-        body_template = "templates/email_kr"
+        body_template = "email_kr.html"
         SUBJECT = "BISKIT Email Certification"
 
     BODY = render_template(body_template, certification=certification)
