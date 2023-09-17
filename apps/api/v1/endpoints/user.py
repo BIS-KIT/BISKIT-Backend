@@ -6,6 +6,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi import APIRouter, Body, Depends, HTTPException, Header
 from sqlalchemy.orm import Session
 from jose import jwt, JWTError
+from sqlalchemy.exc import IntegrityError
 
 import crud
 from schemas.user import (
@@ -97,7 +98,7 @@ def register_user(
     # 데이터베이스에서 이메일로 사용자 확인
     db_user = crud.user.get_by_email(db=db, email=user_in.email)
     if db_user:
-        raise HTTPException(status_code=400, detail="User already registered.")
+        raise HTTPException(status_code=409, detail="User already registered.")
 
     hashed_password = crud.get_password_hash(user_in.password)
 
@@ -138,7 +139,7 @@ def create_user(
     # 데이터베이스에서 이메일로 사용자 확인
     db_user = crud.user.get_by_email(db=db, email=user_email)
     if db_user:
-        raise HTTPException(status_code=400, detail="User already registered.")
+        raise HTTPException(status_code=409, detail="User already registered.")
 
     # 새로운 사용자 생성 및 저장
     obj_in = UserCreate(email=user_email)
@@ -303,27 +304,39 @@ def change_password(
 
     return {"detail": "Password changed successfully"}
 
+@router.post("/check-email/")
+def check_mail_exists(email:str, db:Session=Depends(get_db)):
+    check_email = crud.user.get_by_email(db=db, email=email)
+    if check_email:
+        raise HTTPException(status_code=409, detail="Email already registered.")
+    return {"status": "Email is available."}
+
 
 @router.post("/certificate/")
 async def certificate_email(
     cert_in: EmailCertificationIn, db: Session = Depends(get_db)
 ):
+    check_user = crud.user.get_by_email(db=db, email=cert_in.email)
+    if check_user:
+        raise HTTPException(status_code=409, detail="Email already registered.")
+
     certification = str(randint(100000, 999999))
     user_cert = EmailCertificationCheck(
         email=cert_in.email, certification=certification
     )
 
     # DB에 인증 데이터 저장
-    certi = crud.user.create_email_certification(db, obj_in=user_cert)
     try:
+        certi = crud.user.create_email_certification(db, obj_in=user_cert)
         if crud.send_email(certification, cert_in.email):
             return {
                 "result": "success",
                 "email": cert_in.email,
                 "certification": certification,
             }
+    except IntegrityError:
+        raise HTTPException(status_code=409, detail="Email already exists.")
     except Exception as e:
-        print(e)
         crud.user.remove_email_certification(db, db_obj=certi)
         return {"result": "fail"}
 

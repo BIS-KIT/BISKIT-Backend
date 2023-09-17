@@ -17,7 +17,7 @@ class User(ModelBase):
 class EmailCertification(ModelBase):
     id = Column(Integer, primary_key=True, index=True)
     certification = Column(String, index=True)
-    email = Column(String, unique=True, index=True)
+    email = Column(String, index=True)
 
 
 class Consent(ModelBase):

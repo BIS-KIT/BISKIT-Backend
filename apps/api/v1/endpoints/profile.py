@@ -77,7 +77,7 @@ def create_profile(
     # 사용자에게 이미 프로필이 있는지 확인
     if user.profile:
         raise HTTPException(
-            status_code=400, detail="Profile already exists for the user"
+            status_code=409, detail="Profile already exists for the user"
         )
 
     nick_name = profile.nick_name
