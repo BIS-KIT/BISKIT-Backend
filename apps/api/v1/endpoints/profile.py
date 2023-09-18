@@ -70,14 +70,14 @@ def create_profile(
     - 생성된 프로필 정보.
     """
     # 유저 존재 확인
-    user = db.query(User).filter(User.id == user_id).first()
+    user = crud.user.get(db=db,id=user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
     # 사용자에게 이미 프로필이 있는지 확인
     if user.profile:
         raise HTTPException(
-            status_code=400, detail="Profile already exists for the user"
+            status_code=409, detail="Profile already exists for the user"
         )
 
     nick_name = profile.nick_name
@@ -103,14 +103,27 @@ def create_profile(
     return new_profile
 
 
-@router.put("/profile/{profile_id}/", response_model=ProfileUpdate)
+@router.put("/profile/{user_id}/", response_model=ProfileUpdate)
 def update_profile(
-    profile_id: int,  # 업데이트할 프로필의 ID
+    user_id: int,  
     profile: ProfileUpdate,
     db: Session = Depends(get_db),
 ):
+    """
+    사용자 프로필 업데이트 API
+
+    이 API는 주어진 사용자 ID에 대한 프로필 정보를 업데이트합니다.
+    프로필이 존재하지 않는 경우 오류를 반환합니다.
+
+    Parameters:
+    - user_id: 업데이트하려는 프로필의 사용자 ID.
+    - profile: 업데이트를 위한 프로필 정보.
+
+    Returns:
+    - 업데이트된 프로필 정보.
+    """
     # 프로필 존재 확인
-    existing_profile = db.query(Profile).filter(Profile.id == profile_id).first()
+    existing_profile = crud.profile.get_by_user_id(db=db, user_id=user_id)
     if not existing_profile:
         raise HTTPException(status_code=404, detail="Profile not found")
 
@@ -126,7 +139,17 @@ def update_profile(
 def delete_profile(profile_id: int, db: Session = Depends(get_db)):
     """
     프로필 삭제 API
+
+    해당 API는 주어진 프로필 ID로 프로필을 삭제합니다. 
+    프로필이 존재하지 않는 경우 오류를 반환합니다.
+
+    Parameters:
+    - profile_id: 삭제하려는 프로필의 ID.
+
+    Returns:
+    - 삭제된 프로필의 정보.
     """
+
     profile = crud.profile.get(db, id=profile_id)
     if not profile:
         raise HTTPException(status_code=404, detail="Profile not found")
@@ -144,3 +167,50 @@ def delete_profile_by_user(user_id: int, db: Session = Depends(get_db)):
             status_code=404, detail="Profile not found for the given user_id"
         )
     return crud.profile.remove(db, id=profile.id)
+
+
+@router.post("/profile/{user_id}/photo")
+async def upload_profile_photo(
+    user_id: int, photo: UploadFile = File(...), db: Session = Depends(get_db)
+):
+    """
+    사용자 프로필 사진 업로드 API
+
+    해당 API는 주어진 사용자 ID에 대한 프로필 사진을 업로드합니다. 
+    사용자 프로필이 존재하지 않는 경우 오류를 반환합니다.
+
+    이미 프로필이 존재하는 경우 덮어 씌우고, 이전 프로필 이미지 파일은 삭제됩니다.
+
+    Parameters:
+    - user_id: 사진을 업로드하려는 사용자의 ID.
+    - photo: 업로드하려는 프로필 사진 파일.
+
+    Returns:
+    - 업로드된 사진의 정보.
+    """
+    profile = crud.profile.get_by_user_id(db, user_id=user_id)
+    if not profile:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    return crud.profile.upload_profile_photo(db=db, user_id=user_id, photo=photo)
+
+
+@router.delete("/profile/{user_id}/photo")
+async def delete_profile_photo(user_id: int, db: Session = Depends(get_db)):
+    """
+    사용자 프로필 사진 삭제 API
+
+    해당 API는 주어진 사용자 ID에 대한 프로필 사진을 삭제합니다. 
+    사용자 프로필이 존재하지 않는 경우 오류를 반환합니다.
+
+    Parameters:
+    - user_id: 사진을 삭제하려는 사용자의 ID.
+
+    Returns:
+    - 삭제 처리 결과.
+    """
+    profile = crud.profile.get_by_user_id(db, user_id=user_id)
+    if not profile:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    return crud.profile.remove_profile_photo(db=db, user_id=user_id)

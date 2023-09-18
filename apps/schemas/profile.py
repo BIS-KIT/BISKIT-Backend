@@ -15,9 +15,9 @@ class ProfileBase(CoreSchema):
     last_name: str
     nick_name: Optional[str] = None
     birth: Optional[date] = None
-    nationality: Optional[bool] = None
+    nationality: Optional[str] = None
     gender: genderEum
-    is_graduated: bool
+    is_graduated: bool = False
     university: Optional[str] = None
     department: Optional[str] = None
     profile_photo: Optional[str] = None  # 이미지 URL 저장
@@ -31,7 +31,7 @@ class ProfileCreate(BaseModel):
     birth: Optional[date] = None
     nationality: Optional[str] = None
     gender: genderEum
-    is_graduated: Optional[bool] = None
+    is_graduated: Optional[bool] = False
     university: Optional[str] = None
     department: Optional[str] = None
 
@@ -44,7 +44,7 @@ class ProfileUpdate(BaseModel):
     birth: Optional[date] = None
     nationality: Optional[str] = None
     gender: genderEum
-    is_graduated: Optional[bool] = None
+    is_graduated: Optional[bool] = False
     university: Optional[str] = None
     department: Optional[str] = None
 
@@ -54,3 +54,7 @@ class ProfileResponse(ProfileBase):
 
     class Config:
         orm_mode = True
+
+
+class ProfilePhoto(BaseModel):
+    profile_photo: str
