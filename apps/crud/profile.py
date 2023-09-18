@@ -18,6 +18,9 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
     CRUD operations for User model.
     """
 
+    def get_by_nick_name(self, db: Session, nick_name: str):
+        return db.query(Profile).filter(Profile.nick_name == nick_name).first()
+
     def get_by_user_id(self, db: Session, *, user_id: str) -> Optional[Profile]:
         return db.query(Profile).filter(Profile.user_id == user_id).first()
 
@@ -34,6 +37,14 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
         """
         if not user_id:
             raise ValueError("There is no user_id")
+
+        if obj_in.profile_photo:
+            random_str = generate_random_string()
+            file_path = (
+                f"media/profile_photo/{random_str}_{obj_in.profile_photo.filename}"
+            )
+            self.save_upload_file(obj_in.profile_photo, file_path)
+            obj_in.profile_photo = file_path  # Update path
 
         db_obj = Profile(**obj_in.dict(), user_id=user_id)
         db.add(db_obj)
@@ -63,6 +74,21 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
             update_data = obj_in
         else:
             update_data = obj_in.dict(exclude_unset=True)
+
+        # Handle profile photo upload if provided
+        if "profile_photo" in update_data and isinstance(
+            update_data["profile_photo"], UploadFile
+        ):
+            photo = update_data["profile_photo"]
+
+            # Delete old photo if exists
+            if db_obj.profile_photo and os.path.exists(db_obj.profile_photo):
+                os.remove(db_obj.profile_photo)
+
+            random_str = generate_random_string()
+            file_path = f"media/profile_photo/{random_str}_{photo.filename}"
+            self.save_upload_file(photo, file_path)
+            update_data["profile_photo"] = file_path  # Update path
 
         return super().update(db, db_obj=db_obj, obj_in=update_data)
 
