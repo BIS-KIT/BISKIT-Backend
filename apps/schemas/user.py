@@ -19,11 +19,19 @@ class UserWithStatus(UserBase):
 class UserCreate(BaseModel):
     email: EmailStr
     password: str
+    name: str
+    birth: date
+    nationality: str
+    university: str
+    department: str
+    gender: str
+    is_graduated: bool
 
 
 # 유저 업데이트를 위한 스키마
 class UserUpdate(UserBase):
     email: Optional[EmailStr] = None
+    password: Optional[str] = None
 
 
 # 유저 응답을 위한 스키마
