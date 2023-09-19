@@ -8,6 +8,13 @@ from typing import Optional
 class UserBase(CoreSchema):
     email: EmailStr
     password: str
+    name: str
+    birth: date
+    nationality: str
+    university: str
+    department: str
+    gender: str
+    is_graduated: bool
 
 
 class UserWithStatus(UserBase):
@@ -27,17 +34,30 @@ class UserCreate(BaseModel):
     gender: str
     is_graduated: bool
 
+    terms_mandatory: Optional[bool]
+    terms_optional: Optional[bool] = False
+    terms_push: Optional[bool] = False
+
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
 
 # 유저 업데이트를 위한 스키마
-class UserUpdate(UserBase):
-    email: Optional[EmailStr] = None
-    password: Optional[str] = None
+class UserUpdate(BaseModel):
+    name: str
+    birth: date
+    nationality: str
+    university: str
+    department: str
+    gender: str
+    is_graduated: bool
 
 
 # 유저 응답을 위한 스키마
-class UserResponse(BaseModel):
-    id: int
-    email: EmailStr
+class UserResponse(UserBase):
+    password: Optional[str] = None
 
     class Config:
         orm_mode = True
