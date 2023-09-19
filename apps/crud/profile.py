@@ -1,10 +1,13 @@
 from typing import Any, Dict, Optional, Union
 import os, random, string
+from botocore.exceptions import NoCredentialsError
 
 from sqlalchemy.orm import Session
 from fastapi import UploadFile
 
 from crud.base import CRUDBase
+from core.security import get_aws_client
+from core.config import settings
 from models.profile import Profile
 from schemas.profile import ProfileCreate, ProfileUpdate
 
@@ -93,11 +96,19 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
         return super().update(db, db_obj=db_obj, obj_in=update_data)
 
     def save_upload_file(self, upload_file: UploadFile, destination: str) -> None:
+        s3_client = get_aws_client()
+        bucket_name = settings.BUCKET_NAME
+
         try:
-            with open(destination, "wb") as buffer:
-                buffer.write(upload_file.file.read())
+            s3_client.upload_fileobj(upload_file.file, bucket_name, destination)
+        except NoCredentialsError:
+            print("Credentials not available")
         finally:
             upload_file.file.close()
+
+        image_url = f"https://{bucket_name}.s3.{settings.AWS_REGION}.amazonaws.com/{destination}"
+
+        return image_url
 
     def upload_profile_photo(self, db: Session, user_id: int, photo: UploadFile):
         profile = self.get_by_user_id(db, user_id=user_id)
@@ -105,13 +116,13 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
             return None
 
         if profile.profile_photo:
-            old_photo_path = profile.profile_photo
-            if os.path.exists(old_photo_path):
-                os.remove(old_photo_path)
+            # Delete the old photo from S3
+            self.delete_file_from_s3(profile.profile_photo)
 
         random_str = generate_random_string()
-        file_path = f"media/profile_photo/{random_str}_{photo.filename}"
-        self.save_upload_file(photo, file_path)
+        file_path = f"/profile_photo/{random_str}_{photo.filename}"
+        # TODO : Check this url
+        s3_url = self.save_upload_file(photo, file_path)
 
         profile.profile_photo = file_path
         db.commit()

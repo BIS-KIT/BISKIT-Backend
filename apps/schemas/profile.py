@@ -23,6 +23,10 @@ class ProfileCreate(BaseModel):
     profile_photo: Optional[UploadFile] = None
 
 
+class ProfileUpdate(ProfileCreate):
+    pass
+
+
 class ProfileResponse(ProfileBase):
     id: int  # 프로필에 대한 고유 ID를 가정
 

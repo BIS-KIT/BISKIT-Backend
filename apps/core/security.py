@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from typing import Any, Union, Optional, Annotated
-import secrets
+import secrets, boto3
 
 from jose import jwt, JWTError
 from firebase_admin import auth
@@ -21,6 +21,20 @@ from core.config import settings
 
 security = HTTPBasic()
 bearer_security = HTTPBearer()
+
+
+def get_aws_client():
+    AWS_ACCESS_KEY_ID = settings.AWS_ACCESS_KEY_ID
+    AWS_SECRET_ACCESS_KEY = settings.AWS_SECRET_ACCESS_KEY
+    AWS_DEFAULT_REGION = settings.AWS_REGION
+
+    client = boto3.client(
+        "s3",
+        aws_access_key_id=AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+        region_name=AWS_DEFAULT_REGION,
+    )
+    return client
 
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
@@ -140,7 +154,9 @@ def get_current_token(authorization: str = Header(...)) -> str:
     return token
 
 
-def get_current_user(token: str = Depends(get_current_token),db: Session = Depends(get_db)):
+def get_current_user(
+    token: str = Depends(get_current_token), db: Session = Depends(get_db)
+):
     """
     현재의 JWT 토큰을 사용하여 사용자 정보를 검색한다.
 
