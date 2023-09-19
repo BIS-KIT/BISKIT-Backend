@@ -12,15 +12,19 @@ class Setting(BaseSettings):
     SECRET_KEY: str
     ALGORITHM: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int
-    nickname_api: str
-    docs_user: str
-    docs_pw: str
+    NICKNAME_API: str
+    DOCS_USER: str
+    DOCS_PW: str
     REFRESH_SECRET_KEY: str
     REFRESH_TOKEN_EXPIRE_MINUTES: int
     SMTP_SERVER: str
     SMTP_PORT: int
     SMTP_USER: str
     SMTP_PASSWORD: str
+
+    AWS_ACCESS_KEY_ID: str
+    AWS_SECRET_ACCESS_KEY: str
+    AWS_REGION: str
 
     @property
     def cors_origins_list(self) -> List[str]:
