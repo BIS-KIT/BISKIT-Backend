@@ -11,8 +11,17 @@ from alembic import context
 
 from database.session import DATABASE_URL
 from models.base import ModelBase
-from models.user import User, Consent, Verification, FirebaseAuth
-from models.profile import Profile
+from models.user import (
+    User,
+    Consent,
+    Verification,
+    FirebaseAuth,
+    EmailCertification,
+    UserNationality,
+    UserUniversity,
+)
+from models.profile import Profile, AvailableLanguage
+from models.utility import Nationality, Language, University
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
