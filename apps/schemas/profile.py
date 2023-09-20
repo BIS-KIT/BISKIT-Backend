@@ -1,8 +1,10 @@
-from schemas.base import CoreSchema
 from datetime import date
 from pydantic import EmailStr, BaseModel
 from enum import Enum
 from typing import Optional
+from fastapi import UploadFile
+
+from schemas.base import CoreSchema
 
 
 class genderEum(str, Enum):
@@ -11,42 +13,18 @@ class genderEum(str, Enum):
 
 
 class ProfileBase(CoreSchema):
-    first_name: str
-    last_name: str
     nick_name: Optional[str] = None
-    birth: Optional[date] = None
-    nationality: Optional[str] = None
-    gender: genderEum
-    is_graduated: bool = False
-    university: Optional[str] = None
-    department: Optional[str] = None
-    profile_photo: Optional[str] = None  # 이미지 URL 저장
+    profile_photo: Optional[str] = None
 
 
 # 프로필 생성을 위한 스키마
 class ProfileCreate(BaseModel):
-    first_name: str
-    last_name: str
     nick_name: Optional[str] = None
-    birth: Optional[date] = None
-    nationality: Optional[str] = None
-    gender: genderEum
-    is_graduated: Optional[bool] = False
-    university: Optional[str] = None
-    department: Optional[str] = None
+    profile_photo: Optional[UploadFile] = None
 
 
-# 프로필 업데이트를 위한 스키마
-class ProfileUpdate(BaseModel):
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
-    nick_name: Optional[str] = None
-    birth: Optional[date] = None
-    nationality: Optional[str] = None
-    gender: genderEum
-    is_graduated: Optional[bool] = False
-    university: Optional[str] = None
-    department: Optional[str] = None
+class ProfileUpdate(ProfileCreate):
+    pass
 
 
 class ProfileResponse(ProfileBase):

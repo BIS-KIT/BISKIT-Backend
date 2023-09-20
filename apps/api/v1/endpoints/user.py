@@ -18,6 +18,9 @@ from schemas.user import (
     PasswordUpdate,
     EmailCertificationIn,
     EmailCertificationCheck,
+    UserLogin,
+    ConsentCreate,
+    UserRegister,
 )
 from models.user import User
 from core.security import (
@@ -80,7 +83,7 @@ async def read_users_me(current_user: User = Depends(get_current_user)):
 
 @router.post("/register/", response_model=dict)
 def register_user(
-    user_in: UserCreate,
+    user_in: UserRegister,
     db: Session = Depends(get_db),
 ):
     """
@@ -93,7 +96,6 @@ def register_user(
     Returns:
     - dict: 새로 등록된 사용자의 ID와 이메일.
     """
-    print(user_in)
 
     # 데이터베이스에서 이메일로 사용자 확인
     db_user = crud.user.get_by_email(db=db, email=user_in.email)
@@ -102,19 +104,46 @@ def register_user(
 
     hashed_password = crud.get_password_hash(user_in.password)
 
-    obj_in = UserCreate(email=user_in.email, password=hashed_password)
+    try:
+        obj_in = UserCreate(
+            email=user_in.email,
+            password=hashed_password,
+            name=user_in.name,
+            birth=user_in.birth,
+            nationality=user_in.nationality,
+            university=user_in.university,
+            department=user_in.department,
+            gender=user_in.gender,
+            is_graduated=user_in.is_graduated,
+        )
 
-    new_user = crud.user.create(db=db, obj_in=obj_in)
+        new_user = crud.user.create(db=db, obj_in=obj_in)
 
+        consent = ConsentCreate(
+            terms_mandatory=user_in.terms_optional,
+            terms_optional=user_in.terms_optional,
+            terms_push=user_in.terms_push,
+            user_id=new_user.id,
+        )
+
+        consent_obj = crud.user.create_consent(db=db, obj_in=consent)
+    except Exception as e:
+        print(e)
     # 토큰 생성
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": new_user.email}, expires_delta=access_token_expires
     )
-    return {"id": new_user.id, "token": access_token, "email": new_user.email}
+    refresh_token = create_refresh_token(data={"sub": new_user.email})
+    return {
+        "id": new_user.id,
+        "token": access_token,
+        "email": new_user.email,
+        "refresh_token": refresh_token,
+    }
 
 
-@router.post("/register/firebase", response_model=dict)
+@router.post("/register/firebase", response_model=UserResponse)
 def create_user(
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_user_by_fb),
@@ -170,7 +199,7 @@ async def login_for_access_token_firebase(authorization: str = Depends(get_user_
 
 
 @router.post("/login", response_model=Dict[str, Any])
-def login_for_access_token(login_obj: UserCreate, db: Session = Depends(get_db)):
+def login_for_access_token(login_obj: UserLogin, db: Session = Depends(get_db)):
     """
     로그인을 위한 엑세스 토큰을 발급
 
@@ -304,8 +333,9 @@ def change_password(
 
     return {"detail": "Password changed successfully"}
 
+
 @router.post("/check-email/")
-def check_mail_exists(email:str, db:Session=Depends(get_db)):
+def check_mail_exists(email: str, db: Session = Depends(get_db)):
     check_email = crud.user.get_by_email(db=db, email=email)
     if check_email:
         raise HTTPException(status_code=409, detail="Email already registered.")

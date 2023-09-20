@@ -6,6 +6,14 @@ from sqlalchemy.orm import relationship
 class User(ModelBase):
     email = Column(String, unique=True, index=True)
     password = Column(String)
+    name = Column(String)
+    birth = Column(Date)
+    nationality = Column(String)
+    university = Column(String, nullable=True)
+    department = Column(String, nullable=True)
+    gender = Column(String)
+    is_graduated = Column(Boolean, default=False)
+
     is_active = Column(Boolean, default=True)
     is_admin = Column(Boolean, default=False)
 
@@ -15,7 +23,6 @@ class User(ModelBase):
 
 
 class EmailCertification(ModelBase):
-    id = Column(Integer, primary_key=True, index=True)
     certification = Column(String, index=True)
     email = Column(String, index=True)
 

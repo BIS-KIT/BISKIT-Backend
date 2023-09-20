@@ -140,7 +140,9 @@ def get_current_token(authorization: str = Header(...)) -> str:
     return token
 
 
-def get_current_user(token: str = Depends(get_current_token),db: Session = Depends(get_db)):
+def get_current_user(
+    token: str = Depends(get_current_token), db: Session = Depends(get_db)
+):
     """
     현재의 JWT 토큰을 사용하여 사용자 정보를 검색한다.
 
@@ -173,8 +175,8 @@ def get_current_user(token: str = Depends(get_current_token),db: Session = Depen
 
 
 def get_admin(credentials: Annotated[HTTPBasicCredentials, Depends(security)]):
-    correct_username = secrets.compare_digest(credentials.username, settings.docs_user)
-    correct_password = secrets.compare_digest(credentials.password, settings.docs_pw)
+    correct_username = secrets.compare_digest(credentials.username, settings.DOCS_USER)
+    correct_password = secrets.compare_digest(credentials.password, settings.DOCS_PW)
     if not (correct_username and correct_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

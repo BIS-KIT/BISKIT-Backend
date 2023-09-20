@@ -8,6 +8,13 @@ from typing import Optional
 class UserBase(CoreSchema):
     email: EmailStr
     password: str
+    name: str
+    birth: date
+    nationality: str
+    university: str
+    department: str
+    gender: str
+    is_graduated: bool
 
 
 class UserWithStatus(UserBase):
@@ -19,17 +26,50 @@ class UserWithStatus(UserBase):
 class UserCreate(BaseModel):
     email: EmailStr
     password: str
+    name: str
+    birth: date
+    nationality: str
+    university: str
+    department: str
+    gender: str
+    is_graduated: bool
+
+
+class UserRegister(BaseModel):
+    email: EmailStr
+    password: str
+    name: str
+    birth: date
+    nationality: str
+    university: str
+    department: str
+    gender: str
+    is_graduated: bool
+
+    terms_mandatory: Optional[bool] = True
+    terms_optional: Optional[bool] = False
+    terms_push: Optional[bool] = False
+
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
 
 
 # 유저 업데이트를 위한 스키마
-class UserUpdate(UserBase):
-    email: Optional[EmailStr] = None
+class UserUpdate(BaseModel):
+    name: str
+    birth: date
+    nationality: str
+    university: str
+    department: str
+    gender: str
+    is_graduated: bool
 
 
 # 유저 응답을 위한 스키마
-class UserResponse(BaseModel):
-    id: int
-    email: EmailStr
+class UserResponse(UserBase):
+    password: Optional[str] = None
 
     class Config:
         orm_mode = True
@@ -53,8 +93,11 @@ class ConsentBase(CoreSchema):
 
 
 # 동의 생성을 위한 스키마
-class ConsentCreate(ConsentBase):
-    pass
+class ConsentCreate(BaseModel):
+    terms_mandatory: Optional[bool]
+    terms_optional: Optional[bool] = False
+    terms_push: Optional[bool]
+    user_id: int
 
 
 # 동의 응답을 위한 스키마

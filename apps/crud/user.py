@@ -10,12 +10,13 @@ from passlib.context import CryptContext
 
 from core.config import settings
 from crud.base import CRUDBase
-from models.user import User, EmailCertification
+from models.user import User, EmailCertification, Consent
 from schemas.user import (
     UserCreate,
     UserUpdate,
     EmailCertificationIn,
     EmailCertificationCheck,
+    ConsentCreate,
 )
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -86,6 +87,13 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
     """
     CRUD operations for User model.
     """
+
+    def create_consent(self, db: Session, obj_in: ConsentCreate):
+        db_obj = Consent(**obj_in.dict())
+        db.add(db_obj)
+        db.commit()
+        db.refresh(db_obj)
+        return db_obj
 
     def remove_email_certification(
         self, db: Session, *, db_obj: EmailCertificationCheck
