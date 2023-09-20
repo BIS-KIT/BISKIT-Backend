@@ -74,3 +74,4 @@ pydantic[email]
 httpx
 python-multipart
 jinja2
+boto3
