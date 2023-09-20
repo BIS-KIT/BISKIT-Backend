@@ -95,6 +95,12 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         db.refresh(db_obj)
         return db_obj
 
+    def remove_consent(self, db: Session, user_id: int):
+        obj = db.query(Consent).filter(Consent.user_id == user_id).first()
+        db.delete(obj)
+        db.commit()
+        return obj
+
     def remove_email_certification(
         self, db: Session, *, db_obj: EmailCertificationCheck
     ):

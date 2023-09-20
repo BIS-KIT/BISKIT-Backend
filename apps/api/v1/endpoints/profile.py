@@ -56,6 +56,7 @@ def create_profile(
 
     해당 API는 주어진 사용자 ID에 대한 프로필을 생성합니다.
     사용자 ID가 존재하지 않거나 이미 프로필이 있는 경우에는 오류를 반환합니다.
+    nick_name에 특수문자가 포함된 경우 오류를 반환합니다.
 
     Parameters:
     - profile: Profile 생성을 위한 정보.
@@ -68,6 +69,11 @@ def create_profile(
     user = crud.user.get(db=db, id=user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+
+    if re.search(r"[~!@#$%^&*()_+{}[\]:;<>,.?~]", nick_name):
+        raise HTTPException(
+            status_code=400, detail="Nick_name contains special characters."
+        )
 
     # 사용자에게 이미 프로필이 있는지 확인
     if user.profile:
@@ -92,6 +98,7 @@ def update_profile(
 
     이 API는 주어진 사용자 ID에 대한 프로필 정보를 업데이트합니다.
     프로필이 존재하지 않는 경우 오류를 반환합니다.
+    nick_name에 특수문자가 포함된 경우 오류를 반환합니다.
     프로필 이미지를 업데이트 하는 경우 기존 이미지는 삭제됩니다.
 
     Parameters:
@@ -105,6 +112,11 @@ def update_profile(
     existing_profile = crud.profile.get_by_user_id(db=db, user_id=user_id)
     if not existing_profile:
         raise HTTPException(status_code=404, detail="Profile not found")
+
+    if re.search(r"[~!@#$%^&*()_+{}[\]:;<>,.?~]", nick_name):
+        raise HTTPException(
+            status_code=400, detail="Nick_name contains special characters."
+        )
 
     obj_in = ProfileCreate(nick_name=nick_name, profile_photo=profile_photo)
 
