@@ -14,7 +14,7 @@ class genderEum(str, Enum):
 
 class ProfileBase(CoreSchema):
     nick_name: Optional[str] = None
-    profile_photo: Optional[UploadFile] = None
+    profile_photo: Optional[str] = None
 
 
 # 프로필 생성을 위한 스키마

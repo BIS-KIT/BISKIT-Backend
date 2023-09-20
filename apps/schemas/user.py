@@ -34,7 +34,19 @@ class UserCreate(BaseModel):
     gender: str
     is_graduated: bool
 
-    terms_mandatory: Optional[bool]
+
+class UserRegister(BaseModel):
+    email: EmailStr
+    password: str
+    name: str
+    birth: date
+    nationality: str
+    university: str
+    department: str
+    gender: str
+    is_graduated: bool
+
+    terms_mandatory: Optional[bool] = True
     terms_optional: Optional[bool] = False
     terms_push: Optional[bool] = False
 
@@ -81,8 +93,11 @@ class ConsentBase(CoreSchema):
 
 
 # 동의 생성을 위한 스키마
-class ConsentCreate(ConsentBase):
-    pass
+class ConsentCreate(BaseModel):
+    terms_mandatory: Optional[bool]
+    terms_optional: Optional[bool] = False
+    terms_push: Optional[bool]
+    user_id: int
 
 
 # 동의 응답을 위한 스키마
