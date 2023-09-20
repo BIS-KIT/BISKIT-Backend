@@ -8,7 +8,6 @@ class User(ModelBase):
     password = Column(String)
     name = Column(String)
     birth = Column(Date)
-    nationality = Column(String)
 
     gender = Column(String)
     is_graduated = Column(Boolean, default=False)
@@ -21,12 +20,12 @@ class User(ModelBase):
     verification = relationship("Verification", back_populates="user")
     available_language = relationship("AvailableLanguage", back_populates="user")
     user_university = relationship("UserUniversity", back_populates="user")
-    user_nationality = relationship("UserNaionality", back_populates="user")
+    user_nationality = relationship("UserNationality", back_populates="user")
 
 
 class UserNationality(ModelBase):
-    user_nationality_id = Column(Integer, ForeignKey("nationality.id"))
-    user_nationality = relationship("Nationality", back_populates="user_nationality")
+    nationality_id = Column(Integer, ForeignKey("nationality.id"))
+    nationality = relationship("Nationality", back_populates="user_nationalities")
 
     user_id = Column(Integer, ForeignKey("user.id"))
     user = relationship("User", back_populates="user_nationality")
@@ -36,7 +35,7 @@ class UserUniversity(ModelBase):
     department = Column(String, nullable=True)
 
     user_university_id = Column(Integer, ForeignKey("university.id"))
-    user_university = relationship("University", back_populates="user_university")
+    university = relationship("University", back_populates="user_university")
 
     user_id = Column(Integer, ForeignKey("user.id"))
     user = relationship("User", back_populates="user_university")

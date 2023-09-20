@@ -7,7 +7,7 @@ class Nationality(ModelBase):
     name = Column(String)
     code = Column(String)
 
-    user_nationality = relationship("UserNaionality", back_populates="nationality")
+    user_nationalities = relationship("UserNationality", back_populates="nationality")
 
 
 class Language(ModelBase):
