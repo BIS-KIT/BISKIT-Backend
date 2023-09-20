@@ -9,6 +9,7 @@ from fastapi import (
     Header,
     File,
     UploadFile,
+    Form,
     Path,
 )
 from pydantic.networks import EmailStr
@@ -19,7 +20,13 @@ from database.session import get_db
 from core.config import settings
 from models.user import User
 from models.profile import Profile
-from schemas.profile import ProfileCreate, ProfileResponse, ProfileBase
+from schemas.profile import (
+    ProfileCreate,
+    ProfileResponse,
+    ProfileBase,
+    AvailableLanguageCreate,
+    LanguageLevel,
+)
 
 router = APIRouter()
 
@@ -82,7 +89,6 @@ def create_profile(
         )
     obj_in = ProfileCreate(nick_name=nick_name, profile_photo=profile_photo)
     new_profile = crud.profile.create(db=db, obj_in=obj_in, user_id=user_id)
-    print(new_profile)
     return new_profile
 
 
@@ -206,32 +212,48 @@ async def check_nick_name(nick_name: str, db: Session = Depends(get_db)):
     if exists_nick:
         raise HTTPException(status_code=409, detail="nick_name already used")
 
-    return {"status": "Nick_name is available."} @ router.get("/profile/nick-name")
-
-
-async def check_nick_name(nick_name: str, db: Session = Depends(get_db)):
-    """
-    닉네임 사용 가능 여부 확인 API
-
-    이 API는 주어진 닉네임의 사용 가능 여부를 확인합니다.
-    - 닉네임에 특수문자가 포함된 경우, 에러를 반환합니다.
-    - 닉네임이 이미 사용 중인 경우, 에러를 반환합니다.
-
-    Parameters:
-    - nick_name: 사용 가능 여부를 확인하려는 닉네임.
-
-    Returns:
-    - 닉네임 사용 가능 여부에 대한 메시지.
-    """
-
-    # 닉네임에 특수문자 포함 여부 체크
-    if re.search(r"[~!@#$%^&*()_+{}[\]:;<>,.?~]", nick_name):
-        raise HTTPException(
-            status_code=400, detail="Nick_name contains special characters."
-        )
-
-    exists_nick = crud.profile.get_by_nick_name(db=db, nick_name=nick_name)
-    if exists_nick:
-        raise HTTPException(status_code=409, detail="nick_name already used")
-
     return {"status": "Nick_name is available."}
+
+
+@router.post("/profile/language", response_model=AvailableLanguageCreate)
+async def create_available_language(
+    level: LanguageLevel = Form(...),
+    language_id: int = Form(...),
+    user_id: int = Form(...),
+    db: Session = Depends(get_db),
+):
+    user = crud.user.get(db=db, id=user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    lang = crud.utility.get(db=db, language_id=language_id)
+    if not lang:
+        raise HTTPException(status_code=404, detail="Languag not found")
+
+    obj = AvailableLanguageCreate(
+        level=level.value, language_id=language_id, user_id=user_id
+    )
+    new_ava = crud.profile.create_ava_lan(db=db, obj_in=obj)
+
+    return new_ava
+
+
+@router.get("/profile/random-nickname")
+async def get_random_nickname():
+    async with httpx.AsyncClient() as client:
+        response = await client.get(settings.NICKNAME_API)
+
+        # API 요청이 성공했는지 확인
+        if response.status_code != 200:
+            raise HTTPException(
+                status_code=503,
+                detail="Nickname API service unavailable",
+            )
+
+        data = response.json()
+
+        kr_nick_name = data.get("words")[0]
+        # TODO : random english nickname
+        en_nick_name = data.get("en_nick_name")
+
+    return {"kr_nick_name": kr_nick_name, "en_nick_name": en_nick_name}

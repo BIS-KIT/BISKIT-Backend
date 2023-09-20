@@ -1,6 +1,7 @@
-from models.base import ModelBase
 from sqlalchemy import Column, Integer, String, Boolean, Date, Enum, ForeignKey
 from sqlalchemy.orm import relationship
+
+from models.base import ModelBase
 
 
 class Profile(ModelBase):
@@ -9,3 +10,13 @@ class Profile(ModelBase):
 
     user_id = Column(Integer, ForeignKey("user.id"))
     user = relationship("User", back_populates="profile")
+
+
+class AvailableLanguage(ModelBase):
+    level = Column(String)
+
+    language_id = Column(Integer, ForeignKey("language.id"))
+    language = relationship("Language", back_populates="available_language")
+
+    user_id = Column(Integer, ForeignKey("user.id"))
+    user = relationship("User", back_populates="available_language")
