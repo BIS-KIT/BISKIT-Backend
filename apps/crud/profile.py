@@ -8,8 +8,8 @@ from fastapi import UploadFile
 from log import log_error
 from crud.base import CRUDBase
 from core.config import settings
-from models.profile import Profile
-from schemas.profile import ProfileCreate, ProfileUpdate
+from models.profile import Profile, AvailableLanguage
+from schemas.profile import ProfileCreate, ProfileUpdate, AvailableLanguageCreate
 
 
 def generate_random_string(length=3):
@@ -37,6 +37,19 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
     """
     CRUD operations for User model.
     """
+
+    def create_ava_lan(self, db: Session, obj_in: AvailableLanguageCreate):
+        db_obj = AvailableLanguage(**obj_in.dict())
+        db.add(db_obj)
+        db.commit()
+        db.refresh(db_obj)
+        return db_obj
+
+    def remove_ava_lan(self, db: Session, ava_id: int):
+        obj = db.query(AvailableLanguage).filter(AvailableLanguage.id == ava_id).first()
+        db.delete(obj)
+        db.commit()
+        return obj
 
     def get_by_nick_name(self, db: Session, nick_name: str):
         return db.query(Profile).filter(Profile.nick_name == nick_name).first()

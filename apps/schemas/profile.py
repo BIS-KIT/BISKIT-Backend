@@ -12,6 +12,14 @@ class genderEum(str, Enum):
     FEMALE = "female"
 
 
+class LanguageLevel(Enum):
+    BEGINNER = "초보"
+    BASIC = "기초"
+    INTERMEDIATE = "중급"
+    ADVANCED = "고급"
+    PROFICIENT = "능숙"
+
+
 class ProfileBase(CoreSchema):
     nick_name: Optional[str] = None
     profile_photo: Optional[str] = None
@@ -36,3 +44,15 @@ class ProfileResponse(ProfileBase):
 
 class ProfilePhoto(BaseModel):
     profile_photo: str
+
+
+class AvailableLanguageBase(CoreSchema):
+    level: str
+    language_id: int
+    user_id: int
+
+
+class AvailableLanguageCreate(BaseModel):
+    level: str
+    language_id: int
+    user_id: int
