@@ -1,12 +1,11 @@
 from typing import Any, Dict, Optional, Union
-import os, random, string
+import os, random, string, boto3
 from botocore.exceptions import NoCredentialsError
 
 from sqlalchemy.orm import Session
 from fastapi import UploadFile
 
 from crud.base import CRUDBase
-from core.security import get_aws_client
 from core.config import settings
 from models.profile import Profile
 from schemas.profile import ProfileCreate, ProfileUpdate
@@ -14,6 +13,20 @@ from schemas.profile import ProfileCreate, ProfileUpdate
 
 def generate_random_string(length=3):
     return "".join(random.choices(string.ascii_letters, k=length))
+
+
+def get_aws_client():
+    AWS_ACCESS_KEY_ID = settings.AWS_ACCESS_KEY_ID
+    AWS_SECRET_ACCESS_KEY = settings.AWS_SECRET_ACCESS_KEY
+    AWS_DEFAULT_REGION = settings.AWS_REGION
+
+    client = boto3.client(
+        "s3",
+        aws_access_key_id=AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+        region_name=AWS_DEFAULT_REGION,
+    )
+    return client
 
 
 class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
@@ -43,10 +56,8 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
 
         if obj_in.profile_photo:
             random_str = generate_random_string()
-            file_path = (
-                f"media/profile_photo/{random_str}_{obj_in.profile_photo.filename}"
-            )
-            self.save_upload_file(obj_in.profile_photo, file_path)
+            file_path = f"profile_photo/{random_str}_{obj_in.profile_photo.filename}"
+            s3_url = self.save_upload_file(obj_in.profile_photo, file_path)
             obj_in.profile_photo = file_path  # Update path
 
         db_obj = Profile(**obj_in.dict(), user_id=user_id)
@@ -79,20 +90,22 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
             update_data = obj_in.dict(exclude_unset=True)
 
         # Handle profile photo upload if provided
-        if "profile_photo" in update_data and isinstance(
-            update_data["profile_photo"], UploadFile
-        ):
-            photo = update_data["profile_photo"]
+        if "profile_photo" in update_data:
+            if update_data["profile_photo"]:
+                photo = update_data["profile_photo"]
+                # Delete old photo if exists
+                if db_obj.profile_photo:
+                    self.delete_file_from_s3(db_obj.profile_photo)
 
-            # Delete old photo if exists
-            if db_obj.profile_photo and os.path.exists(db_obj.profile_photo):
-                os.remove(db_obj.profile_photo)
+                random_str = generate_random_string()
+                file_path = f"profile_photo/{random_str}_{photo.filename}"
+                self.save_upload_file(photo, file_path)
+                update_data["profile_photo"] = file_path  # Update path
+            else:
+                del update_data["profile_photo"]
 
-            random_str = generate_random_string()
-            file_path = f"media/profile_photo/{random_str}_{photo.filename}"
-            self.save_upload_file(photo, file_path)
-            update_data["profile_photo"] = file_path  # Update path
-
+        if not update_data["nick_name"]:
+            del update_data["nick_name"]
         return super().update(db, db_obj=db_obj, obj_in=update_data)
 
     def save_upload_file(self, upload_file: UploadFile, destination: str) -> None:
@@ -109,6 +122,19 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
         image_url = f"https://{bucket_name}.s3.{settings.AWS_REGION}.amazonaws.com/{destination}"
 
         return image_url
+
+    def delete_file_from_s3(self, file_url: str) -> None:
+        s3_client = get_aws_client()
+        bucket_name = settings.BUCKET_NAME
+
+        # Assuming file_url follows the format: https://{bucket_name}.s3.{settings.AWS_REGION}.amazonaws.com/{destination}
+        # Extract the S3 object key from the file_url
+        object_key = file_url
+
+        try:
+            s3_client.delete_object(Bucket=bucket_name, Key=object_key)
+        except Exception as e:
+            print(f"Error deleting {file_url} from S3:", e)
 
     def upload_profile_photo(self, db: Session, user_id: int, photo: UploadFile):
         profile = self.get_by_user_id(db, user_id=user_id)

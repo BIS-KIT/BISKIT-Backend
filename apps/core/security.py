@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from typing import Any, Union, Optional, Annotated
-import secrets, boto3
+import secrets
 
 from jose import jwt, JWTError
 from firebase_admin import auth
@@ -21,20 +21,6 @@ from core.config import settings
 
 security = HTTPBasic()
 bearer_security = HTTPBearer()
-
-
-def get_aws_client():
-    AWS_ACCESS_KEY_ID = settings.AWS_ACCESS_KEY_ID
-    AWS_SECRET_ACCESS_KEY = settings.AWS_SECRET_ACCESS_KEY
-    AWS_DEFAULT_REGION = settings.AWS_REGION
-
-    client = boto3.client(
-        "s3",
-        aws_access_key_id=AWS_ACCESS_KEY_ID,
-        aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-        region_name=AWS_DEFAULT_REGION,
-    )
-    return client
 
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
@@ -189,8 +175,8 @@ def get_current_user(
 
 
 def get_admin(credentials: Annotated[HTTPBasicCredentials, Depends(security)]):
-    correct_username = secrets.compare_digest(credentials.username, settings.docs_user)
-    correct_password = secrets.compare_digest(credentials.password, settings.docs_pw)
+    correct_username = secrets.compare_digest(credentials.username, settings.DOCS_USER)
+    correct_password = secrets.compare_digest(credentials.password, settings.DOCS_PW)
     if not (correct_username and correct_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

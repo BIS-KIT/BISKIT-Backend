@@ -46,8 +46,9 @@ def get_profile_by_user_id(
 
 @router.post("/profile/", response_model=ProfileResponse)
 def create_profile(
-    profile: ProfileCreate,
+    nick_name: str,
     user_id: int,
+    profile_photo: UploadFile = None,
     db: Session = Depends(get_db),
 ):
     """
@@ -73,15 +74,17 @@ def create_profile(
         raise HTTPException(
             status_code=409, detail="Profile already exists for the user"
         )
-
-    new_profile = crud.profile.create(db=db, obj_in=profile, user_id=user_id)
+    obj_in = ProfileCreate(nick_name=nick_name, profile_photo=profile_photo)
+    new_profile = crud.profile.create(db=db, obj_in=obj_in, user_id=user_id)
+    print(new_profile)
     return new_profile
 
 
 @router.put("/profile/{user_id}/", response_model=ProfileResponse)
 def update_profile(
     user_id: int,
-    profile: ProfileCreate,
+    nick_name: str = None,
+    profile_photo: UploadFile = None,
     db: Session = Depends(get_db),
 ):
     """
@@ -89,6 +92,7 @@ def update_profile(
 
     이 API는 주어진 사용자 ID에 대한 프로필 정보를 업데이트합니다.
     프로필이 존재하지 않는 경우 오류를 반환합니다.
+    프로필 이미지를 업데이트 하는 경우 기존 이미지는 삭제됩니다.
 
     Parameters:
     - user_id: 업데이트하려는 프로필의 사용자 ID.
@@ -102,9 +106,9 @@ def update_profile(
     if not existing_profile:
         raise HTTPException(status_code=404, detail="Profile not found")
 
-    updated_profile = crud.profile.update(
-        db=db, db_obj=existing_profile, obj_in=profile
-    )
+    obj_in = ProfileCreate(nick_name=nick_name, profile_photo=profile_photo)
+
+    updated_profile = crud.profile.update(db=db, db_obj=existing_profile, obj_in=obj_in)
 
     return updated_profile
 
