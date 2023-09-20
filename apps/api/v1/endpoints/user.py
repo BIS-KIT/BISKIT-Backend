@@ -9,6 +9,7 @@ from jose import jwt, JWTError
 from sqlalchemy.exc import IntegrityError
 
 import crud
+from log import log_error
 from schemas.user import (
     Token,
     UserCreate,
@@ -97,6 +98,9 @@ def register_user(
     - dict: 새로 등록된 사용자의 ID와 이메일.
     """
 
+    new_user = None
+    consent_obj = None
+
     # 데이터베이스에서 이메일로 사용자 확인
     db_user = crud.user.get_by_email(db=db, email=user_in.email)
     if db_user:
@@ -128,7 +132,12 @@ def register_user(
 
         consent_obj = crud.user.create_consent(db=db, obj_in=consent)
     except Exception as e:
-        print(e)
+        if new_user:
+            crud.user.remove(db=db, id=new_user.id)
+        if consent_obj:
+            crud.user.remove_consent(db=db, user_id=new_user.id)
+        log_error(e)
+
     # 토큰 생성
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
@@ -367,6 +376,7 @@ async def certificate_email(
     except IntegrityError:
         raise HTTPException(status_code=409, detail="Email already exists.")
     except Exception as e:
+        log_error(e)
         crud.user.remove_email_certification(db, db_obj=certi)
         return {"result": "fail"}
 

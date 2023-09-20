@@ -2,7 +2,8 @@ import base64, json
 from dotenv import load_dotenv
 from typing import Annotated
 
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, HTTPException, Request
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from starlette.middleware.cors import CORSMiddleware
@@ -12,6 +13,7 @@ from fastapi.openapi.docs import get_swagger_ui_html
 from core.config import settings
 from core.security import get_admin
 from api.v1.router import api_router as v1_router
+from log import logger
 
 
 with open("encoded_key.txt", "r") as file:
@@ -30,6 +32,13 @@ app = FastAPI(
     docs_url=None,
 )
 app.mount("/media", StaticFiles(directory="media"), name="media")
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.error(f"An error occurred: {exc}")
+    return JSONResponse(status_code=500, content={"detail": "Internal Server Error"})
+
 
 app.include_router(v1_router, prefix="/v1")
 

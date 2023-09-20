@@ -5,6 +5,7 @@ from botocore.exceptions import NoCredentialsError
 from sqlalchemy.orm import Session
 from fastapi import UploadFile
 
+from log import log_error
 from crud.base import CRUDBase
 from core.config import settings
 from models.profile import Profile
@@ -19,13 +20,16 @@ def get_aws_client():
     AWS_ACCESS_KEY_ID = settings.AWS_ACCESS_KEY_ID
     AWS_SECRET_ACCESS_KEY = settings.AWS_SECRET_ACCESS_KEY
     AWS_DEFAULT_REGION = settings.AWS_REGION
-
-    client = boto3.client(
-        "s3",
-        aws_access_key_id=AWS_ACCESS_KEY_ID,
-        aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-        region_name=AWS_DEFAULT_REGION,
-    )
+    try:
+        client = boto3.client(
+            "s3",
+            aws_access_key_id=AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+            region_name=AWS_DEFAULT_REGION,
+        )
+    except Exception as e:
+        client = None
+        log_error(e)
     return client
 
 
