@@ -4,7 +4,7 @@ from models.base import ModelBase
 
 
 class CoreSchema(BaseModel):
-    id: Optional[Any]
+    id: Optional[int] = None
 
     def dict(
         self,

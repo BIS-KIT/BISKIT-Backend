@@ -1,8 +1,13 @@
-from schemas.base import CoreSchema
 from datetime import date
 from pydantic import EmailStr, BaseModel
 from enum import Enum
-from typing import Optional
+from typing import Optional, List
+
+from schemas.base import CoreSchema
+from schemas.profile import (
+    ProfileResponse,
+    AvailableLanguageBase,
+)
 
 
 class UserBase(CoreSchema):
@@ -10,9 +15,6 @@ class UserBase(CoreSchema):
     password: str
     name: str
     birth: date
-    nationality: str
-    university: str
-    department: str
     gender: str
     is_graduated: bool
 
@@ -67,14 +69,6 @@ class UserUpdate(BaseModel):
     is_graduated: bool
 
 
-# 유저 응답을 위한 스키마
-class UserResponse(UserBase):
-    password: Optional[str] = None
-
-    class Config:
-        orm_mode = True
-
-
 class PasswordChange(CoreSchema):
     old_password: str
     new_password: str
@@ -86,10 +80,10 @@ class PasswordUpdate(BaseModel):
 
 
 class ConsentBase(CoreSchema):
-    terms_mandatory: Optional[bool]
+    terms_mandatory: Optional[bool] = False
     terms_optional: Optional[bool] = False
-    terms_push: Optional[bool]
-    user_id: int
+    terms_push: Optional[bool] = False
+    user_id: Optional[int] = False
 
 
 # 동의 생성을 위한 스키마
@@ -102,7 +96,7 @@ class ConsentCreate(BaseModel):
 
 # 동의 응답을 위한 스키마
 class ConsentResponse(ConsentBase):
-    id: int
+    id: Optional[int] = None
 
     class Config:
         orm_mode = True
@@ -116,9 +110,9 @@ class VerificationStatus(str, Enum):
 
 
 class StudentVerificationSchema(CoreSchema):
-    user_id: int
-    student_card_image: str
-    verification_status: VerificationStatus
+    user_id: Optional[int] = None
+    student_card_image: Optional[str] = None
+    verification_status: VerificationStatus = VerificationStatus.UNVERIFIED.value
 
 
 class FirebaseAuthBase(BaseModel):
@@ -164,3 +158,32 @@ class EmailCertificationIn(BaseModel):
 class EmailCertificationCheck(BaseModel):
     email: str
     certification: str
+
+
+class UserUniversityBase(CoreSchema):
+    department: Optional[str] = None
+    user_university_id: Optional[int] = None
+    user_id: Optional[int] = None
+
+
+class UserNationalityBase(CoreSchema):
+    nationality_id: Optional[int] = None
+    user_id: Optional[int] = None
+
+
+class UserResponse(BaseModel):
+    email: str
+    password: str
+    name: str
+    birth: date
+    gender: str
+    is_graduated: bool
+    is_active: bool
+    is_admin: bool
+
+    profile: Optional[ProfileResponse] = None
+    consents: Optional[ConsentResponse] = None
+    verification: Optional[StudentVerificationSchema] = None
+    available_language: Optional[List[AvailableLanguageBase]] = None
+    user_university: Optional[UserUniversityBase] = None
+    user_nationality: Optional[List[UserNationalityBase]] = None

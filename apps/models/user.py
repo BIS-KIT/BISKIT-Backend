@@ -60,14 +60,14 @@ class Verification(ModelBase):
     student_card_image = Column(String)
     verification_status = Column(String, default="pending")
 
-    user_id = Column(Integer, ForeignKey("user.id"), primary_key=True)
+    user_id = Column(Integer, ForeignKey("user.id"))
     user = relationship("User", back_populates="verification")
 
 
 class FirebaseAuth(ModelBase):
-    provider_id = Column(String, nullable=True)  # 예: 'google.com', 'kakao.com'
+    provider_id = Column(String)  # 예: 'google.com', 'kakao.com'
     uid = Column(String, unique=True, index=True)  # Firebase에서 제공하는 고유 사용자 ID
-    firebase_token = Column(String, nullable=True)  # Firebase 인증 토큰 (주기적으로 갱신됨)
+    firebase_token = Column(String)  # Firebase 인증 토큰 (주기적으로 갱신됨)
 
-    user_id = Column(Integer, ForeignKey("user.id"), primary_key=True)
+    user_id = Column(Integer, ForeignKey("user.id"))
     user = relationship("User", backref="firebase_auth")
