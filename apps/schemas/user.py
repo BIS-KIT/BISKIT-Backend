@@ -1,13 +1,27 @@
 from datetime import date
 from pydantic import EmailStr, BaseModel
 from enum import Enum
-from typing import Optional, List
+from typing import Optional, List, Union
 
 from schemas.base import CoreSchema
 from schemas.profile import (
     ProfileResponse,
     AvailableLanguageBase,
 )
+
+
+class EducationStatus(str, Enum):
+    UNDERGRADUATE = "학부"
+    GRADUATE = "대학원"
+    EXCHANGE_STUDENT = "교환학생"
+    LANGUAGE_INSTITUTE = "어학당"
+
+
+class VerificationStatus(str, Enum):
+    PENDING = "pending"
+    VERIFIED = "verified"
+    REJECTED = "rejected"
+    UNVERIFIED = "unverified"
 
 
 class UserBase(CoreSchema):
@@ -30,11 +44,7 @@ class UserCreate(BaseModel):
     password: str
     name: str
     birth: date
-    nationality: str
-    university: str
-    department: str
     gender: str
-    is_graduated: bool
 
 
 class UserRegister(BaseModel):
@@ -42,11 +52,14 @@ class UserRegister(BaseModel):
     password: str
     name: str
     birth: date
-    nationality: str
-    university: str
-    department: str
     gender: str
-    is_graduated: bool
+
+    nationality_id: List[int] = None
+
+    university_id: Optional[int] = None
+    department: Optional[str] = None
+    education_status: Optional[str] = None
+    is_graduated: Optional[bool] = False
 
     terms_mandatory: Optional[bool] = True
     terms_optional: Optional[bool] = False
@@ -80,18 +93,15 @@ class PasswordUpdate(BaseModel):
 
 
 class ConsentBase(CoreSchema):
-    terms_mandatory: Optional[bool] = False
+    terms_mandatory: Optional[bool] = True
     terms_optional: Optional[bool] = False
     terms_push: Optional[bool] = False
     user_id: Optional[int] = False
 
 
 # 동의 생성을 위한 스키마
-class ConsentCreate(BaseModel):
-    terms_mandatory: Optional[bool]
-    terms_optional: Optional[bool] = False
-    terms_push: Optional[bool]
-    user_id: int
+class ConsentCreate(ConsentBase):
+    pass
 
 
 # 동의 응답을 위한 스키마
@@ -100,13 +110,6 @@ class ConsentResponse(ConsentBase):
 
     class Config:
         orm_mode = True
-
-
-class VerificationStatus(str, Enum):
-    PENDING = "pending"
-    VERIFIED = "verified"
-    REJECTED = "rejected"
-    UNVERIFIED = "unverified"
 
 
 class StudentVerificationSchema(CoreSchema):
@@ -162,8 +165,15 @@ class EmailCertificationCheck(BaseModel):
 
 class UserUniversityBase(CoreSchema):
     department: Optional[str] = None
-    user_university_id: Optional[int] = None
+    education_status: Optional[str] = None
+    is_graduated: Optional[bool] = False
+
+    university_id: Optional[int] = None
     user_id: Optional[int] = None
+
+
+class UserUniversityCreate(UserUniversityBase):
+    pass
 
 
 class UserNationalityBase(CoreSchema):
@@ -171,7 +181,12 @@ class UserNationalityBase(CoreSchema):
     user_id: Optional[int] = None
 
 
+class UserNationalityCreate(UserNationalityBase):
+    pass
+
+
 class UserResponse(BaseModel):
+    id: int
     email: str
     password: str
     name: str

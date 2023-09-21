@@ -10,7 +10,6 @@ class User(ModelBase):
     birth = Column(Date)
 
     gender = Column(String)
-    is_graduated = Column(Boolean, default=False)
 
     is_active = Column(Boolean, default=True)
     is_admin = Column(Boolean, default=False)
@@ -33,6 +32,8 @@ class UserNationality(ModelBase):
 
 class UserUniversity(ModelBase):
     department = Column(String, nullable=True)
+    education_status = Column(String, nullable=True)
+    is_graduated = Column(Boolean, default=False)
 
     user_university_id = Column(Integer, ForeignKey("university.id"))
     university = relationship("University", back_populates="user_university")

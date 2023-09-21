@@ -22,6 +22,8 @@ from schemas.user import (
     UserLogin,
     ConsentCreate,
     UserRegister,
+    UserUniversityCreate,
+    UserNationalityCreate
 )
 from models.user import User
 from core.security import (
@@ -57,6 +59,26 @@ def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return users
 
 
+@router.get("/users/{user_id}", response_model=UserResponse)
+def read_user(user_id: int, db: Session = Depends(get_db)):
+    """
+    사용자 목록을 반환합니다.
+
+    **파라미터**
+
+    * `skip`: 건너뛸 항목의 수
+    * `limit`: 반환할 최대 항목 수
+
+    **반환**
+
+    * 사용자 목록
+    """
+    users = crud.user.get(db=db, id=user_id)
+    if users is None:
+        raise HTTPException(status_code=404, detail="Users not found")
+    return users
+
+
 @router.delete("/user/{user_id}", response_model=UserResponse)
 def delete_user(user_id: int, db: Session = Depends(get_db)):
     """
@@ -82,7 +104,7 @@ async def read_users_me(current_user: User = Depends(get_current_user)):
     return current_user
 
 
-@router.post("/register/", response_model=dict)
+@router.post("/register/", response_model=UserResponse)
 def register_user(
     user_in: UserRegister,
     db: Session = Depends(get_db),
@@ -114,11 +136,7 @@ def register_user(
             password=hashed_password,
             name=user_in.name,
             birth=user_in.birth,
-            nationality=user_in.nationality,
-            university=user_in.university,
-            department=user_in.department,
             gender=user_in.gender,
-            is_graduated=user_in.is_graduated,
         )
 
         new_user = crud.user.create(db=db, obj_in=obj_in)
@@ -130,6 +148,10 @@ def register_user(
             user_id=new_user.id,
         )
 
+        user_university = UserUniversityCreate(department=user_in.department,education_status=user_in.education_status,is_graduated=user_in.is_graduated,university_id=user_in.university_id,user_id=new_user.id)
+        user_nationally = UserNationalityCreate(nationality_id=user_in.nationality_id, user_id=new_user.id)
+
+        # TODO : Need To Create CRUD moduel for university, nationally
         consent_obj = crud.user.create_consent(db=db, obj_in=consent)
     except Exception as e:
         if new_user:
@@ -393,3 +415,5 @@ async def certificate_check(
         db.commit()
         return {"result": "success", "email": cert_check.email}
     return {"result": "fail"}
+
+@router.post("/user/{user_id}/university",response_model=UserUniversityBase)
