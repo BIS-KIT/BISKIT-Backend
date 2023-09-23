@@ -14,7 +14,9 @@ router = APIRouter()
 
 
 @router.get("/languages", response_model=List[LanguageBase])
-def get_languages(os_language: OsLanguage = None, search: str = None, db: Session = Depends(get_db)):
+def get_languages(
+    os_language: OsLanguage = None, search: str = None, db: Session = Depends(get_db)
+):
     """
     데이터베이스에서 언어 목록을 검색하여 반환합니다.
 
@@ -24,14 +26,14 @@ def get_languages(os_language: OsLanguage = None, search: str = None, db: Sessio
     - db (Session): FastAPI의 의존성 주입을 통해 제공되는 데이터베이스 세션입니다.
 
     반환값:
-    - List[LanguageBase]: 지정된 조건에 맞는 언어 객체의 목록입니다. 
+    - List[LanguageBase]: 지정된 조건에 맞는 언어 객체의 목록입니다.
     """
 
     if search:
         query = db.query(Language).filter(
             or_(
                 Language.en_name.ilike(f"%{search}%"),
-                Language.kr_name.ilike(f"%{search}%")
+                Language.kr_name.ilike(f"%{search}%"),
             )
         )
     else:
@@ -51,13 +53,16 @@ def get_languages(os_language: OsLanguage = None, search: str = None, db: Sessio
 
     return languages
 
+
 @router.get("/universty", response_model=List[UniversityBase])
-def get_universities(os_language: OsLanguage = None, search: str = None, db: Session = Depends(get_db)):
+def get_universities(
+    os_language: OsLanguage = None, search: str = None, db: Session = Depends(get_db)
+):
     if search:
         query = db.query(University).filter(
             or_(
                 University.en_name.ilike(f"%{search}%"),
-                University.kr_name.ilike(f"%{search}%")
+                University.kr_name.ilike(f"%{search}%"),
             )
         )
     else:
@@ -67,16 +72,21 @@ def get_universities(os_language: OsLanguage = None, search: str = None, db: Ses
 
 
 @router.get("/nationality", response_model=List[NationalityBase])
-def get_Countries(os_language: OsLanguage = None, search: str = None, db: Session = Depends(get_db)):
-
+def get_Countries(
+    os_language: OsLanguage = None, search: str = None, db: Session = Depends(get_db)
+):
     if search:
         query = db.query(Nationality).filter(
             or_(
                 Nationality.en_name.ilike(f"%{search}%"),
-                Nationality.kr_name.ilike(f"%{search}%")
+                Nationality.kr_name.ilike(f"%{search}%"),
             )
         )
     else:
         query = db.query(Nationality)
+
+    if os_language and os_language.value == OsLanguage.EN:
+        query = query.order_by(Nationality.en_name)
+
     Countries = query.all()
     return Countries
