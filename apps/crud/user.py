@@ -10,13 +10,21 @@ from passlib.context import CryptContext
 
 from core.config import settings
 from crud.base import CRUDBase
-from models.user import User, EmailCertification, Consent
+from models.user import (
+    User,
+    EmailCertification,
+    Consent,
+    UserNationality,
+    UserUniversity,
+)
 from schemas.user import (
     UserCreate,
     UserUpdate,
     EmailCertificationIn,
     EmailCertificationCheck,
     ConsentCreate,
+    UserUniversityCreate,
+    UserNationalityCreate,
 )
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -95,11 +103,40 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         db.refresh(db_obj)
         return db_obj
 
-    def remove_consent(self, db: Session, user_id: int):
-        obj = db.query(Consent).filter(Consent.user_id == user_id).first()
-        db.delete(obj)
+    def remove_consent(self, db: Session, id: int):
+        obj = db.query(Consent).filter(Consent.id == id).first()
+        if obj:
+            db.delete(obj)
+            db.commit()
+            return obj
+
+    def create_university(self, db: Session, obj_in: UserUniversityCreate):
+        db_obj = UserUniversity(**obj_in.dict())
+        db.add(db_obj)
         db.commit()
-        return obj
+        db.refresh(db_obj)
+        return db_obj
+
+    def remove_university(self, db: Session, id: int):
+        obj = db.query(UserUniversity).filter(UserUniversity.id == id).first()
+        if obj:
+            db.delete(obj)
+            db.commit()
+            return obj
+
+    def create_nationally(self, db: Session, obj_in: UserNationalityCreate):
+        db_obj = UserNationality(**obj_in.dict())
+        db.add(db_obj)
+        db.commit()
+        db.refresh(db_obj)
+        return db_obj
+
+    def remove_nationally(self, db: Session, id: int):
+        obj = db.query(UserNationality).filter(UserNationality.id == id).first()
+        if obj:
+            db.delete(obj)
+            db.commit()
+            return obj
 
     def remove_email_certification(
         self, db: Session, *, db_obj: EmailCertificationCheck
