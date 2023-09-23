@@ -5,3 +5,32 @@
 2023-09-20 18:18:16,638 - biskit - ERROR - An error occurred: Mapper 'Mapper[UserNationality(usernationality)]' has no property 'nationality'.  If this property was indicated from other mappers or configure events, ensure registry.configure() has been called.
 2023-09-20 18:22:08,215 - biskit - ERROR - An error occurred: Mapper 'Mapper[UserNationality(usernationality)]' has no property 'nationality'.  If this property was indicated from other mappers or configure events, ensure registry.configure() has been called.
 2023-09-20 18:23:19,079 - biskit - ERROR - An error occurred: Mapper 'Mapper[UserUniversity(useruniversity)]' has no property 'university'.  If this property was indicated from other mappers or configure events, ensure registry.configure() has been called.
+2023-09-21 08:02:20,865 - biskit - ERROR - An error occurred: 3 validation errors:
+  {'type': 'missing', 'loc': ('response', 0, 'nationality'), 'msg': 'Field required', 'input': <models.user.User object at 0x7ff1c7cee230>, 'url': 'https://errors.pydantic.dev/2.1/v/missing'}
+  {'type': 'missing', 'loc': ('response', 0, 'university'), 'msg': 'Field required', 'input': <models.user.User object at 0x7ff1c7cee230>, 'url': 'https://errors.pydantic.dev/2.1/v/missing'}
+  {'type': 'missing', 'loc': ('response', 0, 'department'), 'msg': 'Field required', 'input': <models.user.User object at 0x7ff1c7cee230>, 'url': 'https://errors.pydantic.dev/2.1/v/missing'}
+
+2023-09-21 08:03:32,908 - biskit - ERROR - An error occurred: 3 validation errors:
+  {'type': 'missing', 'loc': ('response', 0, 'nationality'), 'msg': 'Field required', 'input': <models.user.User object at 0x7ff1c7cef7f0>, 'url': 'https://errors.pydantic.dev/2.1/v/missing'}
+  {'type': 'missing', 'loc': ('response', 0, 'university'), 'msg': 'Field required', 'input': <models.user.User object at 0x7ff1c7cef7f0>, 'url': 'https://errors.pydantic.dev/2.1/v/missing'}
+  {'type': 'missing', 'loc': ('response', 0, 'department'), 'msg': 'Field required', 'input': <models.user.User object at 0x7ff1c7cef7f0>, 'url': 'https://errors.pydantic.dev/2.1/v/missing'}
+
+2023-09-21 14:01:36,658 - biskit - ERROR - An error occurred: 3 validation errors:
+  {'type': 'missing', 'loc': ('response', 0, 'nationality'), 'msg': 'Field required', 'input': <models.user.User object at 0x7ff1c7cf5ed0>, 'url': 'https://errors.pydantic.dev/2.1/v/missing'}
+  {'type': 'missing', 'loc': ('response', 0, 'university'), 'msg': 'Field required', 'input': <models.user.User object at 0x7ff1c7cf5ed0>, 'url': 'https://errors.pydantic.dev/2.1/v/missing'}
+  {'type': 'missing', 'loc': ('response', 0, 'department'), 'msg': 'Field required', 'input': <models.user.User object at 0x7ff1c7cf5ed0>, 'url': 'https://errors.pydantic.dev/2.1/v/missing'}
+
+2023-09-23 13:00:01,013 - biskit - ERROR - An error occurred: Mapper 'Mapper[Language(language)]' has no property 'available_language'.  If this property was indicated from other mappers or configure events, ensure registry.configure() has been called.
+2023-09-23 13:00:02,055 - biskit - ERROR - An error occurred: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[AvailableLanguage(availablelanguage)]'. Original exception was: Mapper 'Mapper[Language(language)]' has no property 'available_language'.  If this property was indicated from other mappers or configure events, ensure registry.configure() has been called.
+2023-09-23 13:50:32,649 - biskit - ERROR - An error occurred: 'NoneType' object has no attribute 'value'
+2023-09-23 13:51:05,113 - biskit - ERROR - An error occurred: 'list' object has no attribute 'order_by'
+2023-09-23 13:52:39,364 - biskit - ERROR - An error occurred: name 'asc' is not defined
+2023-09-23 13:52:40,104 - biskit - ERROR - An error occurred: name 'asc' is not defined
+2023-09-23 13:52:40,523 - biskit - ERROR - An error occurred: name 'asc' is not defined
+2023-09-23 13:52:40,633 - biskit - ERROR - An error occurred: name 'asc' is not defined
+2023-09-23 13:53:09,985 - biskit - ERROR - An error occurred: name 'asc' is not defined
+2023-09-23 13:53:10,773 - biskit - ERROR - An error occurred: name 'asc' is not defined
+2023-09-23 13:53:10,884 - biskit - ERROR - An error occurred: name 'asc' is not defined
+2023-09-23 13:53:11,084 - biskit - ERROR - An error occurred: name 'asc' is not defined
+2023-09-23 13:53:11,213 - biskit - ERROR - An error occurred: name 'asc' is not defined
+2023-09-23 14:12:02,696 - biskit - ERROR - An error occurred: all() takes exactly one argument (0 given)
