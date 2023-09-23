@@ -36,13 +36,6 @@ class ProfileUpdate(ProfileCreate):
     pass
 
 
-class ProfileResponse(ProfileBase):
-    id: int = None
-
-    class Config:
-        orm_mode = True
-
-
 class ProfilePhoto(BaseModel):
     profile_photo: str
 
@@ -50,27 +43,71 @@ class ProfilePhoto(BaseModel):
 class AvailableLanguageBase(CoreSchema):
     level: Optional[str] = None
     language: Optional[LanguageBase] = None
-    user_id: Optional[int] = None
+    profile_id: Optional[int] = None
 
 
 class AvailableLanguageCreate(BaseModel):
     level: str
     language_id: int
-    user_id: int
+    profile_id: int
 
 
-class LanguageLevel(BaseModel):
-    language_id: str
-    level: str
+class LanguageLevelSchema(CoreSchema):
+    language_id: Optional[int] = None
+    level: Optional[str] = None
+
+    class Config:
+        orm_mode = True
 
 
-class Introduction(BaseModel):
-    keyword: str
-    introduction: str
+class IntroductionBaseSchema(CoreSchema):
+    keyword: Optional[str] = None
+    context: Optional[str] = None
+
+    class Config:
+        orm_mode = True
+
+
+class IntroductionCreate(BaseModel):
+    keyword: Optional[str] = None
+    context: Optional[str] = None
+    profile_id: int
+
+
+class ProfileCreateLanguage(BaseModel):
+    level: Optional[str]
+    language_id: Optional[int]
+
+    class Config:
+        orm_mode = True
+
+
+class IntroductCreateLanguage(BaseModel):
+    keyword: Optional[str] = None
+    context: Optional[str] = None
+
+    class Config:
+        orm_mode = True
 
 
 class CreateProfileSchema(BaseModel):
     nick_name: str
     user_id: int
-    languages: List[LanguageLevel]
-    introduction: List[Introduction]
+    profile_photo: Optional[UploadFile] = None
+    languages: List[ProfileCreateLanguage]
+    introduction: List[IntroductCreateLanguage]
+
+    class Config:
+        orm_mode = True
+
+
+class ProfileResponse(BaseModel):
+    id: int = None
+    user_id: int
+    nick_name: Optional[str] = None
+    profile_photo: Optional[str] = None
+    available_languages: Optional[List[LanguageLevelSchema]]
+    introductions: Optional[List[IntroductionBaseSchema]]
+
+    class Config:
+        orm_mode = True

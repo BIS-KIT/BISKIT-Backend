@@ -207,7 +207,7 @@ class UserResponse(BaseModel):
     is_active: bool
     is_admin: bool
 
-    profile: Optional[List[ProfileResponse]] = None
+    profile: Optional[ProfileResponse] = None
     consents: Optional[List[ConsentResponse]] = None
     verification: Optional[List[StudentVerificationSchema]] = None
     user_university: Optional[List[UserUniversityBase]] = None

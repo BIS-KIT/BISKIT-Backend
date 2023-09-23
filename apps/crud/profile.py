@@ -8,8 +8,13 @@ from fastapi import UploadFile
 from log import log_error
 from crud.base import CRUDBase
 from core.config import settings
-from models.profile import Profile, AvailableLanguage
-from schemas.profile import ProfileCreate, ProfileUpdate, AvailableLanguageCreate
+from models.profile import Profile, AvailableLanguage, Introduction
+from schemas.profile import (
+    ProfileCreate,
+    ProfileUpdate,
+    AvailableLanguageCreate,
+    IntroductionCreate,
+)
 
 
 def generate_random_string(length=3):
@@ -45,9 +50,28 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
         db.refresh(db_obj)
         return db_obj
 
-    def remove_ava_lan(self, db: Session, ava_id: int):
-        obj = db.query(AvailableLanguage).filter(AvailableLanguage.id == ava_id).first()
-        db.delete(obj)
+    def remove_ava_lan(self, db: Session, profile_id: int):
+        obj = (
+            db.query(AvailableLanguage)
+            .filter(AvailableLanguage.profile_id == profile_id)
+            .delete()
+        )
+        db.commit()
+        return obj
+
+    def create_introduction(self, db: Session, obj_in: IntroductionCreate):
+        db_obj = Introduction(**obj_in.dict())
+        db.add(db_obj)
+        db.commit()
+        db.refresh(db_obj)
+        return db_obj
+
+    def remove_introduction(self, db: Session, profile_id: int):
+        obj = (
+            db.query(Introduction)
+            .filter(Introduction.profile_id == profile_id)
+            .delete()
+        )
         db.commit()
         return obj
 

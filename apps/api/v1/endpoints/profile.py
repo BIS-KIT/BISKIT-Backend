@@ -13,7 +13,7 @@ from fastapi import (
     Path,
 )
 from pydantic.networks import EmailStr
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 import crud
 from database.session import get_db
@@ -27,6 +27,7 @@ from schemas.profile import (
     AvailableLanguageCreate,
     LanguageLevel,
     CreateProfileSchema,
+    IntroductionCreate,
 )
 from log import log_error
 
@@ -56,7 +57,7 @@ def get_profile_by_user_id(
 @router.post("/profile/", response_model=ProfileResponse)
 def create_profile(
     profile: CreateProfileSchema,
-    profile_photo: UploadFile = None,
+    # profile_photo: UploadFile = None,
     db: Session = Depends(get_db),
 ):
     """
@@ -74,6 +75,9 @@ def create_profile(
     - 생성된 프로필 정보.
     """
     new_profile = None
+    user_languages = []
+    user_introduction = []
+
     user = crud.user.get(db=db, id=profile.user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -96,33 +100,55 @@ def create_profile(
         raise HTTPException(status_code=400, detail="Need Available Language")
 
     try:
-        obj_in = ProfileCreate(nick_name=profile.nick_name, profile_photo=profile_photo)
+        obj_in = ProfileCreate(
+            nick_name=profile.nick_name, profile_photo=profile.profile_photo
+        )
         new_profile = crud.profile.create(db=db, obj_in=obj_in, user_id=profile.user_id)
-
-        for lang_level in profile.languages:
-            available_language = AvailableLanguage(
-                level=lang_level.level,
-                language_id=int(lang_level.language_id),
-                user_id=profile.user_id,
+        print(123123, new_profile.id)
+        user_languages = profile.languages
+        for lang in user_languages:
+            available_language = AvailableLanguageCreate(
+                level=lang.level,
+                language_id=int(lang.language_id),
+                profile_id=new_profile.id,
             )
-            db.add(available_language)
+            available_language_obj = crud.profile.create_ava_lan(
+                db=db, obj_in=available_language
+            )
 
         # introduction을 Introduction로 변환 및 추가
-        for intro in profile.introduction:
-            introduction_model = Introduction(
+        user_introduction = profile.introduction
+        for intro in user_introduction:
+            introduction = IntroductionCreate(
                 keyword=intro.keyword,
-                context=intro.introduction,
-                user_id=profile.user_id,
+                context=intro.context,
+                profile_id=new_profile.id,
             )
-            db.add(introduction_model)
-        db.commit()
+            introduction_obj = crud.profile.create_introduction(
+                db=db, obj_in=introduction
+            )
 
     except Exception as e:
         if new_profile:
             crud.profile.remove(db=db, id=new_profile.id)
-        db.rollback()
-        log_error(e)
+        if user_languages:
+            crud.profile.remove_ava_lan(db=db, profile_id=new_profile.id)
+        if user_introduction:
+            crud.profile.remove_introduction(db=db, profile_id=new_profile.id)
 
+        print(e)
+        log_error(e)
+        raise HTTPException(status_code=500, detail=f"error about : {e}")
+
+    return_profile = (
+        db.query(Profile)
+        .options(
+            joinedload(Profile.available_languages), joinedload(Profile.introductions)
+        )
+        .filter_by(id=new_profile.id)
+        .first()
+    )
+    print(676767, return_profile.to_dict())
     return new_profile
 
 
