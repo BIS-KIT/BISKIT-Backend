@@ -54,7 +54,7 @@ class UserRegister(BaseModel):
     birth: date
     gender: str
 
-    nationality_id: List[int] = None
+    nationality_ids: List[int] = None
 
     university_id: Optional[int] = None
     department: Optional[str] = None
@@ -192,7 +192,6 @@ class UserResponse(BaseModel):
     name: str
     birth: date
     gender: str
-    is_graduated: bool
     is_active: bool
     is_admin: bool
 

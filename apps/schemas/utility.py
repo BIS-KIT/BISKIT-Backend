@@ -5,13 +5,13 @@ from typing import Optional
 
 
 class LanguageBase(CoreSchema):
-    name: str
+    name: Optional[str]
 
 
 class UniversityBase(CoreSchema):
-    name: str
+    name: Optional[str]
 
 
 class NationalityBase(CoreSchema):
-    name: str
-    code: str
+    name: Optional[str]
+    code: Optional[str]

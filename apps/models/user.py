@@ -35,7 +35,7 @@ class UserUniversity(ModelBase):
     education_status = Column(String, nullable=True)
     is_graduated = Column(Boolean, default=False)
 
-    user_university_id = Column(Integer, ForeignKey("university.id"))
+    university_id = Column(Integer, ForeignKey("university.id"))
     university = relationship("University", back_populates="user_university")
 
     user_id = Column(Integer, ForeignKey("user.id"))
