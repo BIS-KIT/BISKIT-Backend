@@ -8,6 +8,7 @@ from schemas.profile import (
     ProfileResponse,
     AvailableLanguageBase,
 )
+from schemas.utility import UniversityBase, NationalityBase
 
 
 class EducationStatus(str, Enum):
@@ -171,7 +172,7 @@ class UserUniversityBase(CoreSchema):
     education_status: Optional[str] = None
     is_graduated: Optional[bool] = False
 
-    university_id: Optional[int] = None
+    university: Optional[UniversityBase] = None
     user_id: Optional[int] = None
 
     class Config:
@@ -183,7 +184,7 @@ class UserUniversityCreate(UserUniversityBase):
 
 
 class UserNationalityBase(CoreSchema):
-    nationality_id: Optional[int] = None
+    nationality: Optional[NationalityBase] = None
     user_id: Optional[int] = None
 
 

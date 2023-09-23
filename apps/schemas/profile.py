@@ -5,6 +5,7 @@ from typing import Optional
 from fastapi import UploadFile
 
 from schemas.base import CoreSchema
+from schemas.utility import LanguageBase
 
 
 class genderEum(str, Enum):
@@ -48,7 +49,7 @@ class ProfilePhoto(BaseModel):
 
 class AvailableLanguageBase(CoreSchema):
     level: Optional[str] = None
-    language_id: Optional[int] = None
+    language: Optional[LanguageBase] = None
     user_id: Optional[int] = None
 
 
