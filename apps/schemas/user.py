@@ -1,8 +1,27 @@
-from schemas.base import CoreSchema
 from datetime import date
 from pydantic import EmailStr, BaseModel
 from enum import Enum
-from typing import Optional
+from typing import Optional, List, Union
+
+from schemas.base import CoreSchema
+from schemas.profile import (
+    ProfileResponse,
+    AvailableLanguageBase,
+)
+
+
+class EducationStatus(str, Enum):
+    UNDERGRADUATE = "학부"
+    GRADUATE = "대학원"
+    EXCHANGE_STUDENT = "교환학생"
+    LANGUAGE_INSTITUTE = "어학당"
+
+
+class VerificationStatus(str, Enum):
+    PENDING = "pending"
+    VERIFIED = "verified"
+    REJECTED = "rejected"
+    UNVERIFIED = "unverified"
 
 
 class UserBase(CoreSchema):
@@ -10,9 +29,6 @@ class UserBase(CoreSchema):
     password: str
     name: str
     birth: date
-    nationality: str
-    university: str
-    department: str
     gender: str
     is_graduated: bool
 
@@ -28,11 +44,7 @@ class UserCreate(BaseModel):
     password: str
     name: str
     birth: date
-    nationality: str
-    university: str
-    department: str
     gender: str
-    is_graduated: bool
 
 
 class UserRegister(BaseModel):
@@ -40,11 +52,14 @@ class UserRegister(BaseModel):
     password: str
     name: str
     birth: date
-    nationality: str
-    university: str
-    department: str
     gender: str
-    is_graduated: bool
+
+    nationality_ids: List[int] = None
+
+    university_id: Optional[int] = None
+    department: Optional[str] = None
+    education_status: Optional[str] = None
+    is_graduated: Optional[bool] = False
 
     terms_mandatory: Optional[bool] = True
     terms_optional: Optional[bool] = False
@@ -67,14 +82,6 @@ class UserUpdate(BaseModel):
     is_graduated: bool
 
 
-# 유저 응답을 위한 스키마
-class UserResponse(UserBase):
-    password: Optional[str] = None
-
-    class Config:
-        orm_mode = True
-
-
 class PasswordChange(CoreSchema):
     old_password: str
     new_password: str
@@ -86,39 +93,29 @@ class PasswordUpdate(BaseModel):
 
 
 class ConsentBase(CoreSchema):
-    terms_mandatory: Optional[bool]
+    terms_mandatory: Optional[bool] = True
     terms_optional: Optional[bool] = False
-    terms_push: Optional[bool]
-    user_id: int
+    terms_push: Optional[bool] = False
+    user_id: Optional[int] = False
 
 
 # 동의 생성을 위한 스키마
-class ConsentCreate(BaseModel):
-    terms_mandatory: Optional[bool]
-    terms_optional: Optional[bool] = False
-    terms_push: Optional[bool]
-    user_id: int
+class ConsentCreate(ConsentBase):
+    pass
 
 
 # 동의 응답을 위한 스키마
 class ConsentResponse(ConsentBase):
-    id: int
+    id: Optional[int] = None
 
     class Config:
         orm_mode = True
 
 
-class VerificationStatus(str, Enum):
-    PENDING = "pending"
-    VERIFIED = "verified"
-    REJECTED = "rejected"
-    UNVERIFIED = "unverified"
-
-
 class StudentVerificationSchema(CoreSchema):
-    user_id: int
-    student_card_image: str
-    verification_status: VerificationStatus
+    user_id: Optional[int] = None
+    student_card_image: Optional[str] = None
+    verification_status: VerificationStatus = VerificationStatus.UNVERIFIED.value
 
 
 class FirebaseAuthBase(BaseModel):
@@ -164,3 +161,43 @@ class EmailCertificationIn(BaseModel):
 class EmailCertificationCheck(BaseModel):
     email: str
     certification: str
+
+
+class UserUniversityBase(CoreSchema):
+    department: Optional[str] = None
+    education_status: Optional[str] = None
+    is_graduated: Optional[bool] = False
+
+    university_id: Optional[int] = None
+    user_id: Optional[int] = None
+
+
+class UserUniversityCreate(UserUniversityBase):
+    pass
+
+
+class UserNationalityBase(CoreSchema):
+    nationality_id: Optional[int] = None
+    user_id: Optional[int] = None
+
+
+class UserNationalityCreate(UserNationalityBase):
+    pass
+
+
+class UserResponse(BaseModel):
+    id: int
+    email: str
+    password: str
+    name: str
+    birth: date
+    gender: str
+    is_active: bool
+    is_admin: bool
+
+    profile: Optional[ProfileResponse] = None
+    consents: Optional[ConsentResponse] = None
+    verification: Optional[StudentVerificationSchema] = None
+    available_language: Optional[List[AvailableLanguageBase]] = None
+    user_university: Optional[UserUniversityBase] = None
+    user_nationality: Optional[List[UserNationalityBase]] = None

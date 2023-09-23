@@ -4,7 +4,7 @@ from models.base import ModelBase
 
 
 class CoreSchema(BaseModel):
-    id: Optional[Any]
+    id: Optional[int] = None
 
     def dict(
         self,
@@ -12,7 +12,6 @@ class CoreSchema(BaseModel):
         include: Any = None,
         exclude: Any = None,
         by_alias: bool = False,
-        skip_defaults: Any = None,
         exclude_unset: bool = False,
         exclude_defaults: bool = False,
         exclude_none: bool = False,
@@ -29,8 +28,6 @@ class CoreSchema(BaseModel):
         - by_alias: bool (기본값: False)
             True로 설정하면, 모델의 속성 이름 대신 alias를 사용하여 딕셔너리 키를 생성합니다. (모델 필드 정의에서 alias 설정이 있는 경우)
 
-        - skip_defaults: bool (기본값: None)
-            True로 설정하면, 기본값을 가진 모델의 속성은 딕셔너리에서 생략됩니다.
 
         - exclude_unset: bool (기본값: False)
             True로 설정하면, 설정되지 않은 모든 값(즉, 값이 제공되지 않아서 기본값을 사용하는 값)은 반환된 딕셔너리에서 제외됩니다.
@@ -50,7 +47,6 @@ class CoreSchema(BaseModel):
             include=include,
             exclude=add_exclude,
             by_alias=by_alias,
-            skip_defaults=skip_defaults,
             exclude_unset=exclude_unset,
             exclude_defaults=exclude_defaults,
             exclude_none=exclude_none,

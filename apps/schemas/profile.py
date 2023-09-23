@@ -36,7 +36,7 @@ class ProfileUpdate(ProfileCreate):
 
 
 class ProfileResponse(ProfileBase):
-    id: int  # 프로필에 대한 고유 ID를 가정
+    id: int = None
 
     class Config:
         orm_mode = True
@@ -47,9 +47,9 @@ class ProfilePhoto(BaseModel):
 
 
 class AvailableLanguageBase(CoreSchema):
-    level: str
-    language_id: int
-    user_id: int
+    level: Optional[str] = None
+    language_id: Optional[int] = None
+    user_id: Optional[int] = None
 
 
 class AvailableLanguageCreate(BaseModel):
