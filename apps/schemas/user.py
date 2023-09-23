@@ -96,7 +96,7 @@ class ConsentBase(CoreSchema):
     terms_mandatory: Optional[bool] = True
     terms_optional: Optional[bool] = False
     terms_push: Optional[bool] = False
-    user_id: Optional[int] = False
+    user_id: Optional[int] = None
 
 
 # 동의 생성을 위한 스키마
@@ -106,7 +106,7 @@ class ConsentCreate(ConsentBase):
 
 # 동의 응답을 위한 스키마
 class ConsentResponse(ConsentBase):
-    id: Optional[int] = None
+    pass
 
     class Config:
         orm_mode = True
@@ -116,6 +116,9 @@ class StudentVerificationSchema(CoreSchema):
     user_id: Optional[int] = None
     student_card_image: Optional[str] = None
     verification_status: VerificationStatus = VerificationStatus.UNVERIFIED.value
+
+    class Config:
+        orm_mode = True
 
 
 class FirebaseAuthBase(BaseModel):
@@ -171,6 +174,9 @@ class UserUniversityBase(CoreSchema):
     university_id: Optional[int] = None
     user_id: Optional[int] = None
 
+    class Config:
+        orm_mode = True
+
 
 class UserUniversityCreate(UserUniversityBase):
     pass
@@ -195,9 +201,12 @@ class UserResponse(BaseModel):
     is_active: bool
     is_admin: bool
 
-    profile: Optional[ProfileResponse] = None
-    consents: Optional[ConsentResponse] = None
-    verification: Optional[StudentVerificationSchema] = None
+    profile: Optional[List[ProfileResponse]] = None
+    consents: Optional[List[ConsentResponse]] = None
+    verification: Optional[List[StudentVerificationSchema]] = None
     available_language: Optional[List[AvailableLanguageBase]] = None
-    user_university: Optional[UserUniversityBase] = None
+    user_university: Optional[List[UserUniversityBase]] = None
     user_nationality: Optional[List[UserNationalityBase]] = None
+
+    class Config:
+        orm_mode = True
