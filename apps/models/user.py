@@ -17,16 +17,15 @@ class User(ModelBase):
     profile = relationship("Profile", back_populates="user", uselist=False)
     consents = relationship("Consent", back_populates="user")
     verification = relationship("Verification", back_populates="user")
-    available_language = relationship("AvailableLanguage", back_populates="user")
     user_university = relationship("UserUniversity", back_populates="user")
     user_nationality = relationship("UserNationality", back_populates="user")
 
 
 class UserNationality(ModelBase):
     nationality_id = Column(Integer, ForeignKey("nationality.id"))
-    nationality = relationship("Nationality", backref="user_nationalities")
+    nationality = relationship("Nationality", backref="user_nationality")
 
-    user_id = Column(Integer, ForeignKey("user.id"))
+    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))
     user = relationship("User", back_populates="user_nationality")
 
 
@@ -38,7 +37,7 @@ class UserUniversity(ModelBase):
     university_id = Column(Integer, ForeignKey("university.id"))
     university = relationship("University", backref="user_university")
 
-    user_id = Column(Integer, ForeignKey("user.id"))
+    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))
     user = relationship("User", back_populates="user_university")
 
 

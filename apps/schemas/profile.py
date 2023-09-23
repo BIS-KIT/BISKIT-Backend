@@ -1,7 +1,7 @@
 from datetime import date
 from pydantic import EmailStr, BaseModel
 from enum import Enum
-from typing import Optional
+from typing import Optional, List
 from fastapi import UploadFile
 
 from schemas.base import CoreSchema
@@ -57,3 +57,20 @@ class AvailableLanguageCreate(BaseModel):
     level: str
     language_id: int
     user_id: int
+
+
+class LanguageLevel(BaseModel):
+    language_id: str
+    level: str
+
+
+class Introduction(BaseModel):
+    keyword: str
+    introduction: str
+
+
+class CreateProfileSchema(BaseModel):
+    nick_name: str
+    user_id: int
+    languages: List[LanguageLevel]
+    introduction: List[Introduction]

@@ -184,12 +184,17 @@ class UserUniversityCreate(UserUniversityBase):
 
 
 class UserNationalityBase(CoreSchema):
-    nationality: Optional[NationalityBase] = None
-    user_id: Optional[int] = None
+    nationality: Optional[NationalityBase]
+    # nationality_id: Optional[int]
+    user_id: Optional[int]
+
+    class Config:
+        orm_mode = True
 
 
-class UserNationalityCreate(UserNationalityBase):
-    pass
+class UserNationalityCreate(BaseModel):
+    nationality_id: Optional[int]
+    user_id: Optional[int]
 
 
 class UserResponse(BaseModel):
@@ -205,7 +210,6 @@ class UserResponse(BaseModel):
     profile: Optional[List[ProfileResponse]] = None
     consents: Optional[List[ConsentResponse]] = None
     verification: Optional[List[StudentVerificationSchema]] = None
-    available_language: Optional[List[AvailableLanguageBase]] = None
     user_university: Optional[List[UserUniversityBase]] = None
     user_nationality: Optional[List[UserNationalityBase]] = None
 

@@ -19,14 +19,16 @@ import crud
 from database.session import get_db
 from core.config import settings
 from models.user import User
-from models.profile import Profile
+from models.profile import Profile, AvailableLanguage, Introduction
 from schemas.profile import (
     ProfileCreate,
     ProfileResponse,
     ProfileBase,
     AvailableLanguageCreate,
     LanguageLevel,
+    CreateProfileSchema,
 )
+from log import log_error
 
 router = APIRouter()
 
@@ -53,8 +55,7 @@ def get_profile_by_user_id(
 
 @router.post("/profile/", response_model=ProfileResponse)
 def create_profile(
-    nick_name: str,
-    user_id: int,
+    profile: CreateProfileSchema,
     profile_photo: UploadFile = None,
     db: Session = Depends(get_db),
 ):
@@ -72,23 +73,56 @@ def create_profile(
     Returns:
     - 생성된 프로필 정보.
     """
-    # 유저 존재 확인
-    user = crud.user.get(db=db, id=user_id)
+    new_profile = None
+    user = crud.user.get(db=db, id=profile.user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-
-    if re.search(r"[~!@#$%^&*()_+{}[\]:;<>,.?~]", nick_name):
-        raise HTTPException(
-            status_code=400, detail="Nick_name contains special characters."
-        )
 
     # 사용자에게 이미 프로필이 있는지 확인
     if user.profile:
         raise HTTPException(
             status_code=409, detail="Profile already exists for the user"
         )
-    obj_in = ProfileCreate(nick_name=nick_name, profile_photo=profile_photo)
-    new_profile = crud.profile.create(db=db, obj_in=obj_in, user_id=user_id)
+
+    if re.search(r"[~!@#$%^&*()_+{}[\]:;<>,.?~]", profile.nick_name):
+        raise HTTPException(
+            status_code=400, detail="Nick_name contains special characters."
+        )
+
+    if not profile.introduction:
+        raise HTTPException(status_code=400, detail="Need introduction.")
+
+    if not profile.languages:
+        raise HTTPException(status_code=400, detail="Need Available Language")
+
+    try:
+        obj_in = ProfileCreate(nick_name=profile.nick_name, profile_photo=profile_photo)
+        new_profile = crud.profile.create(db=db, obj_in=obj_in, user_id=profile.user_id)
+
+        for lang_level in profile.languages:
+            available_language = AvailableLanguage(
+                level=lang_level.level,
+                language_id=int(lang_level.language_id),
+                user_id=profile.user_id,
+            )
+            db.add(available_language)
+
+        # introduction을 Introduction로 변환 및 추가
+        for intro in profile.introduction:
+            introduction_model = Introduction(
+                keyword=intro.keyword,
+                context=intro.introduction,
+                user_id=profile.user_id,
+            )
+            db.add(introduction_model)
+        db.commit()
+
+    except Exception as e:
+        if new_profile:
+            crud.profile.remove(db=db, id=new_profile.id)
+        db.rollback()
+        log_error(e)
+
     return new_profile
 
 

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, Date, Enum, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, Date, Enum, ForeignKey, Text
 from sqlalchemy.orm import relationship
 
 from models.base import ModelBase
@@ -11,6 +11,9 @@ class Profile(ModelBase):
     user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))
     user = relationship("User", back_populates="profile")
 
+    available_languages = relationship("AvailableLanguage", back_populates="profile")
+    introductions = relationship("Introduction", back_populates="profile")
+
 
 class AvailableLanguage(ModelBase):
     level = Column(String)
@@ -18,5 +21,13 @@ class AvailableLanguage(ModelBase):
     language_id = Column(Integer, ForeignKey("language.id", ondelete="SET NULL"))
     language = relationship("Language", backref="available_language")
 
-    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))
-    user = relationship("User", back_populates="available_language")
+    profile_id = Column(Integer, ForeignKey("profile.id", ondelete="CASCADE"))
+    profile = relationship("Profile", back_populates="available_languages")
+
+
+class Introduction(ModelBase):
+    keyword = Column(String)
+    context = Column(Text)
+
+    profile_id = Column(Integer, ForeignKey("profile.id", ondelete="CASCADE"))
+    profile = relationship("Profile", back_populates="introductions")
