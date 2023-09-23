@@ -24,7 +24,7 @@ class User(ModelBase):
 
 class UserNationality(ModelBase):
     nationality_id = Column(Integer, ForeignKey("nationality.id"))
-    nationality = relationship("Nationality", back_populates="user_nationalities")
+    nationality = relationship("Nationality", backref="user_nationalities")
 
     user_id = Column(Integer, ForeignKey("user.id"))
     user = relationship("User", back_populates="user_nationality")
@@ -36,7 +36,7 @@ class UserUniversity(ModelBase):
     is_graduated = Column(Boolean, default=False)
 
     university_id = Column(Integer, ForeignKey("university.id"))
-    university = relationship("University", back_populates="user_university")
+    university = relationship("University", backref="user_university")
 
     user_id = Column(Integer, ForeignKey("user.id"))
     user = relationship("User", back_populates="user_university")
@@ -52,7 +52,7 @@ class Consent(ModelBase):
     terms_optional = Column(Boolean, default=False, nullable=True)  # 선택 약관 동의
     terms_push = Column(Boolean, nullable=True)
 
-    user_id = Column(Integer, ForeignKey("user.id"))
+    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))
     user = relationship("User", back_populates="consents")
 
 
@@ -61,7 +61,7 @@ class Verification(ModelBase):
     student_card_image = Column(String)
     verification_status = Column(String, default="pending")
 
-    user_id = Column(Integer, ForeignKey("user.id"))
+    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))
     user = relationship("User", back_populates="verification")
 
 

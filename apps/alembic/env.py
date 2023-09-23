@@ -11,6 +11,7 @@ from alembic import context
 
 from database.session import DATABASE_URL
 from models.base import ModelBase
+from models.utility import Nationality, Language, University
 from models.user import (
     User,
     Consent,
@@ -21,7 +22,6 @@ from models.user import (
     UserUniversity,
 )
 from models.profile import Profile, AvailableLanguage
-from models.utility import Nationality, Language, University
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
