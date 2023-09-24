@@ -10,12 +10,21 @@ from schemas.profile import (
 )
 from schemas.utility import UniversityBase, NationalityBase
 
+from fastapi import UploadFile
+
 
 class EducationStatus(str, Enum):
     UNDERGRADUATE = "학부"
     GRADUATE = "대학원"
     EXCHANGE_STUDENT = "교환학생"
     LANGUAGE_INSTITUTE = "어학당"
+
+
+class VerificationStatus(str, Enum):
+    PENDING = "pending"
+    VERIFIED = "verified"
+    REJECTED = "rejected"
+    UNVERIFIED = "unverified"
 
 
 class UserBase(CoreSchema):
@@ -179,6 +188,23 @@ class UserNationalityBase(CoreSchema):
 class UserNationalityCreate(BaseModel):
     nationality_id: Optional[int]
     user_id: Optional[int]
+
+
+class StudentVerificationBase(CoreSchema):
+    user_id: Optional[int] = None
+    student_card: Optional[Union[str, UploadFile]] = None
+    verification_status: Optional[
+        VerificationStatus
+    ] = VerificationStatus.UNVERIFIED.value
+
+    class Config:
+        orm_mode = True
+
+
+class StudentVerificationCreate(BaseModel):
+    user_id: Optional[int] = None
+    # student_card: Optional[Union[str, UploadFile]] = None
+    verification_status: VerificationStatus = VerificationStatus.UNVERIFIED.value
 
 
 class UserResponse(BaseModel):

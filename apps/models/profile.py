@@ -13,7 +13,7 @@ class Profile(ModelBase):
 
     available_languages = relationship("AvailableLanguage", back_populates="profile")
     introductions = relationship("Introduction", back_populates="profile")
-    verification = relationship("Verification", back_populates="profile", uselist=False)
+    # verification = relationship("Verification", back_populates="profile", uselist=False)
 
 
 class AvailableLanguage(ModelBase):
@@ -32,12 +32,3 @@ class Introduction(ModelBase):
 
     profile_id = Column(Integer, ForeignKey("profile.id", ondelete="CASCADE"))
     profile = relationship("Profile", back_populates="introductions")
-
-
-class Verification(ModelBase):
-    # 학생증 사진의 파일 경로나 URL을 저장하는 필드
-    student_card_image = Column(String)
-    verification_status = Column(String, default="pending")
-
-    profile_id = Column(Integer, ForeignKey("profile.id", ondelete="CASCADE"))
-    profile = relationship("Profile", back_populates="verification")

@@ -16,7 +16,9 @@ class User(ModelBase):
 
     profile = relationship("Profile", back_populates="user", uselist=False)
     consents = relationship("Consent", back_populates="user")
-    # verification = relationship("Verification", back_populates="user")
+    student_verification = relationship(
+        "StudentVerification", back_populates="user", uselist=False
+    )
     user_university = relationship("UserUniversity", back_populates="user")
     user_nationality = relationship("UserNationality", back_populates="user")
 
@@ -60,5 +62,13 @@ class FirebaseAuth(ModelBase):
     uid = Column(String, unique=True, index=True)  # Firebase에서 제공하는 고유 사용자 ID
     firebase_token = Column(String)  # Firebase 인증 토큰 (주기적으로 갱신됨)
 
-    user_id = Column(Integer, ForeignKey("user.id"))
+    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))
     user = relationship("User", backref="firebase_auth")
+
+
+class StudentVerification(ModelBase):
+    student_card = Column(String)
+    verification_status = Column(String, default="pending")
+
+    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))
+    user = relationship("User", back_populates="student_verification")
