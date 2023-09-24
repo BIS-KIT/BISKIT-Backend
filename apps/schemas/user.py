@@ -18,13 +18,6 @@ class EducationStatus(str, Enum):
     LANGUAGE_INSTITUTE = "어학당"
 
 
-class VerificationStatus(str, Enum):
-    PENDING = "pending"
-    VERIFIED = "verified"
-    REJECTED = "rejected"
-    UNVERIFIED = "unverified"
-
-
 class UserBase(CoreSchema):
     email: EmailStr
     password: str
@@ -108,15 +101,6 @@ class ConsentCreate(ConsentBase):
 # 동의 응답을 위한 스키마
 class ConsentResponse(ConsentBase):
     pass
-
-    class Config:
-        orm_mode = True
-
-
-class StudentVerificationSchema(CoreSchema):
-    user_id: Optional[int] = None
-    student_card_image: Optional[str] = None
-    verification_status: VerificationStatus = VerificationStatus.UNVERIFIED.value
 
     class Config:
         orm_mode = True
@@ -209,7 +193,6 @@ class UserResponse(BaseModel):
 
     profile: Optional[ProfileResponse] = None
     consents: Optional[List[ConsentResponse]] = None
-    verification: Optional[List[StudentVerificationSchema]] = None
     user_university: Optional[List[UserUniversityBase]] = None
     user_nationality: Optional[List[UserNationalityBase]] = None
 

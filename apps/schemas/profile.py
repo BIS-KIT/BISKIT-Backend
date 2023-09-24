@@ -21,15 +21,16 @@ class LanguageLevel(Enum):
     PROFICIENT = "능숙"
 
 
+class VerificationStatus(str, Enum):
+    PENDING = "pending"
+    VERIFIED = "verified"
+    REJECTED = "rejected"
+    UNVERIFIED = "unverified"
+
+
 class ProfileBase(CoreSchema):
     nick_name: Optional[str] = None
     profile_photo: Optional[str] = None
-
-
-# 프로필 생성을 위한 스키마
-class ProfileCreate(BaseModel):
-    nick_name: Optional[str] = None
-    profile_photo: Optional[UploadFile] = None
 
 
 class ProfileUpdate(ProfileCreate):
@@ -90,15 +91,38 @@ class IntroductCreateLanguage(BaseModel):
         orm_mode = True
 
 
+class VerificationBase(CoreSchema):
+    profile_id: Optional[int] = None
+    student_card_image: Optional[str] = None
+    verification_status: VerificationStatus = VerificationStatus.UNVERIFIED.value
+
+    class Config:
+        orm_mode = True
+
+
+class VerificationCreate(BaseModel):
+    profile_id: Optional[int] = None
+    student_card_image: Optional[str] = None
+    verification_status: VerificationStatus = VerificationStatus.UNVERIFIED.value
+
+
+# 프로필 생성을 위한 스키마
+class ProfileCreate(BaseModel):
+    nick_name: Optional[str] = None
+    profile_photo: Optional[UploadFile] = None
+
+
 class CreateProfileSchema(BaseModel):
     nick_name: str
     user_id: int
     profile_photo: Optional[UploadFile] = None
     languages: List[ProfileCreateLanguage]
     introduction: List[IntroductCreateLanguage]
+    verification: List[VerificationCreate]
 
     class Config:
         orm_mode = True
+
 
 class UpdateProfileSchema(BaseModel):
     nick_name: Optional[str] = None
@@ -118,6 +142,7 @@ class ProfileResponse(BaseModel):
     profile_photo: Optional[str] = None
     available_languages: Optional[List[LanguageLevelSchema]]
     introductions: Optional[List[IntroductionBaseSchema]]
+    verification: Optional[VerificationBase]
 
     class Config:
         orm_mode = True

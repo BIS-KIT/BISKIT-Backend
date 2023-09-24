@@ -55,15 +55,6 @@ class Consent(ModelBase):
     user = relationship("User", back_populates="consents")
 
 
-class Verification(ModelBase):
-    # 학생증 사진의 파일 경로나 URL을 저장하는 필드
-    student_card_image = Column(String)
-    verification_status = Column(String, default="pending")
-
-    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))
-    user = relationship("User", back_populates="verification")
-
-
 class FirebaseAuth(ModelBase):
     provider_id = Column(String)  # 예: 'google.com', 'kakao.com'
     uid = Column(String, unique=True, index=True)  # Firebase에서 제공하는 고유 사용자 ID
