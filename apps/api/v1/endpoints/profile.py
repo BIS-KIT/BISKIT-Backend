@@ -28,7 +28,7 @@ from schemas.profile import (
     LanguageLevel,
     CreateProfileSchema,
     IntroductionCreate,
-    UpdateProfileSchema
+    UpdateProfileSchema,
 )
 from log import log_error
 
@@ -69,8 +69,15 @@ def create_profile(
     nick_name에 특수문자가 포함된 경우 오류를 반환합니다.
 
     Parameters:
-    - profile: Profile 생성을 위한 정보.
-    - user_id: 프로필을 생성하려는 사용자의 ID.
+    - profile.nick_name (str): 사용자의 닉네임입니다. 특수 문자를 포함할 수 없습니다.
+    - profile.user_id (int): 프로필을 생성할 사용자의 ID입니다.
+    - profile.profile_photo (Optional[UploadFile]): 사용자의 프로필 사진입니다.
+    - profile.languages (List[ProfileCreateLanguage]): 사용자가 아는 언어의 목록입니다. 각 언어는 level과 language_id로 표시됩니다.
+        - level (Optional[str]): 사용자의 해당 언어에 대한 숙련도입니다.
+        - language_id (Optional[int]): 언어의 ID입니다.
+    - profile.introduction (List[IntroductCreateLanguage]): 소개글 목록입니다.
+        - keyword (Optional[str]): 소개글과 관련된 키워드입니다.
+        - context (Optional[str]): 소개글의 내용이나 추가 정보입니다.
 
     Returns:
     - 생성된 프로필 정보.
@@ -105,7 +112,6 @@ def create_profile(
             nick_name=profile.nick_name, profile_photo=profile.profile_photo
         )
         new_profile = crud.profile.create(db=db, obj_in=obj_in, user_id=profile.user_id)
-        print(123123, new_profile.id)
         user_languages = profile.languages
         for lang in user_languages:
             available_language = AvailableLanguageCreate(
@@ -141,15 +147,6 @@ def create_profile(
         log_error(e)
         raise HTTPException(status_code=500, detail=f"error about : {e}")
 
-    return_profile = (
-        db.query(Profile)
-        .options(
-            joinedload(Profile.available_languages), joinedload(Profile.introductions)
-        )
-        .filter_by(id=new_profile.id)
-        .first()
-    )
-    print(676767, return_profile.to_dict())
     return new_profile
 
 
@@ -177,7 +174,9 @@ def update_profile(
     if not existing_profile:
         raise HTTPException(status_code=404, detail="Profile not found")
 
-    if profile.nick_name and re.search(r"[~!@#$%^&*()_+{}[\]:;<>,.?~]", profile.nick_name):
+    if profile.nick_name and re.search(
+        r"[~!@#$%^&*()_+{}[\]:;<>,.?~]", profile.nick_name
+    ):
         raise HTTPException(
             status_code=400, detail="Nick_name contains special characters."
         )
