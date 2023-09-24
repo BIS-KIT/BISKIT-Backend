@@ -30,6 +30,7 @@ from schemas.profile import (
     IntroductionCreate,
     IntroductionResponse,
     IntroductionUpdate,
+    AvailableLanguageUpdate,
 )
 from log import log_error
 
@@ -212,47 +213,6 @@ async def check_nick_name(nick_name: str, db: Session = Depends(get_db)):
     return {"status": "Nick_name is available."}
 
 
-@router.post("/profile/language", response_model=List[AvailableLanguageBase])
-async def create_available_language(
-    available_language: List[AvailableLanguageCreate],
-    db: Session = Depends(get_db),
-):
-    """
-    - BEGINNER = "초보"
-    - BASIC = "기초"
-    - INTERMEDIATE = "중급"
-    - ADVANCED = "고급"
-    - PROFICIENT = "능숙"
-
-    """
-    return_list = []
-
-    profile = crud.profile.get(db=db, id=available_language[0].profile_id)
-    if not profile:
-        raise HTTPException(status_code=404, detail="profile not found")
-
-    for ava_lang in available_language:
-        lang = crud.utility.get(db=db, language_id=ava_lang.language_id)
-
-        if len(lang) >= 5:
-            raise HTTPException(
-                status_code=409, detail="There are already five of these"
-            )
-
-        if not lang:
-            raise HTTPException(status_code=404, detail="Languag not found")
-
-        obj = AvailableLanguageCreate(
-            level=ava_lang.level,
-            language_id=ava_lang.language_id,
-            profile_id=ava_lang.profile_id,
-        )
-        new_ava = crud.profile.create_ava_lan(db=db, obj_in=obj)
-        return_list.append(new_ava)
-
-    return return_list
-
-
 @router.get("/profile/random-nickname")
 async def get_random_nickname():
     async with httpx.AsyncClient() as client:
@@ -334,3 +294,80 @@ def get_introduction(introduction_id: int, db: Session = Depends(get_db)):
 def delete_introduction(introduction_id: int, db: Session = Depends(get_db)):
     db_obj = crud.profile.remove_introduction(db=db, id=introduction_id)
     return db_obj
+
+
+@router.post("/profile/available-language", response_model=List[AvailableLanguageBase])
+async def create_available_language(
+    available_language: List[AvailableLanguageCreate],
+    db: Session = Depends(get_db),
+):
+    """
+    - BEGINNER = "초보"
+    - BASIC = "기초"
+    - INTERMEDIATE = "중급"
+    - ADVANCED = "고급"
+    - PROFICIENT = "능숙"
+
+    """
+    return_list = []
+
+    profile = crud.profile.get(db=db, id=available_language[0].profile_id)
+    if not profile:
+        raise HTTPException(status_code=404, detail="profile not found")
+
+    for ava_lang in available_language:
+        lang = crud.utility.get(db=db, language_id=ava_lang.language_id)
+
+        if len(lang) >= 5:
+            raise HTTPException(
+                status_code=409, detail="There are already five of these"
+            )
+
+        if not lang:
+            raise HTTPException(status_code=404, detail="Languag not found")
+
+        obj = AvailableLanguageCreate(
+            level=ava_lang.level,
+            language_id=ava_lang.language_id,
+            profile_id=ava_lang.profile_id,
+        )
+        new_ava = crud.profile.create_ava_lan(db=db, obj_in=obj)
+        return_list.append(new_ava)
+
+    return return_list
+
+
+@router.get(
+    "/profile/available-language/{ava_lang_id}", response_model=AvailableLanguageBase
+)
+async def get_available_language(ava_lang_id: int, db: Session = Depends(get_db)):
+    db_obj = crud.profile.get_ava_lan(db=db, id=ava_lang_id)
+    if not db_obj:
+        raise HTTPException(status_code=404, detail="AvailableLanguage not found")
+    return db_obj
+
+
+@router.delete(
+    "/profile/available-language/{ava_lang_id}", response_model=AvailableLanguageBase
+)
+async def delete_available_language(ava_lang_id: int, db: Session = Depends(get_db)):
+    db_obj = crud.profile.remove_ava_lan(db=db, id=ava_lang_id)
+    return db_obj
+
+
+@router.put(
+    "/profile/available-language/{ava_lang_id}", response_model=AvailableLanguageBase
+)
+async def update_available_language(
+    ava_lang_id: int,
+    available_language: AvailableLanguageUpdate,
+    db: Session = Depends(get_db),
+):
+    existing_ava_lang = crud.profile.get_ava_lan(db=db, id=ava_lang_id)
+    if not existing_ava_lang:
+        raise HTTPException(status_code=404, detail="Introduction not found")
+
+    update_introdu = crud.profile.update_ava_lan(
+        db=db, db_obj=existing_ava_lang, obj_in=available_language
+    )
+    return update_introdu

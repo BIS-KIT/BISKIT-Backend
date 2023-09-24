@@ -54,15 +54,13 @@ class AvailableLanguageCreate(BaseModel):
     profile_id: int
 
 
-class AvailableLanguageResponse(AvailableLanguageBase):
-    class Config:
-        orm_mode = True
-
-
-class LanguageLevelSchema(CoreSchema):
-    language_id: Optional[int] = None
+class AvailableLanguageUpdate(BaseModel):
     level: Optional[str] = None
+    language_id: Optional[int] = None
+    profile_id: Optional[int] = None
 
+
+class AvailableLanguageResponse(AvailableLanguageBase):
     class Config:
         orm_mode = True
 

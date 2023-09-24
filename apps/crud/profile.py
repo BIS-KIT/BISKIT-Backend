@@ -101,6 +101,30 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
         db.commit()
         return obj
 
+    def get_ava_lan(self, db: Session, id: int):
+        return db.query(AvailableLanguage).filter(AvailableLanguage.id == id).first()
+
+    def remove_ava_lan(self, db: Session, id: int):
+        obj = db.query(AvailableLanguage).filter(AvailableLanguage.id == id).delete()
+        db.commit()
+        return obj
+
+    def create_ava_lan(self, db: Session, obj_in: AvailableLanguageCreate):
+        db_obj = AvailableLanguage(**obj_in.dict())
+        db.add(db_obj)
+        db.commit()
+        db.refresh(db_obj)
+        return db_obj
+
+    def update_ava_lan(
+        self, db: Session, db_obj: AvailableLanguage, obj_in: AvailableLanguageCreate
+    ):
+        if isinstance(obj_in, dict):
+            update_data = obj_in
+        else:
+            update_data = obj_in.dict(exclude_unset=True)
+        return super().update(db, db_obj=db_obj, obj_in=update_data)
+
     def get_by_nick_name(self, db: Session, nick_name: str):
         return db.query(Profile).filter(Profile.nick_name == nick_name).first()
 
