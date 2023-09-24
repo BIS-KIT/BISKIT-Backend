@@ -3,7 +3,16 @@ from random import randint
 from datetime import timedelta
 
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from fastapi import APIRouter, Body, Depends, HTTPException, Header
+from fastapi import (
+    APIRouter,
+    Body,
+    Depends,
+    HTTPException,
+    Header,
+    UploadFile,
+    Form,
+    File,
+)
 from sqlalchemy.orm import Session
 from jose import jwt, JWTError
 from sqlalchemy.exc import IntegrityError
@@ -24,6 +33,8 @@ from schemas.user import (
     UserRegister,
     UserUniversityCreate,
     UserNationalityCreate,
+    StudentVerificationCreate,
+    StudentVerificationBase,
 )
 from models.user import User
 from core.security import (
@@ -440,4 +451,27 @@ async def certificate_check(
     return {"result": "fail"}
 
 
-# @router.post("/user/{user_id}/university",response_model=UserUniversityBase)
+@router.post("/user/student-card", response_model=StudentVerificationBase)
+def student_varification(
+    student_card: UploadFile = File(...),
+    user_id: int = Form(...),
+    verification_status: Optional[str] = Form(None),
+    db: Session = Depends(get_db),
+):
+    user = crud.user.get(db=db, id=user_id)
+    if user is None:
+        raise HTTPException(status_code=404, detail="user not found")
+
+    obj_in = StudentVerificationBase(
+        verification_status=verification_status,
+        student_card=student_card,
+        user_id=user_id,
+    )
+
+    try:
+        user_verification = crud.user.create_verification(db=db, obj_in=obj_in)
+    except Exception as e:
+        log_error(e)
+        print(e)
+        raise HTTPException(status_code=500)
+    return user_verification

@@ -10,12 +10,14 @@ from passlib.context import CryptContext
 
 from core.config import settings
 from crud.base import CRUDBase
+from crud.profile import save_upload_file, generate_random_string
 from models.user import (
     User,
     EmailCertification,
     Consent,
     UserNationality,
     UserUniversity,
+    StudentVerification,
 )
 from schemas.user import (
     UserCreate,
@@ -25,6 +27,8 @@ from schemas.user import (
     ConsentCreate,
     UserUniversityCreate,
     UserNationalityCreate,
+    StudentVerificationBase,
+    StudentVerificationCreate,
 )
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -95,6 +99,26 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
     """
     CRUD operations for User model.
     """
+
+    def create_verification(self, db: Session, obj_in: StudentVerificationBase):
+        if not obj_in.user_id:
+            raise ValueError("There is no user_id")
+
+        user = db.query(User).filter(User.id == obj_in.user_id)
+        if not user:
+            raise ValueError("There is no user_id")
+
+        if obj_in.student_card:
+            random_str = generate_random_string()
+            file_path = f"student_card/{random_str}_{obj_in.student_card.filename}"
+            s3_url = save_upload_file(obj_in.student_card, file_path)
+            obj_in.student_card = file_path  # Update path
+
+        db_obj = StudentVerification(**obj_in.dict())
+        db.add(db_obj)
+        db.commit()
+        db.refresh(db_obj)
+        return db_obj
 
     def create_consent(self, db: Session, obj_in: ConsentCreate):
         db_obj = Consent(**obj_in.dict())

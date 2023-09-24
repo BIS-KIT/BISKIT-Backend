@@ -17,6 +17,24 @@ from schemas.profile import (
 )
 
 
+def save_upload_file(upload_file: UploadFile, destination: str) -> None:
+    s3_client = get_aws_client()
+    bucket_name = settings.BUCKET_NAME
+
+    try:
+        s3_client.upload_fileobj(upload_file.file, bucket_name, destination)
+    except NoCredentialsError:
+        print("Credentials not available")
+    finally:
+        upload_file.file.close()
+
+    image_url = (
+        f"https://{bucket_name}.s3.{settings.AWS_REGION}.amazonaws.com/{destination}"
+    )
+
+    return image_url
+
+
 def generate_random_string(length=3):
     return "".join(random.choices(string.ascii_letters, k=length))
 
@@ -98,7 +116,7 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
         if obj_in.profile_photo:
             random_str = generate_random_string()
             file_path = f"profile_photo/{random_str}_{obj_in.profile_photo.filename}"
-            s3_url = self.save_upload_file(obj_in.profile_photo, file_path)
+            s3_url = save_upload_file(obj_in.profile_photo, file_path)
             obj_in.profile_photo = file_path  # Update path
 
         db_obj = Profile(**obj_in.dict(), user_id=user_id)
@@ -148,21 +166,6 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
         if not update_data["nick_name"]:
             del update_data["nick_name"]
         return super().update(db, db_obj=db_obj, obj_in=update_data)
-
-    def save_upload_file(self, upload_file: UploadFile, destination: str) -> None:
-        s3_client = get_aws_client()
-        bucket_name = settings.BUCKET_NAME
-
-        try:
-            s3_client.upload_fileobj(upload_file.file, bucket_name, destination)
-        except NoCredentialsError:
-            print("Credentials not available")
-        finally:
-            upload_file.file.close()
-
-        image_url = f"https://{bucket_name}.s3.{settings.AWS_REGION}.amazonaws.com/{destination}"
-
-        return image_url
 
     def delete_file_from_s3(self, file_url: str) -> None:
         s3_client = get_aws_client()
