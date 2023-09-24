@@ -1,7 +1,7 @@
 from datetime import date
 from pydantic import EmailStr, BaseModel
 from enum import Enum
-from typing import Optional, List
+from typing import Optional, List, Union
 from fastapi import UploadFile
 
 from schemas.base import CoreSchema
@@ -23,11 +23,19 @@ class LanguageLevel(Enum):
 
 class ProfileBase(CoreSchema):
     nick_name: Optional[str] = None
-    profile_photo: Optional[str] = None
+    profile_photo: Optional[Union[str, UploadFile]] = None
+    user_id: int
+
+
+# 프로필 생성을 위한 스키마
+class ProfileCreate(ProfileBase):
+    class Config:
+        orm_mode = True
 
 
 class ProfileUpdate(BaseModel):
-    pass
+    nick_name: Optional[str] = None
+    profile_photo: Optional[Union[str, UploadFile]] = None
 
 
 class ProfilePhoto(BaseModel):
@@ -46,6 +54,11 @@ class AvailableLanguageCreate(BaseModel):
     profile_id: int
 
 
+class AvailableLanguageResponse(AvailableLanguageBase):
+    class Config:
+        orm_mode = True
+
+
 class LanguageLevelSchema(CoreSchema):
     language_id: Optional[int] = None
     level: Optional[str] = None
@@ -54,10 +67,13 @@ class LanguageLevelSchema(CoreSchema):
         orm_mode = True
 
 
-class IntroductionBaseSchema(CoreSchema):
+class IntroductionBase(CoreSchema):
     keyword: Optional[str] = None
     context: Optional[str] = None
+    profile_id: int
 
+
+class IntroductionResponse(IntroductionBase):
     class Config:
         orm_mode = True
 
@@ -66,6 +82,11 @@ class IntroductionCreate(BaseModel):
     keyword: Optional[str] = None
     context: Optional[str] = None
     profile_id: int
+
+
+class IntroductionUpdate(BaseModel):
+    keyword: Optional[str] = None
+    context: Optional[str] = None
 
 
 class ProfileCreateLanguage(BaseModel):
@@ -84,43 +105,13 @@ class IntroductCreateLanguage(BaseModel):
         orm_mode = True
 
 
-# 프로필 생성을 위한 스키마
-class ProfileCreate(BaseModel):
-    nick_name: Optional[str] = None
-    profile_photo: Optional[UploadFile] = None
-
-
-class CreateProfileSchema(BaseModel):
-    nick_name: str
-    user_id: int
-    profile_photo: Optional[UploadFile] = None
-    languages: List[ProfileCreateLanguage]
-    introduction: List[IntroductCreateLanguage]
-    # verification: List[VerificationCreate]
-
-    class Config:
-        orm_mode = True
-
-
-class UpdateProfileSchema(BaseModel):
-    nick_name: Optional[str] = None
-    profile_photo: Optional[UploadFile] = None
-    languages: Optional[List[ProfileCreateLanguage]] = None
-    introduction: Optional[List[IntroductCreateLanguage]] = None
-    # verification: Optional[List[VerificationCreate]] = None
-
-    class Config:
-        orm_mode = True
-
-
 class ProfileResponse(BaseModel):
     id: int = None
     user_id: int
     nick_name: Optional[str] = None
     profile_photo: Optional[str] = None
-    available_languages: Optional[List[LanguageLevelSchema]]
-    introductions: Optional[List[IntroductionBaseSchema]]
-    # verification: Optional[VerificationBase]
+    available_languages: Optional[List[AvailableLanguageResponse]]
+    introductions: Optional[List[IntroductionResponse]]
 
     class Config:
         orm_mode = True

@@ -23,12 +23,13 @@ from models.profile import Profile, AvailableLanguage, Introduction
 from schemas.profile import (
     ProfileCreate,
     ProfileResponse,
+    ProfileUpdate,
     ProfileBase,
     AvailableLanguageCreate,
-    LanguageLevel,
-    CreateProfileSchema,
+    AvailableLanguageBase,
     IntroductionCreate,
-    UpdateProfileSchema,
+    IntroductionResponse,
+    IntroductionUpdate,
 )
 from log import log_error
 
@@ -57,36 +58,15 @@ def get_profile_by_user_id(
 
 @router.post("/profile/", response_model=ProfileResponse)
 def create_profile(
-    profile: CreateProfileSchema,
-    # profile_photo: UploadFile = None,
+    user_id: int,
+    nick_name: str = None,
+    profile_photo: UploadFile = None,
     db: Session = Depends(get_db),
 ):
-    """
-    사용자 프로필 생성 API
-
-    해당 API는 주어진 사용자 ID에 대한 프로필을 생성합니다.
-    사용자 ID가 존재하지 않거나 이미 프로필이 있는 경우에는 오류를 반환합니다.
-    nick_name에 특수문자가 포함된 경우 오류를 반환합니다.
-
-    Parameters:
-    - profile.nick_name (str): 사용자의 닉네임입니다. 특수 문자를 포함할 수 없습니다.
-    - profile.user_id (int): 프로필을 생성할 사용자의 ID입니다.
-    - profile.profile_photo (Optional[UploadFile]): 사용자의 프로필 사진입니다.
-    - profile.languages (List[ProfileCreateLanguage]): 사용자가 아는 언어의 목록입니다. 각 언어는 level과 language_id로 표시됩니다.
-        - level (Optional[str]): 사용자의 해당 언어에 대한 숙련도입니다.
-        - language_id (Optional[int]): 언어의 ID입니다.
-    - profile.introduction (List[IntroductCreateLanguage]): 소개글 목록입니다.
-        - keyword (Optional[str]): 소개글과 관련된 키워드입니다.
-        - context (Optional[str]): 소개글의 내용이나 추가 정보입니다.
-
-    Returns:
-    - 생성된 프로필 정보.
-    """
+    """ """
     new_profile = None
-    user_languages = []
-    user_introduction = []
 
-    user = crud.user.get(db=db, id=profile.user_id)
+    user = crud.user.get(db=db, id=user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
@@ -96,64 +76,28 @@ def create_profile(
             status_code=409, detail="Profile already exists for the user"
         )
 
-    if re.search(r"[~!@#$%^&*()_+{}[\]:;<>,.?~]", profile.nick_name):
+    if re.search(r"[~!@#$%^&*()_+{}[\]:;<>,.?~]", nick_name):
         raise HTTPException(
             status_code=400, detail="Nick_name contains special characters."
         )
 
-    if not profile.introduction:
-        raise HTTPException(status_code=400, detail="Need introduction.")
-
-    if not profile.languages:
-        raise HTTPException(status_code=400, detail="Need Available Language")
-
     try:
         obj_in = ProfileCreate(
-            nick_name=profile.nick_name, profile_photo=profile.profile_photo
+            nick_name=nick_name, profile_photo=profile_photo, user_id=user_id
         )
-        new_profile = crud.profile.create(db=db, obj_in=obj_in, user_id=profile.user_id)
-        user_languages = profile.languages
-        for lang in user_languages:
-            available_language = AvailableLanguageCreate(
-                level=lang.level,
-                language_id=int(lang.language_id),
-                profile_id=new_profile.id,
-            )
-            available_language_obj = crud.profile.create_ava_lan(
-                db=db, obj_in=available_language
-            )
-
-        # introduction을 Introduction로 변환 및 추가
-        user_introduction = profile.introduction
-        for intro in user_introduction:
-            introduction = IntroductionCreate(
-                keyword=intro.keyword,
-                context=intro.context,
-                profile_id=new_profile.id,
-            )
-            introduction_obj = crud.profile.create_introduction(
-                db=db, obj_in=introduction
-            )
-
     except Exception as e:
-        if new_profile:
-            crud.profile.remove(db=db, id=new_profile.id)
-        if user_languages:
-            crud.profile.remove_ava_lan(db=db, profile_id=new_profile.id)
-        if user_introduction:
-            crud.profile.remove_introduction(db=db, profile_id=new_profile.id)
-
-        print(e)
         log_error(e)
-        raise HTTPException(status_code=500, detail=f"error about : {e}")
-
+        print(e)
+        raise HTTPException(status_code=500)
+    new_profile = crud.profile.create(db=db, obj_in=obj_in)
     return new_profile
 
 
-@router.put("/profile/{user_id}/", response_model=ProfileResponse)
+@router.put("/profile/{profile_id}/", response_model=ProfileResponse)
 def update_profile(
-    user_id: int,
-    profile: UpdateProfileSchema,
+    profile_id: int,
+    nick_name: Optional[str] = None,
+    profile_photo: UploadFile = None,
     db: Session = Depends(get_db),
 ):
     """
@@ -170,28 +114,17 @@ def update_profile(
     - 업데이트된 프로필 정보.
     """
     # 프로필 존재 확인
-    existing_profile = crud.profile.get_by_user_id(db=db, user_id=user_id)
+    existing_profile = crud.profile.get(db=db, id=profile_id)
     if not existing_profile:
         raise HTTPException(status_code=404, detail="Profile not found")
 
-    if profile.nick_name and re.search(
-        r"[~!@#$%^&*()_+{}[\]:;<>,.?~]", profile.nick_name
-    ):
+    if nick_name and re.search(r"[~!@#$%^&*()_+{}[\]:;<>,.?~]", nick_name):
         raise HTTPException(
             status_code=400, detail="Nick_name contains special characters."
         )
 
-    # TODO: Additional update logic for languages, introduction, and verification
-    # This will involve updating the relationships and possibly adding or removing records.
-
-    # Update the existing profile with the provided data
-    updated_profile_data = existing_profile.dict()
-    update_data = profile.dict(exclude_unset=True)
-    updated_profile_data.update(update_data)
-
-    obj_in = ProfileCreate(**updated_profile_data)
+    obj_in = ProfileUpdate(nick_name=nick_name, profile_photo=profile_photo)
     updated_profile = crud.profile.update(db=db, db_obj=existing_profile, obj_in=obj_in)
-
     return updated_profile
 
 
@@ -279,27 +212,45 @@ async def check_nick_name(nick_name: str, db: Session = Depends(get_db)):
     return {"status": "Nick_name is available."}
 
 
-@router.post("/profile/language", response_model=AvailableLanguageCreate)
+@router.post("/profile/language", response_model=List[AvailableLanguageBase])
 async def create_available_language(
-    level: LanguageLevel = Form(...),
-    language_id: int = Form(...),
-    user_id: int = Form(...),
+    available_language: List[AvailableLanguageCreate],
     db: Session = Depends(get_db),
 ):
-    user = crud.user.get(db=db, id=user_id)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    """
+    - BEGINNER = "초보"
+    - BASIC = "기초"
+    - INTERMEDIATE = "중급"
+    - ADVANCED = "고급"
+    - PROFICIENT = "능숙"
 
-    lang = crud.utility.get(db=db, language_id=language_id)
-    if not lang:
-        raise HTTPException(status_code=404, detail="Languag not found")
+    """
+    return_list = []
 
-    obj = AvailableLanguageCreate(
-        level=level.value, language_id=language_id, user_id=user_id
-    )
-    new_ava = crud.profile.create_ava_lan(db=db, obj_in=obj)
+    profile = crud.profile.get(db=db, id=available_language[0].profile_id)
+    if not profile:
+        raise HTTPException(status_code=404, detail="profile not found")
 
-    return new_ava
+    for ava_lang in available_language:
+        lang = crud.utility.get(db=db, language_id=ava_lang.language_id)
+
+        if len(lang) >= 5:
+            raise HTTPException(
+                status_code=409, detail="There are already five of these"
+            )
+
+        if not lang:
+            raise HTTPException(status_code=404, detail="Languag not found")
+
+        obj = AvailableLanguageCreate(
+            level=ava_lang.level,
+            language_id=ava_lang.language_id,
+            profile_id=ava_lang.profile_id,
+        )
+        new_ava = crud.profile.create_ava_lan(db=db, obj_in=obj)
+        return_list.append(new_ava)
+
+    return return_list
 
 
 @router.get("/profile/random-nickname")
@@ -321,3 +272,65 @@ async def get_random_nickname():
         en_nick_name = data.get("en_nick_name")
 
     return {"kr_nick_name": kr_nick_name, "en_nick_name": en_nick_name}
+
+
+@router.post("/profile/introduction", response_model=List[IntroductionResponse])
+def create_introduction(
+    introduction: List[IntroductionCreate],
+    db: Session = Depends(get_db),
+):
+    created_introductions = []
+
+    profile = crud.profile.get(db=db, id=introduction[0].profile_id)
+    if not profile:
+        raise HTTPException(status_code=400, detail="Profile not found")
+
+    try:
+        for intro in introduction:
+            new_introduction = crud.profile.create_introduction(db=db, obj_in=intro)
+            created_introductions.append(new_introduction)
+    except Exception as e:
+        log_error(e)
+        print(e)
+        if created_introductions:
+            for intro in created_introductions:
+                crud.profile.remove_introduction(db=db, profile_id=intro.profile_id)
+        raise HTTPException(status_code=500)
+
+    return created_introductions
+
+
+@router.put(
+    "/profile/introduction/{introduction_id}", response_model=IntroductionResponse
+)
+def update_introduction(
+    introduction_id: int,
+    introduction: IntroductionUpdate,
+    db: Session = Depends(get_db),
+):
+    existing_introduction = crud.profile.get_introduction(db=db, id=introduction_id)
+    if not existing_introduction:
+        raise HTTPException(status_code=404, detail="Introduction not found")
+
+    update_introdu = crud.profile.update_introduction(
+        db=db, db_obj=existing_introduction, obj_in=introduction
+    )
+    return update_introdu
+
+
+@router.get(
+    "/profile/introduction/{introduction_id}", response_model=IntroductionResponse
+)
+def get_introduction(introduction_id: int, db: Session = Depends(get_db)):
+    db_obj = crud.profile.get_introduction(db=db, id=introduction_id)
+    if not db_obj:
+        raise HTTPException(status_code=404, detail="Introduction not found")
+    return db_obj
+
+
+@router.delete(
+    "/profile/introduction/{introduction_id}", response_model=IntroductionResponse
+)
+def delete_introduction(introduction_id: int, db: Session = Depends(get_db)):
+    db_obj = crud.profile.remove_introduction(db=db, id=introduction_id)
+    return db_obj

@@ -77,6 +77,18 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
         db.commit()
         return obj
 
+    def get_introduction(self, db: Session, id: int):
+        return db.query(Introduction).filter(Introduction.id == id).first()
+
+    def update_introduction(
+        self, db: Session, db_obj: Introduction, obj_in: IntroductionCreate
+    ):
+        if isinstance(obj_in, dict):
+            update_data = obj_in
+        else:
+            update_data = obj_in.dict(exclude_unset=True)
+        return super().update(db, db_obj=db_obj, obj_in=update_data)
+
     def create_introduction(self, db: Session, obj_in: IntroductionCreate):
         db_obj = Introduction(**obj_in.dict())
         db.add(db_obj)
@@ -84,12 +96,8 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
         db.refresh(db_obj)
         return db_obj
 
-    def remove_introduction(self, db: Session, profile_id: int):
-        obj = (
-            db.query(Introduction)
-            .filter(Introduction.profile_id == profile_id)
-            .delete()
-        )
+    def remove_introduction(self, db: Session, id: int):
+        obj = db.query(Introduction).filter(Introduction.id == id).delete()
         db.commit()
         return obj
 
@@ -99,7 +107,7 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
     def get_by_user_id(self, db: Session, *, user_id: str) -> Optional[Profile]:
         return db.query(Profile).filter(Profile.user_id == user_id).first()
 
-    def create(self, db: Session, *, obj_in: ProfileCreate, user_id: int) -> Profile:
+    def create(self, db: Session, *, obj_in: ProfileCreate) -> Profile:
         """
         Create a new user.
 
@@ -110,7 +118,7 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
         Returns:
             Created User instance.
         """
-        if not user_id:
+        if not obj_in.user_id:
             raise ValueError("There is no user_id")
 
         if obj_in.profile_photo:
@@ -119,7 +127,7 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
             s3_url = save_upload_file(obj_in.profile_photo, file_path)
             obj_in.profile_photo = file_path  # Update path
 
-        db_obj = Profile(**obj_in.dict(), user_id=user_id)
+        db_obj = Profile(**obj_in.dict())
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)
@@ -158,7 +166,7 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
 
                 random_str = generate_random_string()
                 file_path = f"profile_photo/{random_str}_{photo.filename}"
-                self.save_upload_file(photo, file_path)
+                save_upload_file(photo, file_path)
                 update_data["profile_photo"] = file_path  # Update path
             else:
                 del update_data["profile_photo"]
@@ -204,7 +212,7 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
             return None
 
         # 필요하다면 실제 이미지 파일도 제거합니다.
-        os.remove(profile.profile_photo)
+        self.delete_file_from_s3(profile.profile_photo)
 
         profile.profile_photo = None
         db.commit()
