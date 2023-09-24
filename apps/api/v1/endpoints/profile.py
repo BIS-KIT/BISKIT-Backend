@@ -28,13 +28,14 @@ from schemas.profile import (
     LanguageLevel,
     CreateProfileSchema,
     IntroductionCreate,
+    UpdateProfileSchema
 )
 from log import log_error
 
 router = APIRouter()
 
 
-@router.get("/profile/{user_id}/", response_model=ProfileBase)
+@router.get("/profile/{user_id}/", response_model=ProfileResponse)
 def get_profile_by_user_id(
     user_id: int = Path(..., title="The ID of the user"), db: Session = Depends(get_db)
 ):
@@ -155,8 +156,7 @@ def create_profile(
 @router.put("/profile/{user_id}/", response_model=ProfileResponse)
 def update_profile(
     user_id: int,
-    nick_name: str = None,
-    profile_photo: UploadFile = None,
+    profile: UpdateProfileSchema,
     db: Session = Depends(get_db),
 ):
     """
@@ -164,8 +164,6 @@ def update_profile(
 
     이 API는 주어진 사용자 ID에 대한 프로필 정보를 업데이트합니다.
     프로필이 존재하지 않는 경우 오류를 반환합니다.
-    nick_name에 특수문자가 포함된 경우 오류를 반환합니다.
-    프로필 이미지를 업데이트 하는 경우 기존 이미지는 삭제됩니다.
 
     Parameters:
     - user_id: 업데이트하려는 프로필의 사용자 ID.
@@ -179,13 +177,20 @@ def update_profile(
     if not existing_profile:
         raise HTTPException(status_code=404, detail="Profile not found")
 
-    if re.search(r"[~!@#$%^&*()_+{}[\]:;<>,.?~]", nick_name):
+    if profile.nick_name and re.search(r"[~!@#$%^&*()_+{}[\]:;<>,.?~]", profile.nick_name):
         raise HTTPException(
             status_code=400, detail="Nick_name contains special characters."
         )
 
-    obj_in = ProfileCreate(nick_name=nick_name, profile_photo=profile_photo)
+    # TODO: Additional update logic for languages, introduction, and verification
+    # This will involve updating the relationships and possibly adding or removing records.
 
+    # Update the existing profile with the provided data
+    updated_profile_data = existing_profile.dict()
+    update_data = profile.dict(exclude_unset=True)
+    updated_profile_data.update(update_data)
+
+    obj_in = ProfileCreate(**updated_profile_data)
     updated_profile = crud.profile.update(db=db, db_obj=existing_profile, obj_in=obj_in)
 
     return updated_profile

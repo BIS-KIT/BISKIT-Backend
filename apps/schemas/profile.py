@@ -100,6 +100,16 @@ class CreateProfileSchema(BaseModel):
     class Config:
         orm_mode = True
 
+class UpdateProfileSchema(BaseModel):
+    nick_name: Optional[str] = None
+    profile_photo: Optional[UploadFile] = None
+    languages: Optional[List[ProfileCreateLanguage]] = None
+    introduction: Optional[List[IntroductCreateLanguage]] = None
+    # verification: Optional[List[VerificationCreate]] = None
+
+    class Config:
+        orm_mode = True
+
 
 class ProfileResponse(BaseModel):
     id: int = None
