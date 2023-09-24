@@ -35,6 +35,8 @@ from schemas.user import (
     UserNationalityCreate,
     StudentVerificationCreate,
     StudentVerificationBase,
+    StudentVerificationUpdate,
+    VerificationStatus,
 )
 from models.user import User
 from core.security import (
@@ -455,7 +457,6 @@ async def certificate_check(
 def student_varification(
     student_card: UploadFile = File(...),
     user_id: int = Form(...),
-    verification_status: Optional[str] = Form(None),
     db: Session = Depends(get_db),
 ):
     user = crud.user.get(db=db, id=user_id)
@@ -463,7 +464,6 @@ def student_varification(
         raise HTTPException(status_code=404, detail="user not found")
 
     obj_in = StudentVerificationBase(
-        verification_status=verification_status,
         student_card=student_card,
         user_id=user_id,
     )
@@ -475,3 +475,36 @@ def student_varification(
         print(e)
         raise HTTPException(status_code=500)
     return user_verification
+
+
+@router.get("/user/{user_id}/student-card", response_model=StudentVerificationBase)
+def student_varification(
+    user_id: int,
+    db: Session = Depends(get_db),
+):
+    user = crud.user.get(db=db, id=user_id)
+    if user is None:
+        raise HTTPException(status_code=404, detail="user not found")
+
+    db_obj = crud.user.get_verification(db=db, user_id=user_id)
+    if not db_obj:
+        raise HTTPException(status_code=404, detail="StudentVerification not found")
+    return db_obj
+
+
+@router.post("/user/{user_id}/student-card/approve")
+def approve_varification(
+    user_id: int,
+    db: Session = Depends(get_db),
+):
+    verification = crud.user.get_verification(db=db, user_id=user_id)
+    if verification is None:
+        raise HTTPException(status_code=404, detail="StudentVerification not found")
+
+    obj_in = StudentVerificationUpdate(
+        verification_status=VerificationStatus.VERIFIED.value
+    )
+    update_verification = crud.user.update_verification(
+        db=db, db_obj=verification, obj_in=obj_in
+    )
+    return update_verification

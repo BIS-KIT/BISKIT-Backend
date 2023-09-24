@@ -203,8 +203,11 @@ class StudentVerificationBase(CoreSchema):
 
 class StudentVerificationCreate(BaseModel):
     user_id: Optional[int] = None
-    # student_card: Optional[Union[str, UploadFile]] = None
-    verification_status: VerificationStatus = VerificationStatus.UNVERIFIED.value
+    verification_status: str = VerificationStatus.UNVERIFIED.value
+
+
+class StudentVerificationUpdate(BaseModel):
+    verification_status: Optional[str] = VerificationStatus.UNVERIFIED.value
 
 
 class UserResponse(BaseModel):

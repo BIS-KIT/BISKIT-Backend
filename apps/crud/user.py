@@ -29,6 +29,7 @@ from schemas.user import (
     UserNationalityCreate,
     StudentVerificationBase,
     StudentVerificationCreate,
+    StudentVerificationUpdate,
 )
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -102,6 +103,25 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
     """
     CRUD operations for User model.
     """
+
+    def get_verification(self, db: Session, user_id: int):
+        return (
+            db.query(StudentVerification)
+            .filter(StudentVerification.user_id == user_id)
+            .first()
+        )
+
+    def update_verification(
+        self,
+        db: Session,
+        db_obj: StudentVerification,
+        obj_in: StudentVerificationUpdate,
+    ):
+        if isinstance(obj_in, dict):
+            update_data = obj_in
+        else:
+            update_data = obj_in.dict(exclude_unset=True)
+        return super().update(db, db_obj=db_obj, obj_in=update_data)
 
     def create_verification(self, db: Session, obj_in: StudentVerificationBase):
         if not obj_in.user_id:
