@@ -48,7 +48,10 @@ def send_email(certification: int, receiver_email: EmailStr, language_code: str 
         body_template = "email_kr.html"
         SUBJECT = "BISKIT Email Certification"
 
-    BODY = render_template(body_template, certification=certification)
+    s3_logo_url = settings.LOGO_URL
+    BODY = render_template(
+        body_template, certification=certification, s3_logo_url=s3_logo_url
+    )
 
     msg = MIMEMultipart()
     msg["From"] = settings.SMTP_USER

@@ -27,6 +27,8 @@ class Setting(BaseSettings):
     AWS_REGION: str
     BUCKET_NAME: str
 
+    LOGO_URL: str
+
     @property
     def cors_origins_list(self) -> List[str]:
         return self.CORS_ORIGINS.split(",")
