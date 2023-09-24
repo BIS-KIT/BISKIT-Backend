@@ -15,13 +15,12 @@ from models.utility import Nationality, Language, University
 from models.user import (
     User,
     Consent,
-    Verification,
     FirebaseAuth,
     EmailCertification,
     UserNationality,
     UserUniversity,
 )
-from models.profile import Profile, AvailableLanguage
+from models.profile import Profile, AvailableLanguage,Verification
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

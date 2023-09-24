@@ -33,7 +33,7 @@ class ProfileBase(CoreSchema):
     profile_photo: Optional[str] = None
 
 
-class ProfileUpdate(ProfileCreate):
+class ProfileUpdate(BaseModel):
     pass
 
 
