@@ -33,7 +33,6 @@ class UserBase(CoreSchema):
     name: str
     birth: date
     gender: str
-    is_graduated: bool
 
 
 class UserWithStatus(UserBase):
@@ -62,7 +61,6 @@ class UserRegister(BaseModel):
     university_id: Optional[int] = None
     department: Optional[str] = None
     education_status: Optional[str] = None
-    is_graduated: Optional[bool] = False
 
     terms_mandatory: Optional[bool] = True
     terms_optional: Optional[bool] = False
@@ -82,7 +80,6 @@ class UserUpdate(BaseModel):
     university: str
     department: str
     gender: str
-    is_graduated: bool
 
 
 class PasswordChange(CoreSchema):
@@ -163,7 +160,6 @@ class EmailCertificationCheck(BaseModel):
 class UserUniversityBase(CoreSchema):
     department: Optional[str] = None
     education_status: Optional[str] = None
-    is_graduated: Optional[bool] = False
 
     university: Optional[UniversityBase] = None
     user_id: Optional[int] = None
@@ -175,12 +171,15 @@ class UserUniversityBase(CoreSchema):
 class UserUniversityUpdate(BaseModel):
     department: Optional[str] = None
     education_status: Optional[str] = None
-    is_graduated: Optional[bool] = False
     university_id: Optional[int] = 0
+    user_id: Optional[int] = 0
 
 
-class UserUniversityCreate(UserUniversityBase):
-    pass
+class UserUniversityCreate(BaseModel):
+    department: Optional[str] = None
+    education_status: Optional[str] = None
+    university_id: Optional[int] = 0
+    user_id: Optional[int] = 0
 
 
 class UserNationalityBase(CoreSchema):
@@ -192,17 +191,27 @@ class UserNationalityBase(CoreSchema):
         orm_mode = True
 
 
+class UserNationalityResponse(BaseModel):
+    user_id: Optional[int]
+    nationality: Optional[NationalityBase]
+
+    class Config:
+        orm_mode = True
+
+
 class UserNationalityCreate(BaseModel):
     nationality_id: Optional[int]
     user_id: Optional[int]
 
 
+class UserNationalityUpdate(BaseModel):
+    nationality_id: Optional[int]
+
+
 class StudentVerificationBase(CoreSchema):
     user_id: Optional[int] = None
     student_card: Optional[Union[str, UploadFile]] = None
-    verification_status: Optional[
-        VerificationStatus
-    ] = VerificationStatus.UNVERIFIED.value
+    verification_status: Optional[str] = VerificationStatus.UNVERIFIED.value
 
     class Config:
         orm_mode = True

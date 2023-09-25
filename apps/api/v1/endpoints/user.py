@@ -33,8 +33,9 @@ from schemas.user import (
     ConsentCreate,
     UserRegister,
     UserUniversityCreate,
+    UserNationalityResponse,
     UserNationalityCreate,
-    StudentVerificationCreate,
+    UserNationalityUpdate,
     StudentVerificationBase,
     StudentVerificationUpdate,
     VerificationStatus,
@@ -131,8 +132,22 @@ def register_user(
     이메일과 비밀번호를 사용하여 새 사용자를 등록합니다.
 
     Args:
-    - user_in (UserCreate): 사용자의 이메일 및 비밀번호.
-    - db (Session): 데이터베이스 세션.
+
+    - email: EmailStr
+    - password: str
+    - name: str
+    - birth: date
+    - gender: str
+
+    - nationality_ids: List[int]
+
+    - university_id: Optional[int]
+    - department: Optional[str] : 소속 선택 ["학부","대학원","교환학생","어학당"]
+    - education_status: Optional[str] : 학적 선택 ["재학", "졸업","수료"]
+
+    - terms_mandatory: Optional[bool]
+    - terms_optional: Optional[bool]
+    - terms_push: Optional[bool]
 
     Returns:
     - dict: 새로 등록된 사용자의 ID와 이메일.
@@ -141,7 +156,7 @@ def register_user(
     new_user = None
     consent_obj = None
     user_university_obj = None
-    user_nationally_obj_list = []
+    user_nationality_obj_list = []
 
     # 데이터베이스에서 이메일로 사용자 확인
     db_user = crud.user.get_by_email(db=db, email=user_in.email)
@@ -155,7 +170,7 @@ def register_user(
             status_code=400, detail="Password must be 8-16 characters long"
         )
 
-    if not not re.match(
+    if not re.match(
         "^(?=.*[a-zA-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,16}$", password
     ):
         raise HTTPException(
@@ -186,18 +201,17 @@ def register_user(
         user_university = UserUniversityCreate(
             department=user_in.department,
             education_status=user_in.education_status,
-            is_graduated=user_in.is_graduated,
             university_id=user_in.university_id,
             user_id=new_user.id,
         )
 
-        user_nationally_obj_list = user_in.nationality_ids
-        for id in user_nationally_obj_list:
-            user_nationally = UserNationalityCreate(
+        user_nationality_obj_list = user_in.nationality_ids
+        for id in user_nationality_obj_list:
+            user_nationality = UserNationalityCreate(
                 nationality_id=id, user_id=new_user.id
             )
-            user_nationally_obj = crud.user.create_nationally(
-                db=db, obj_in=user_nationally
+            user_nationality_obj = crud.user.create_nationality(
+                db=db, obj_in=user_nationality
             )
 
         consent_obj = crud.user.create_consent(db=db, obj_in=consent)
@@ -209,9 +223,9 @@ def register_user(
             crud.user.remove_consent(db=db, id=id)
         if user_university_obj:
             crud.user.remove_university(db=db, id=user_university_obj.id)
-        if user_nationally_obj_list:
-            for id in user_nationally_obj_list:
-                crud.user.remove_nationally(db=db, id=id)
+        if user_nationality_obj_list:
+            for id in user_nationality_obj_list:
+                crud.user.remove_nationality(db=db, id=id)
         print(e)
         log_error(e)
         raise HTTPException(status_code=500)
@@ -620,5 +634,53 @@ def update_user_university(
 
     update_user_univer = crud.user.update_university(
         db=db, db_obj=exsisting_user_university, obj_in=user_univeristy
+    )
+    return update_user_univer
+
+
+@router.get("/user/{user_id}/nationality", response_model=UserNationalityResponse)
+def get_user_nationality(
+    user_id: int,
+    db: Session = Depends(get_db),
+):
+    user = crud.user.get(db=db, id=user_id)
+    if not user:
+        raise HTTPException(status_code=400, detail="User not found")
+
+    user_nationality = crud.user.get_nationality(db=db, user_id=user_id)
+    if not user_nationality:
+        raise HTTPException(status_code=400, detail="user_nationality not found")
+    return user_nationality
+
+
+@router.delete("/user/{user_id}/nationality", response_model=UserNationalityResponse)
+def delete_user_nationality(
+    user_id: int,
+    db: Session = Depends(get_db),
+):
+    user = crud.user.get(db=db, id=user_id)
+    if not user:
+        raise HTTPException(status_code=400, detail="User not found")
+
+    user_nationality = crud.user.get_nationality(db=db, user_id=user_id)
+    if not user_nationality:
+        raise HTTPException(status_code=400, detail="user_nationality not found")
+
+    db_obj = crud.user.remove_nationality(db=db, id=user_nationality.id)
+    return db_obj
+
+
+@router.put("/user/{user_id}/nationality", response_model=UserNationalityResponse)
+def update_user_nationality(
+    user_id: int,
+    user_univeristy: UserNationalityUpdate,
+    db: Session = Depends(get_db),
+):
+    exsisting_user_nationality = crud.user.get_nationality(db=db, user_id=user_id)
+    if not exsisting_user_nationality:
+        raise HTTPException(status_code=404, detail="Usernationality not found")
+
+    update_user_univer = crud.user.update_nationality(
+        db=db, db_obj=exsisting_user_nationality, obj_in=user_univeristy
     )
     return update_user_univer

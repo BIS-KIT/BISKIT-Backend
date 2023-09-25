@@ -34,7 +34,6 @@ class UserNationality(ModelBase):
 class UserUniversity(ModelBase):
     department = Column(String, nullable=True)
     education_status = Column(String, nullable=True)
-    is_graduated = Column(Boolean, default=False)
 
     university_id = Column(Integer, ForeignKey("university.id"))
     university = relationship("University", backref="user_university")
@@ -49,7 +48,7 @@ class EmailCertification(ModelBase):
 
 
 class Consent(ModelBase):
-    terms_mandatory = Column(Boolean, nullable=True)  # 필수 약관 동의
+    terms_mandatory = Column(Boolean, default=True, nullable=True)  # 필수 약관 동의
     terms_optional = Column(Boolean, default=False, nullable=True)  # 선택 약관 동의
     terms_push = Column(Boolean, nullable=True)
 

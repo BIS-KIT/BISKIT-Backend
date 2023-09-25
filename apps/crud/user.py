@@ -188,19 +188,33 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             update_data = obj_in.dict(exclude_unset=True)
         return super().update(db, db_obj=db_obj, obj_in=update_data)
 
-    def create_nationally(self, db: Session, obj_in: UserNationalityCreate):
+    def get_nationality(self, db: Session, user_id: int):
+        return (
+            db.query(UserNationality).filter(UserNationality.user_id == user_id).first()
+        )
+
+    def create_nationality(self, db: Session, obj_in: UserNationalityCreate):
         db_obj = UserNationality(**obj_in.dict())
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)
         return db_obj
 
-    def remove_nationally(self, db: Session, id: int):
+    def remove_nationality(self, db: Session, id: int):
         obj = db.query(UserNationality).filter(UserNationality.id == id).first()
         if obj:
             db.delete(obj)
             db.commit()
             return obj
+
+    def update_nationality(
+        self, db: Session, db_obj: UserNationality, obj_in: UserNationalityCreate
+    ):
+        if isinstance(obj_in, dict):
+            update_data = obj_in
+        else:
+            update_data = obj_in.dict(exclude_unset=True)
+        return super().update(db, db_obj=db_obj, obj_in=update_data)
 
     def remove_email_certification(
         self, db: Session, *, db_obj: EmailCertificationCheck
