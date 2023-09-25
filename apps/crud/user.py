@@ -10,12 +10,14 @@ from passlib.context import CryptContext
 
 from core.config import settings
 from crud.base import CRUDBase
+from crud.profile import save_upload_file, generate_random_string
 from models.user import (
     User,
     EmailCertification,
     Consent,
     UserNationality,
     UserUniversity,
+    StudentVerification,
 )
 from schemas.user import (
     UserCreate,
@@ -25,6 +27,9 @@ from schemas.user import (
     ConsentCreate,
     UserUniversityCreate,
     UserNationalityCreate,
+    StudentVerificationBase,
+    StudentVerificationCreate,
+    StudentVerificationUpdate,
 )
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -44,7 +49,10 @@ def send_email(certification: int, receiver_email: EmailStr, language_code: str 
         body_template = "email_kr.html"
         SUBJECT = "BISKIT Email Certification"
 
-    BODY = render_template(body_template, certification=certification)
+    s3_logo_url = settings.LOGO_URL
+    BODY = render_template(
+        body_template, certification=certification, s3_logo_url=s3_logo_url
+    )
 
     msg = MIMEMultipart()
     msg["From"] = settings.SMTP_USER
@@ -96,6 +104,51 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
     CRUD operations for User model.
     """
 
+    def get_verification(self, db: Session, user_id: int):
+        return (
+            db.query(StudentVerification)
+            .filter(StudentVerification.user_id == user_id)
+            .first()
+        )
+
+    def list_verification(self, db: Session):
+        return db.query(StudentVerification).all()
+
+    def update_verification(
+        self,
+        db: Session,
+        db_obj: StudentVerification,
+        obj_in: StudentVerificationUpdate,
+    ):
+        if isinstance(obj_in, dict):
+            update_data = obj_in
+        else:
+            update_data = obj_in.dict(exclude_unset=True)
+        return super().update(db, db_obj=db_obj, obj_in=update_data)
+
+    def create_verification(self, db: Session, obj_in: StudentVerificationBase):
+        if not obj_in.user_id:
+            raise ValueError("There is no user_id")
+
+        user = db.query(User).filter(User.id == obj_in.user_id)
+        if not user:
+            raise ValueError("There is no user_id")
+
+        if obj_in.student_card:
+            random_str = generate_random_string()
+            file_path = f"student_card/{random_str}_{obj_in.student_card.filename}"
+            s3_url = save_upload_file(obj_in.student_card, file_path)
+            obj_in.student_card = file_path  # Update path
+
+        db_obj = StudentVerification(**obj_in.dict())
+        db.add(db_obj)
+        db.commit()
+        db.refresh(db_obj)
+        return db_obj
+
+    def get_consent(self, db: Session, user_id: int):
+        return db.query(Consent).filter(Consent.user_id == user_id).first()
+
     def create_consent(self, db: Session, obj_in: ConsentCreate):
         db_obj = Consent(**obj_in.dict())
         db.add(db_obj)
@@ -109,6 +162,11 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             db.delete(obj)
             db.commit()
             return obj
+
+    def get_university(self, db: Session, user_id: int):
+        return (
+            db.query(UserUniversity).filter(UserUniversity.user_id == user_id).first()
+        )
 
     def create_university(self, db: Session, obj_in: UserUniversityCreate):
         db_obj = UserUniversity(**obj_in.dict())
@@ -124,19 +182,42 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             db.commit()
             return obj
 
-    def create_nationally(self, db: Session, obj_in: UserNationalityCreate):
+    def update_university(
+        self, db: Session, db_obj: UserUniversity, obj_in: UserUniversityCreate
+    ):
+        if isinstance(obj_in, dict):
+            update_data = obj_in
+        else:
+            update_data = obj_in.dict(exclude_unset=True)
+        return super().update(db, db_obj=db_obj, obj_in=update_data)
+
+    def get_nationality(self, db: Session, user_id: int):
+        return (
+            db.query(UserNationality).filter(UserNationality.user_id == user_id).first()
+        )
+
+    def create_nationality(self, db: Session, obj_in: UserNationalityCreate):
         db_obj = UserNationality(**obj_in.dict())
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)
         return db_obj
 
-    def remove_nationally(self, db: Session, id: int):
+    def remove_nationality(self, db: Session, id: int):
         obj = db.query(UserNationality).filter(UserNationality.id == id).first()
         if obj:
             db.delete(obj)
             db.commit()
             return obj
+
+    def update_nationality(
+        self, db: Session, db_obj: UserNationality, obj_in: UserNationalityCreate
+    ):
+        if isinstance(obj_in, dict):
+            update_data = obj_in
+        else:
+            update_data = obj_in.dict(exclude_unset=True)
+        return super().update(db, db_obj=db_obj, obj_in=update_data)
 
     def remove_email_certification(
         self, db: Session, *, db_obj: EmailCertificationCheck

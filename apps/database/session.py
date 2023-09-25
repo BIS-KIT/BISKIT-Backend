@@ -25,17 +25,3 @@ def get_db() -> Generator:
         yield db
     finally:
         db.close()
-
-
-def create_table():
-    from models.user import User, Consent, Verification, FirebaseAuth
-    from models.profile import Profile
-
-    inspector = inspect(engine)
-    tables = [User, Consent, Verification, FirebaseAuth, Profile]
-
-    for table in tables:
-        if inspector.has_table(table.__tablename__):
-            pass
-        else:
-            table.__table__.create(engine)

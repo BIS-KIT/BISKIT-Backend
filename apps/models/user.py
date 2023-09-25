@@ -16,29 +16,29 @@ class User(ModelBase):
 
     profile = relationship("Profile", back_populates="user", uselist=False)
     consents = relationship("Consent", back_populates="user")
-    verification = relationship("Verification", back_populates="user")
-    available_language = relationship("AvailableLanguage", back_populates="user")
+    student_verification = relationship(
+        "StudentVerification", back_populates="user", uselist=False
+    )
     user_university = relationship("UserUniversity", back_populates="user")
     user_nationality = relationship("UserNationality", back_populates="user")
 
 
 class UserNationality(ModelBase):
     nationality_id = Column(Integer, ForeignKey("nationality.id"))
-    nationality = relationship("Nationality", back_populates="user_nationalities")
+    nationality = relationship("Nationality", backref="user_nationality")
 
-    user_id = Column(Integer, ForeignKey("user.id"))
+    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))
     user = relationship("User", back_populates="user_nationality")
 
 
 class UserUniversity(ModelBase):
     department = Column(String, nullable=True)
     education_status = Column(String, nullable=True)
-    is_graduated = Column(Boolean, default=False)
 
     university_id = Column(Integer, ForeignKey("university.id"))
-    university = relationship("University", back_populates="user_university")
+    university = relationship("University", backref="user_university")
 
-    user_id = Column(Integer, ForeignKey("user.id"))
+    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))
     user = relationship("User", back_populates="user_university")
 
 
@@ -48,21 +48,12 @@ class EmailCertification(ModelBase):
 
 
 class Consent(ModelBase):
-    terms_mandatory = Column(Boolean, nullable=True)  # 필수 약관 동의
+    terms_mandatory = Column(Boolean, default=True, nullable=True)  # 필수 약관 동의
     terms_optional = Column(Boolean, default=False, nullable=True)  # 선택 약관 동의
     terms_push = Column(Boolean, nullable=True)
 
-    user_id = Column(Integer, ForeignKey("user.id"))
+    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))
     user = relationship("User", back_populates="consents")
-
-
-class Verification(ModelBase):
-    # 학생증 사진의 파일 경로나 URL을 저장하는 필드
-    student_card_image = Column(String)
-    verification_status = Column(String, default="pending")
-
-    user_id = Column(Integer, ForeignKey("user.id"))
-    user = relationship("User", back_populates="verification")
 
 
 class FirebaseAuth(ModelBase):
@@ -70,5 +61,13 @@ class FirebaseAuth(ModelBase):
     uid = Column(String, unique=True, index=True)  # Firebase에서 제공하는 고유 사용자 ID
     firebase_token = Column(String)  # Firebase 인증 토큰 (주기적으로 갱신됨)
 
-    user_id = Column(Integer, ForeignKey("user.id"))
+    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))
     user = relationship("User", backref="firebase_auth")
+
+
+class StudentVerification(ModelBase):
+    student_card = Column(String)
+    verification_status = Column(String, default="pending")
+
+    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))
+    user = relationship("User", back_populates="student_verification")

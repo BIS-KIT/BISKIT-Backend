@@ -75,3 +75,5 @@ httpx
 python-multipart
 jinja2
 boto3
+pandas
+openpyxl

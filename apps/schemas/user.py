@@ -10,6 +10,8 @@ from schemas.profile import (
 )
 from schemas.utility import UniversityBase, NationalityBase
 
+from fastapi import UploadFile
+
 
 class EducationStatus(str, Enum):
     UNDERGRADUATE = "학부"
@@ -31,7 +33,6 @@ class UserBase(CoreSchema):
     name: str
     birth: date
     gender: str
-    is_graduated: bool
 
 
 class UserWithStatus(UserBase):
@@ -60,7 +61,6 @@ class UserRegister(BaseModel):
     university_id: Optional[int] = None
     department: Optional[str] = None
     education_status: Optional[str] = None
-    is_graduated: Optional[bool] = False
 
     terms_mandatory: Optional[bool] = True
     terms_optional: Optional[bool] = False
@@ -80,7 +80,6 @@ class UserUpdate(BaseModel):
     university: str
     department: str
     gender: str
-    is_graduated: bool
 
 
 class PasswordChange(CoreSchema):
@@ -108,15 +107,6 @@ class ConsentCreate(ConsentBase):
 # 동의 응답을 위한 스키마
 class ConsentResponse(ConsentBase):
     pass
-
-    class Config:
-        orm_mode = True
-
-
-class StudentVerificationSchema(CoreSchema):
-    user_id: Optional[int] = None
-    student_card_image: Optional[str] = None
-    verification_status: VerificationStatus = VerificationStatus.UNVERIFIED.value
 
     class Config:
         orm_mode = True
@@ -170,7 +160,6 @@ class EmailCertificationCheck(BaseModel):
 class UserUniversityBase(CoreSchema):
     department: Optional[str] = None
     education_status: Optional[str] = None
-    is_graduated: Optional[bool] = False
 
     university: Optional[UniversityBase] = None
     user_id: Optional[int] = None
@@ -179,17 +168,62 @@ class UserUniversityBase(CoreSchema):
         orm_mode = True
 
 
-class UserUniversityCreate(UserUniversityBase):
-    pass
+class UserUniversityUpdate(BaseModel):
+    department: Optional[str] = None
+    education_status: Optional[str] = None
+    university_id: Optional[int] = 0
+    user_id: Optional[int] = 0
+
+
+class UserUniversityCreate(BaseModel):
+    department: Optional[str] = None
+    education_status: Optional[str] = None
+    university_id: Optional[int] = 0
+    user_id: Optional[int] = 0
 
 
 class UserNationalityBase(CoreSchema):
-    nationality: Optional[NationalityBase] = None
+    nationality: Optional[NationalityBase]
+    # nationality_id: Optional[int]
+    user_id: Optional[int]
+
+    class Config:
+        orm_mode = True
+
+
+class UserNationalityResponse(BaseModel):
+    user_id: Optional[int]
+    nationality: Optional[NationalityBase]
+
+    class Config:
+        orm_mode = True
+
+
+class UserNationalityCreate(BaseModel):
+    nationality_id: Optional[int]
+    user_id: Optional[int]
+
+
+class UserNationalityUpdate(BaseModel):
+    nationality_id: Optional[int]
+
+
+class StudentVerificationBase(CoreSchema):
     user_id: Optional[int] = None
+    student_card: Optional[Union[str, UploadFile]] = None
+    verification_status: Optional[str] = VerificationStatus.UNVERIFIED.value
+
+    class Config:
+        orm_mode = True
 
 
-class UserNationalityCreate(UserNationalityBase):
-    pass
+class StudentVerificationCreate(BaseModel):
+    user_id: Optional[int] = None
+    verification_status: str = VerificationStatus.UNVERIFIED.value
+
+
+class StudentVerificationUpdate(BaseModel):
+    verification_status: Optional[str] = VerificationStatus.UNVERIFIED.value
 
 
 class UserResponse(BaseModel):
@@ -202,10 +236,8 @@ class UserResponse(BaseModel):
     is_active: bool
     is_admin: bool
 
-    profile: Optional[List[ProfileResponse]] = None
+    profile: Optional[ProfileResponse] = None
     consents: Optional[List[ConsentResponse]] = None
-    verification: Optional[List[StudentVerificationSchema]] = None
-    available_language: Optional[List[AvailableLanguageBase]] = None
     user_university: Optional[List[UserUniversityBase]] = None
     user_nationality: Optional[List[UserNationalityBase]] = None
 
