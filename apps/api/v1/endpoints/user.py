@@ -393,11 +393,11 @@ def change_password(
     if not current_user:
         raise HTTPException(status_code=400, detail="User not found")
 
-    if password_data.new_password != password_data.new_password_check:
-        raise HTTPException(status_code=400, detail="New passwords do not match")
-
     if not crud.verify_password(password_data.old_password, current_user.password):
         raise HTTPException(status_code=400, detail="Incorrect old password")
+
+    if password_data.new_password != password_data.new_password_check:
+        raise HTTPException(status_code=400, detail="New passwords do not match")
 
     user_in = PasswordUpdate(password=password_data.new_password)
     updated_user = crud.user.update(db, db_obj=current_user, obj_in=user_in)
@@ -407,6 +407,9 @@ def change_password(
 
 @router.post("/check-email/")
 def check_mail_exists(email: str, db: Session = Depends(get_db)):
+    if not "@" in email:
+        raise HTTPException(status_code=409, detail="This is not Email Form.")
+
     check_email = crud.user.get_by_email(db=db, email=email)
     if check_email:
         raise HTTPException(status_code=409, detail="Email already registered.")
@@ -417,6 +420,9 @@ def check_mail_exists(email: str, db: Session = Depends(get_db)):
 async def certificate_email(
     cert_in: EmailCertificationIn, db: Session = Depends(get_db)
 ):
+    if not "@" in cert_in.email:
+        raise HTTPException(status_code=409, detail="This is not Email Form.")
+
     check_user = crud.user.get_by_email(db=db, email=cert_in.email)
     if check_user:
         raise HTTPException(status_code=409, detail="Email already registered.")
@@ -451,8 +457,8 @@ async def certificate_check(
         db, email=cert_check.email, certification=cert_check.certification
     )
     if user_cert:
-        db.delete(user_cert)
-        db.commit()
+        # db.delete(user_cert)
+        # db.commit()
         return {"result": "success", "email": cert_check.email}
     return {"result": "fail"}
 
