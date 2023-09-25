@@ -1,6 +1,7 @@
 from typing import Any, List, Optional, Dict
 from random import randint
 from datetime import timedelta
+import re
 
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi import (
@@ -147,7 +148,22 @@ def register_user(
     if db_user:
         raise HTTPException(status_code=409, detail="User already registered.")
 
-    hashed_password = crud.get_password_hash(user_in.password)
+    password = user_in.password
+
+    if not (8 <= len(password) <= 16):
+        raise HTTPException(
+            status_code=400, detail="Password must be 8-16 characters long"
+        )
+
+    if not not re.match(
+        "^(?=.*[a-zA-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,16}$", password
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail="Password must be include at least one letter, one number, and one special character.",
+        )
+
+    hashed_password = crud.get_password_hash(password)
 
     try:
         obj_in = UserCreate(
