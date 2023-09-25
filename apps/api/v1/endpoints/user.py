@@ -37,6 +37,10 @@ from schemas.user import (
     StudentVerificationBase,
     StudentVerificationUpdate,
     VerificationStatus,
+    ConsentBase,
+    ConsentResponse,
+    UserUniversityBase,
+    UserUniversityUpdate,
 )
 from models.user import User
 from core.security import (
@@ -508,3 +512,91 @@ def approve_varification(
         db=db, db_obj=verification, obj_in=obj_in
     )
     return update_verification
+
+
+@router.get("/user/{user_id}/consent", response_model=ConsentResponse)
+def get_user_consent(
+    user_id: int,
+    db: Session = Depends(get_db),
+):
+    user = crud.user.get(db=db, id=user_id)
+    if not user:
+        raise HTTPException(status_code=400, detail="User not found")
+
+    consent = crud.user.get_consent(db=db, user_id=user_id)
+    if not consent:
+        raise HTTPException(status_code=400, detail="Consent not found")
+    return consent
+
+
+@router.delete("/user/{user_id}/consent", response_model=ConsentResponse)
+def delete_user_consent(
+    user_id: int,
+    db: Session = Depends(get_db),
+):
+    user = crud.user.get(db=db, id=user_id)
+    if not user:
+        raise HTTPException(status_code=400, detail="User not found")
+
+    consent = crud.user.get_consent(db=db, user_id=user_id)
+    if not consent:
+        raise HTTPException(status_code=400, detail="Consent not found")
+
+    db_obj = crud.user.remove_consent(db=db, id=consent.id)
+    return db_obj
+
+
+# @router.put("/user/{user_id}/consent")
+# def update_user_consent(
+#     user_id: int,
+#     db: Session = Depends(get_db),
+# ):
+#     pass
+
+
+@router.get("/user/{user_id}/university", response_model=UserUniversityBase)
+def get_user_university(
+    user_id: int,
+    db: Session = Depends(get_db),
+):
+    user = crud.user.get(db=db, id=user_id)
+    if not user:
+        raise HTTPException(status_code=400, detail="User not found")
+
+    user_university = crud.user.get_university(db=db, user_id=user_id)
+    if not user_university:
+        raise HTTPException(status_code=400, detail="user_university not found")
+    return user_university
+
+
+@router.delete("/user/{user_id}/university", response_model=UserUniversityBase)
+def delete_user_university(
+    user_id: int,
+    db: Session = Depends(get_db),
+):
+    user = crud.user.get(db=db, id=user_id)
+    if not user:
+        raise HTTPException(status_code=400, detail="User not found")
+
+    user_university = crud.user.get_university(db=db, user_id=user_id)
+    if not user_university:
+        raise HTTPException(status_code=400, detail="user_university not found")
+
+    db_obj = crud.user.remove_university(db=db, id=user_university.id)
+    return db_obj
+
+
+@router.put("/user/{user_id}/university", response_model=UserUniversityBase)
+def update_user_university(
+    user_id: int,
+    user_univeristy: UserUniversityUpdate,
+    db: Session = Depends(get_db),
+):
+    exsisting_user_university = crud.user.get_university(db=db, user_id=user_id)
+    if not exsisting_user_university:
+        raise HTTPException(status_code=404, detail="UserUniversity not found")
+
+    update_user_univer = crud.user.update_university(
+        db=db, db_obj=exsisting_user_university, obj_in=user_univeristy
+    )
+    return update_user_univer

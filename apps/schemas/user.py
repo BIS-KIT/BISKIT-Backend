@@ -172,6 +172,13 @@ class UserUniversityBase(CoreSchema):
         orm_mode = True
 
 
+class UserUniversityUpdate(BaseModel):
+    department: Optional[str] = None
+    education_status: Optional[str] = None
+    is_graduated: Optional[bool] = False
+    university_id: Optional[int] = 0
+
+
 class UserUniversityCreate(UserUniversityBase):
     pass
 

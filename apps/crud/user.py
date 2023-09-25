@@ -143,6 +143,9 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         db.refresh(db_obj)
         return db_obj
 
+    def get_consent(self, db: Session, user_id: int):
+        return db.query(Consent).filter(Consent.user_id == user_id).first()
+
     def create_consent(self, db: Session, obj_in: ConsentCreate):
         db_obj = Consent(**obj_in.dict())
         db.add(db_obj)
@@ -157,6 +160,11 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             db.commit()
             return obj
 
+    def get_university(self, db: Session, user_id: int):
+        return (
+            db.query(UserUniversity).filter(UserUniversity.user_id == user_id).first()
+        )
+
     def create_university(self, db: Session, obj_in: UserUniversityCreate):
         db_obj = UserUniversity(**obj_in.dict())
         db.add(db_obj)
@@ -170,6 +178,15 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             db.delete(obj)
             db.commit()
             return obj
+
+    def update_university(
+        self, db: Session, db_obj: UserUniversity, obj_in: UserUniversityCreate
+    ):
+        if isinstance(obj_in, dict):
+            update_data = obj_in
+        else:
+            update_data = obj_in.dict(exclude_unset=True)
+        return super().update(db, db_obj=db_obj, obj_in=update_data)
 
     def create_nationally(self, db: Session, obj_in: UserNationalityCreate):
         db_obj = UserNationality(**obj_in.dict())
