@@ -88,5 +88,5 @@ def get_Countries(
     if os_language and os_language.value == OsLanguage.EN:
         query = query.order_by(Nationality.en_name)
 
-    Countries = query.all()
-    return Countries
+    countries = query.all()
+    return [NationalityBase.from_orm(country) for country in countries]
