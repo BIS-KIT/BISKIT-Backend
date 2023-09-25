@@ -64,7 +64,21 @@ def create_profile(
     profile_photo: UploadFile = None,
     db: Session = Depends(get_db),
 ):
-    """ """
+    """
+    사용자 프로필 생성 API.
+
+    이 API는 주어진 사용자 정보로 새로운 프로필을 생성합니다.
+    이미 프로필이 존재하는 경우, 오류를 반환합니다.
+
+    매개변수:
+    - user_id (int): 사용자 ID.
+    - nick_name (str, optional): 사용자 별명.
+    - profile_photo (UploadFile, optional): 사용자 프로필 사진.
+    - db (Session): 데이터베이스 세션.
+
+    반환값:
+    - ProfileResponse: 생성된 사용자의 프로필 정보.
+    """
     new_profile = None
 
     user = crud.user.get(db=db, id=user_id)
@@ -169,16 +183,14 @@ def delete_profile_by_user(user_id: int, db: Session = Depends(get_db)):
 @router.delete("/profile/{user_id}/photo")
 async def delete_profile_photo(user_id: int, db: Session = Depends(get_db)):
     """
-    사용자 프로필 사진 삭제 API
+    사용자 프로필 사진 삭제 API.
 
-    해당 API는 주어진 사용자 ID에 대한 프로필 사진을 삭제합니다.
-    사용자 프로필이 존재하지 않는 경우 오류를 반환합니다.
+    매개변수:
+    - user_id (int): 사용자 ID.
+    - db (Session): 데이터베이스 세션.
 
-    Parameters:
-    - user_id: 사진을 삭제하려는 사용자의 ID.
-
-    Returns:
-    - 삭제 처리 결과.
+    반환값:
+    - 메시지: 프로필 사진 삭제 성공 메시지.
     """
     profile = crud.profile.get_by_user_id(db, user_id=user_id)
     if not profile:
@@ -242,6 +254,18 @@ def create_introduction(
     introduction: List[IntroductionCreate],
     db: Session = Depends(get_db),
 ):
+    """
+    사용자 소개 생성 API.
+
+    이 API는 주어진 사용자 소개 정보로 새로운 사용자 소개를 생성합니다.
+
+    매개변수:
+    - introduction (List[IntroductionCreate]): 사용자 소개 목록.
+    - db (Session): 데이터베이스 세션.
+
+    반환값:
+    - List[IntroductionResponse]: 생성된 사용자 소개 목록.
+    """
     created_introductions = []
 
     profile = crud.profile.get(db=db, id=introduction[0].profile_id)
@@ -305,12 +329,14 @@ async def create_available_language(
     db: Session = Depends(get_db),
 ):
     """
-    - BEGINNER = "초보"
-    - BASIC = "기초"
-    - INTERMEDIATE = "중급"
-    - ADVANCED = "고급"
-    - PROFICIENT = "능숙"
+    사용자의 사용 가능 언어 생성 API.
 
+    매개변수:
+    - available_language (List[AvailableLanguageCreate]): 사용자의 사용 가능 언어 목록.
+    - db (Session): 데이터베이스 세션.
+
+    반환값:
+    - List[AvailableLanguageBase]: 생성된 사용 가능 언어 목록.
     """
     return_list = []
 
@@ -364,6 +390,17 @@ async def update_available_language(
     available_language: AvailableLanguageUpdate,
     db: Session = Depends(get_db),
 ):
+    """
+    사용자의 사용 가능 언어 업데이트 API.
+
+    매개변수:
+    - ava_lang_id (int): 업데이트할 사용 가능 언어의 ID.
+    - available_language (AvailableLanguageUpdate): 업데이트할 사용 가능 언어 정보.
+    - db (Session): 데이터베이스 세션.
+
+    반환값:
+    - AvailableLanguageBase: 업데이트된 사용 가능 언어 정보.
+    """
     existing_ava_lang = crud.profile.get_ava_lan(db=db, id=ava_lang_id)
     if not existing_ava_lang:
         raise HTTPException(status_code=404, detail="Introduction not found")
