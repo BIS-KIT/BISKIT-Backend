@@ -81,16 +81,15 @@ def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
 @router.get("/users/{user_id}", response_model=UserResponse)
 def read_user(user_id: int, db: Session = Depends(get_db)):
     """
-    사용자 목록을 반환합니다.
+    특정 사용자의 정보를 조회합니다.
 
     **파라미터**
 
-    * `skip`: 건너뛸 항목의 수
-    * `limit`: 반환할 최대 항목 수
+    * `user_id`: 조회하려는 사용자의 ID
 
-    **반환**
+    **반환값**
 
-    * 사용자 목록
+    * 조회된 사용자의 정보
     """
     users = crud.user.get(db=db, id=user_id)
     if users is None:
@@ -101,8 +100,17 @@ def read_user(user_id: int, db: Session = Depends(get_db)):
 @router.delete("/user/{user_id}", response_model=UserResponse)
 def delete_user(user_id: int, db: Session = Depends(get_db)):
     """
-    사용자 삭제 API
+    특정 사용자를 삭제합니다.
+
+    **파라미터**
+
+    * `user_id`: 삭제하려는 사용자의 ID
+
+    **반환값**
+
+    * 삭제된 사용자의 정보
     """
+
     user = crud.user.get(db, id=user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -112,12 +120,12 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
 @router.get("/users/me", response_model=UserResponse)
 async def read_users_me(current_user: User = Depends(get_current_user)):
     """
-    현재 사용자의 정보를 가져옵니다.
+    현재 사용자의 정보를 반환합니다.
 
-    인자:
+    **인자:**
     - current_user (User): 현재 인증된 사용자.
 
-    반환값:
+    **반환값:**
     - dict: 인증된 사용자의 정보.
     """
     return current_user
@@ -437,6 +445,16 @@ def change_password(
 
 @router.post("/check-email/")
 def check_mail_exists(email: str, db: Session = Depends(get_db)):
+    """
+    입력받은 이메일이 이미 존재하는지 확인합니다.
+
+    **인자:**
+    - email (str): 확인할 이메일 주소.
+    - db (Session): 데이터베이스 세션.
+
+    **반환값:**
+    - dict: 이메일 사용 가능 여부.
+    """
     if not "@" in email:
         raise HTTPException(status_code=409, detail="This is not Email Form.")
 
@@ -450,6 +468,16 @@ def check_mail_exists(email: str, db: Session = Depends(get_db)):
 async def certificate_email(
     cert_in: EmailCertificationIn, db: Session = Depends(get_db)
 ):
+    """
+    주어진 이메일에 인증번호를 발송합니다.
+
+    **인자:**
+    - cert_in (EmailCertificationIn): 인증을 받을 이메일 정보.
+    - db (Session): 데이터베이스 세션.
+
+    **반환값:**
+    - dict: 이메일 인증 결과.
+    """
     if not "@" in cert_in.email:
         raise HTTPException(status_code=409, detail="This is not Email Form.")
 
@@ -483,6 +511,16 @@ async def certificate_email(
 async def certificate_check(
     cert_check: EmailCertificationCheck, db: Session = Depends(get_db)
 ):
+    """
+    사용자로부터 입력받은 인증번호를 검증합니다.
+
+    **인자:**
+    - cert_check (EmailCertificationCheck): 사용자로부터 입력받은 인증번호.
+    - db (Session): 데이터베이스 세션.
+
+    **반환값:**
+    - dict: 인증번호 검증 결과.
+    """
     user_cert = crud.user.get_email_certification(
         db, email=cert_check.email, certification=cert_check.certification
     )
@@ -495,6 +533,15 @@ async def certificate_check(
 
 @router.get("/student-cards", response_model=List[StudentVerificationBase])
 def read_student_cards(db: Session = Depends(get_db)):
+    """
+    학생증 인증을 대기 중인 목록을 반환합니다.
+
+    **인자:**
+    - db (Session): 데이터베이스 세션.
+
+    **반환값:**
+    - List[StudentVerificationBase]: 학생증 인증 대기 중인 목록.
+    """
     obj_list = crud.user.list_verification(db=db)
     return obj_list
 
@@ -505,6 +552,17 @@ def student_varification(
     user_id: int = Form(...),
     db: Session = Depends(get_db),
 ):
+    """
+    학생증 인증 정보를 제출합니다.
+
+    **인자:**
+    - student_card (UploadFile): 업로드된 학생증 이미지 파일.
+    - user_id (int): 사용자 ID.
+    - db (Session): 데이터베이스 세션.
+
+    **반환값:**
+    - StudentVerificationBase: 학생증 인증 정보.
+    """
     user = crud.user.get(db=db, id=user_id)
     if user is None:
         raise HTTPException(status_code=404, detail="user not found")
@@ -528,6 +586,16 @@ def student_varification(
     user_id: int,
     db: Session = Depends(get_db),
 ):
+    """
+    특정 사용자의 학생증 인증 정보를 조회합니다.
+
+    **인자:**
+    - user_id (int): 사용자 ID.
+    - db (Session): 데이터베이스 세션.
+
+    **반환값:**
+    - StudentVerificationBase: 학생증 인증 정보.
+    """
     user = crud.user.get(db=db, id=user_id)
     if user is None:
         raise HTTPException(status_code=404, detail="user not found")
@@ -543,6 +611,16 @@ def approve_varification(
     user_id: int,
     db: Session = Depends(get_db),
 ):
+    """
+    특정 사용자의 학생증 인증을 승인합니다.
+
+    **인자:**
+    - user_id (int): 사용자 ID.
+    - db (Session): 데이터베이스 세션.
+
+    **반환값:**
+    - dict: 인증 승인 결과.
+    """
     verification = crud.user.get_verification(db=db, user_id=user_id)
     if verification is None:
         raise HTTPException(status_code=404, detail="StudentVerification not found")
@@ -561,6 +639,16 @@ def get_user_consent(
     user_id: int,
     db: Session = Depends(get_db),
 ):
+    """
+    특정 사용자의 동의 정보를 반환합니다.
+
+    **인자:**
+    - user_id (int): 사용자 ID.
+    - db (Session): 데이터베이스 세션.
+
+    **반환값:**
+    - ConsentResponse: 사용자의 동의 정보.
+    """
     user = crud.user.get(db=db, id=user_id)
     if not user:
         raise HTTPException(status_code=400, detail="User not found")
@@ -576,6 +664,16 @@ def delete_user_consent(
     user_id: int,
     db: Session = Depends(get_db),
 ):
+    """
+    특정 사용자의 동의 정보를 삭제합니다.
+
+    **인자:**
+    - user_id (int): 사용자 ID.
+    - db (Session): 데이터베이스 세션.
+
+    **반환값:**
+    - ConsentResponse: 삭제된 동의 정보.
+    """
     user = crud.user.get(db=db, id=user_id)
     if not user:
         raise HTTPException(status_code=400, detail="User not found")
@@ -601,6 +699,16 @@ def get_user_university(
     user_id: int,
     db: Session = Depends(get_db),
 ):
+    """
+    특정 사용자의 대학 정보를 반환합니다.
+
+    **인자:**
+    - user_id (int): 사용자 ID.
+    - db (Session): 데이터베이스 세션.
+
+    **반환값:**
+    - UserUniversityBase: 사용자의 대학 정보.
+    """
     user = crud.user.get(db=db, id=user_id)
     if not user:
         raise HTTPException(status_code=400, detail="User not found")
@@ -616,6 +724,16 @@ def delete_user_university(
     user_id: int,
     db: Session = Depends(get_db),
 ):
+    """
+    특정 사용자의 대학 정보를 삭제합니다.
+
+    **인자:**
+    - user_id (int): 사용자 ID.
+    - db (Session): 데이터베이스 세션.
+
+    **반환값:**
+    - UserUniversityBase: 삭제된 대학 정보.
+    """
     user = crud.user.get(db=db, id=user_id)
     if not user:
         raise HTTPException(status_code=400, detail="User not found")
@@ -634,6 +752,17 @@ def update_user_university(
     user_univeristy: UserUniversityUpdate,
     db: Session = Depends(get_db),
 ):
+    """
+    특정 사용자의 대학 정보를 업데이트합니다.
+
+    **인자:**
+    - user_id (int): 사용자 ID.
+    - user_university (UserUniversityUpdate): 업데이트할 대학 정보.
+    - db (Session): 데이터베이스 세션.
+
+    **반환값:**
+    - UserUniversityBase: 업데이트된 대학 정보.
+    """
     exsisting_user_university = crud.user.get_university(db=db, user_id=user_id)
     if not exsisting_user_university:
         raise HTTPException(status_code=404, detail="UserUniversity not found")
@@ -649,6 +778,16 @@ def get_user_nationality(
     user_id: int,
     db: Session = Depends(get_db),
 ):
+    """
+    특정 사용자의 국적 정보를 반환합니다.
+
+    **인자:**
+    - user_id (int): 사용자 ID.
+    - db (Session): 데이터베이스 세션.
+
+    **반환값:**
+    - UserNationalityResponse: 사용자의 국적 정보.
+    """
     user = crud.user.get(db=db, id=user_id)
     if not user:
         raise HTTPException(status_code=400, detail="User not found")
@@ -664,6 +803,16 @@ def delete_user_nationality(
     user_id: int,
     db: Session = Depends(get_db),
 ):
+    """
+    특정 사용자의 국적 정보를 삭제합니다.
+
+    **인자:**
+    - user_id (int): 사용자 ID.
+    - db (Session): 데이터베이스 세션.
+
+    **반환값:**
+    - UserNationalityResponse: 삭제된 국적 정보.
+    """
     user = crud.user.get(db=db, id=user_id)
     if not user:
         raise HTTPException(status_code=400, detail="User not found")
@@ -682,6 +831,17 @@ def update_user_nationality(
     user_univeristy: UserNationalityUpdate,
     db: Session = Depends(get_db),
 ):
+    """
+    특정 사용자의 국적 정보를 업데이트합니다.
+
+    **인자:**
+    - user_id (int): 사용자 ID.
+    - user_nationality (UserNationalityUpdate): 업데이트할 국적 정보.
+    - db (Session): 데이터베이스 세션.
+
+    **반환값:**
+    - UserNationalityResponse: 업데이트된 국적 정보.
+    """
     exsisting_user_nationality = crud.user.get_nationality(db=db, user_id=user_id)
     if not exsisting_user_nationality:
         raise HTTPException(status_code=404, detail="Usernationality not found")
