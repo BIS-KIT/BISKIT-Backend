@@ -82,6 +82,9 @@ def create_profile(
             status_code=400, detail="Nick_name contains special characters."
         )
 
+    if not re.match("^[a-zA-Z0-9ㄱ-ㅎㅏ-ㅣ가-힣]{2,12}$", nick_name):
+        raise HTTPException(status_code=400, detail="Invalid nickname.")
+
     try:
         obj_in = ProfileCreate(
             nick_name=nick_name, profile_photo=profile_photo, user_id=user_id
@@ -311,17 +314,15 @@ async def create_available_language(
     """
     return_list = []
 
+    if len(available_language) >= 5:
+        raise HTTPException(status_code=409, detail="Only up to 5 can be created.")
+
     profile = crud.profile.get(db=db, id=available_language[0].profile_id)
     if not profile:
         raise HTTPException(status_code=404, detail="profile not found")
 
     for ava_lang in available_language:
         lang = crud.utility.get(db=db, language_id=ava_lang.language_id)
-
-        if len(lang) >= 5:
-            raise HTTPException(
-                status_code=409, detail="There are already five of these"
-            )
 
         if not lang:
             raise HTTPException(status_code=404, detail="Languag not found")
