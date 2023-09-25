@@ -2,10 +2,10 @@ from enum import Enum
 
 from models.base import ModelBase
 from sqlalchemy import Column, Integer, String, Boolean, Date, ForeignKey
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, validates
 
 
-class OsLanguage(str,Enum):
+class OsLanguage(str, Enum):
     EN = "english"
     KR = "korean"
 
@@ -15,7 +15,9 @@ class Nationality(ModelBase):
     en_name = Column(String)
     code = Column(String)
 
-    # user_nationalities = relationship("UserNationality", back_populates="nationality")
+    @validates("code")
+    def convert_lowercase(self, key, value):
+        return value.lower()
 
 
 class Language(ModelBase):

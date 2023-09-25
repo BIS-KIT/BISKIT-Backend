@@ -57,7 +57,6 @@ class AvailableLanguageCreate(BaseModel):
 class AvailableLanguageUpdate(BaseModel):
     level: Optional[str] = None
     language_id: Optional[int] = None
-    profile_id: Optional[int] = None
 
 
 class AvailableLanguageResponse(AvailableLanguageBase):
