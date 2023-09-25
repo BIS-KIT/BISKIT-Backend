@@ -111,6 +111,9 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             .first()
         )
 
+    def list_verification(self, db: Session):
+        return db.query(StudentVerification).all()
+
     def update_verification(
         self,
         db: Session,

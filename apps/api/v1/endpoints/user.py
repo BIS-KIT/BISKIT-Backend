@@ -493,7 +493,13 @@ async def certificate_check(
     return {"result": "fail"}
 
 
-@router.post("/user/student-card", response_model=StudentVerificationBase)
+@router.get("/student-cards", response_model=List[StudentVerificationBase])
+def read_student_cards(db: Session = Depends(get_db)):
+    obj_list = crud.user.list_verification(db=db)
+    return obj_list
+
+
+@router.post("/student-card", response_model=StudentVerificationBase)
 def student_varification(
     student_card: UploadFile = File(...),
     user_id: int = Form(...),
@@ -517,7 +523,7 @@ def student_varification(
     return user_verification
 
 
-@router.get("/user/{user_id}/student-card", response_model=StudentVerificationBase)
+@router.get("/student-card/{user_id}", response_model=StudentVerificationBase)
 def student_varification(
     user_id: int,
     db: Session = Depends(get_db),
@@ -532,7 +538,7 @@ def student_varification(
     return db_obj
 
 
-@router.post("/user/{user_id}/student-card/approve")
+@router.post("/student-card/{user_id}/approve")
 def approve_varification(
     user_id: int,
     db: Session = Depends(get_db),
