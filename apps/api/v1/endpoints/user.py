@@ -205,7 +205,11 @@ def register_user(
             terms_push=user_in.terms_push,
             user_id=new_user.id,
         )
-
+        university = crud.utility.get(db=db,university_id=user_in.university_id)
+        if not university:
+            raise HTTPException(
+            status_code=400, detail="University Not Found"
+            )
         user_university = UserUniversityCreate(
             department=user_in.department,
             education_status=user_in.education_status,
@@ -215,6 +219,11 @@ def register_user(
 
         user_nationality_obj_list = user_in.nationality_ids
         for id in user_nationality_obj_list:
+            nation = crud.utility.get(db=db, nationality_id=id)
+            if not nation:
+                raise HTTPException(
+                status_code=400, detail="Nationality Not Found"
+                )
             user_nationality = UserNationalityCreate(
                 nationality_id=id, user_id=new_user.id
             )
@@ -224,6 +233,11 @@ def register_user(
 
         consent_obj = crud.user.create_consent(db=db, obj_in=consent)
         user_university_obj = crud.user.create_university(db=db, obj_in=user_university)
+    except IntegrityError as e:
+        if "useruniversity_university_id_fkey" in str(e):
+            raise HTTPException(status_code=400, detail="Invalid university ID")
+        else:
+            raise
     except Exception as e:
         if new_user:
             crud.user.remove(db=db, id=new_user.id)
@@ -438,7 +452,7 @@ def change_password(
         raise HTTPException(status_code=400, detail="New passwords do not match")
 
     user_in = PasswordUpdate(password=password_data.new_password)
-    updated_user = crud.user.update(db, db_obj=current_user, obj_in=user_in)
+    updated_user = crud.user.update(db=db, db_obj=current_user, obj_in=user_in)
 
     return {"detail": "Password changed successfully"}
 
@@ -492,7 +506,7 @@ async def certificate_email(
 
     # DB에 인증 데이터 저장
     try:
-        certi = crud.user.create_email_certification(db, obj_in=user_cert)
+        certi = crud.user.create_email_certification(db=db, obj_in=user_cert)
         if crud.send_email(certification, cert_in.email):
             return {
                 "result": "success",
@@ -503,7 +517,7 @@ async def certificate_email(
         raise HTTPException(status_code=409, detail="Email already exists.")
     except Exception as e:
         log_error(e)
-        crud.user.remove_email_certification(db, db_obj=certi)
+        crud.user.remove_email_certification(db=db, db_obj=certi)
         return {"result": "fail"}
 
 

@@ -178,8 +178,8 @@ class UserUniversityUpdate(BaseModel):
 class UserUniversityCreate(BaseModel):
     department: Optional[str] = None
     education_status: Optional[str] = None
-    university_id: Optional[int] = 0
-    user_id: Optional[int] = 0
+    university_id: Optional[int]
+    user_id: Optional[int]
 
 
 class UserNationalityBase(CoreSchema):

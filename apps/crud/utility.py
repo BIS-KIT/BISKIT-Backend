@@ -11,13 +11,13 @@ class CRUDUtility:
         university_id: int = None,
     ):
         if language_id:
-            return db.query(Language).filter(Language.id == language_id).first()
+            return db.query(Language).filter(Language.id == language_id)
         if nationality_id:
             return (
-                db.query(Nationality).filter(Nationality.id == nationality_id).first()
+                db.query(Nationality).filter(Nationality.id == nationality_id)
             )
         if university_id:
-            return db.query(University).filter(University.id == university_id).first()
+            return db.query(University).filter(University.id == university_id)
 
 
 utility = CRUDUtility()
