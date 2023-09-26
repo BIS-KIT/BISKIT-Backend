@@ -178,6 +178,16 @@ def register_user(
             status_code=400, detail="Password must be 8-16 characters long"
         )
 
+    university = crud.utility.get(db=db, university_id=user_in.university_id)
+    if not university:
+        raise HTTPException(status_code=400, detail="University Not Found")
+
+    user_nationality_obj_list = user_in.nationality_ids
+    for id in user_nationality_obj_list:
+        nation = crud.utility.get(db=db, nationality_id=id)
+        if not nation:
+            raise HTTPException(status_code=400, detail="Nationality Not Found")
+
     if not re.match(
         "^(?=.*[a-zA-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,16}$", password
     ):
@@ -205,11 +215,7 @@ def register_user(
             terms_push=user_in.terms_push,
             user_id=new_user.id,
         )
-        university = crud.utility.get(db=db,university_id=user_in.university_id)
-        if not university:
-            raise HTTPException(
-            status_code=400, detail="University Not Found"
-            )
+
         user_university = UserUniversityCreate(
             department=user_in.department,
             education_status=user_in.education_status,
@@ -217,13 +223,7 @@ def register_user(
             user_id=new_user.id,
         )
 
-        user_nationality_obj_list = user_in.nationality_ids
         for id in user_nationality_obj_list:
-            nation = crud.utility.get(db=db, nationality_id=id)
-            if not nation:
-                raise HTTPException(
-                status_code=400, detail="Nationality Not Found"
-                )
             user_nationality = UserNationalityCreate(
                 nationality_id=id, user_id=new_user.id
             )
@@ -233,11 +233,6 @@ def register_user(
 
         consent_obj = crud.user.create_consent(db=db, obj_in=consent)
         user_university_obj = crud.user.create_university(db=db, obj_in=user_university)
-    except IntegrityError as e:
-        if "useruniversity_university_id_fkey" in str(e):
-            raise HTTPException(status_code=400, detail="Invalid university ID")
-        else:
-            raise
     except Exception as e:
         if new_user:
             crud.user.remove(db=db, id=new_user.id)
