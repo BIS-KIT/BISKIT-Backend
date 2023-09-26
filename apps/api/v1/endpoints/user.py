@@ -57,6 +57,22 @@ from core.config import settings
 
 router = APIRouter()
 
+@router.get("/users/me", response_model=UserResponse)
+async def read_current_user(current_user= Depends(get_current_user)):
+    """
+    현재 사용자의 정보를 반환합니다.
+
+    **인자:**
+    - current_user (User): 현재 인증된 사용자.
+
+    **반환값:**
+    - dict: 인증된 사용자의 정보.
+    """
+    print(1212,current_user)
+    return current_user
+
+
+
 
 @router.get("/users/", response_model=List[UserResponse])
 def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
@@ -117,19 +133,6 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
     return crud.user.remove(db, id=user_id)
 
 
-@router.get("/users/me", response_model=UserResponse)
-async def read_users_me(current_user: User = Depends(get_current_user)):
-    """
-    현재 사용자의 정보를 반환합니다.
-
-    **인자:**
-    - current_user (User): 현재 인증된 사용자.
-
-    **반환값:**
-    - dict: 인증된 사용자의 정보.
-    """
-    return current_user
-
 
 @router.post("/register/", response_model=Dict[str, Any])
 def register_user(
@@ -173,9 +176,10 @@ def register_user(
 
     password = user_in.password
 
-    if not (8 <= len(password) <= 16):
+    if not re.match("^[a-zA-Z\d@$!%*#?&]{8,16}$", password):
         raise HTTPException(
-            status_code=400, detail="Password must be 8-16 characters long"
+            status_code=400,
+            detail="Password must only include letters, numbers, and special characters.",
         )
 
     university = crud.utility.get(db=db, university_id=user_in.university_id)
@@ -188,13 +192,6 @@ def register_user(
         if not nation:
             raise HTTPException(status_code=400, detail="Nationality Not Found")
 
-    if not re.match(
-        "^(?=.*[a-zA-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,16}$", password
-    ):
-        raise HTTPException(
-            status_code=400,
-            detail="Password must be include at least one letter, one number, and one special character.",
-        )
 
     hashed_password = crud.get_password_hash(password)
 
@@ -423,8 +420,8 @@ def validate_token(token: str = Depends(get_current_token)):
 @router.post("/change-password/")
 def change_password(
     password_data: PasswordChange,
+    user_id : int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
 ):
     """
     사용자의 비밀번호를 변경합니다.
@@ -437,8 +434,16 @@ def change_password(
     반환값:
     - dict: 비밀번호 변경 상태 메시지.
     """
+    current_user = crud.user.get(db=db,id=user_id)
     if not current_user:
         raise HTTPException(status_code=400, detail="User not found")
+
+    if not re.match("^[a-zA-Z\d@$!%*#?&]{8,16}$", password_data.new_password):
+        raise HTTPException(
+            status_code=400,
+            detail="Password must only include letters, numbers, and special characters.",
+        )
+
 
     if not crud.verify_password(password_data.old_password, current_user.password):
         raise HTTPException(status_code=400, detail="Incorrect old password")

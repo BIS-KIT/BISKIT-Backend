@@ -229,7 +229,6 @@ class StudentVerificationUpdate(BaseModel):
 class UserResponse(BaseModel):
     id: int
     email: str
-    password: str
     name: str
     birth: date
     gender: str
