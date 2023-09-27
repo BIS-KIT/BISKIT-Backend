@@ -20,13 +20,6 @@ class EducationStatus(str, Enum):
     LANGUAGE_INSTITUTE = "어학당"
 
 
-class VerificationStatus(str, Enum):
-    PENDING = "pending"
-    VERIFIED = "verified"
-    REJECTED = "rejected"
-    UNVERIFIED = "unverified"
-
-
 class UserBase(CoreSchema):
     email: EmailStr
     password: str
@@ -206,24 +199,6 @@ class UserNationalityCreate(BaseModel):
 
 class UserNationalityUpdate(BaseModel):
     nationality_id: Optional[int]
-
-
-class StudentVerificationBase(CoreSchema):
-    user_id: Optional[int] = None
-    student_card: Optional[Union[str, UploadFile]] = None
-    verification_status: Optional[str] = VerificationStatus.UNVERIFIED.value
-
-    class Config:
-        orm_mode = True
-
-
-class StudentVerificationCreate(BaseModel):
-    user_id: Optional[int] = None
-    verification_status: str = VerificationStatus.UNVERIFIED.value
-
-
-class StudentVerificationUpdate(BaseModel):
-    verification_status: Optional[str] = VerificationStatus.UNVERIFIED.value
 
 
 class UserResponse(BaseModel):

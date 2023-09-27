@@ -8,12 +8,15 @@ from fastapi import UploadFile
 from log import log_error
 from crud.base import CRUDBase
 from core.config import settings
-from models.profile import Profile, AvailableLanguage, Introduction
+from models.profile import Profile, AvailableLanguage, Introduction, StudentVerification
 from schemas.profile import (
     ProfileCreate,
     ProfileUpdate,
     AvailableLanguageCreate,
     IntroductionCreate,
+    StudentVerificationCreate,
+    StudentVerificationUpdate,
+    StudentVerificationBase,
 )
 
 
@@ -61,20 +64,55 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
     CRUD operations for User model.
     """
 
-    def create_ava_lan(self, db: Session, obj_in: AvailableLanguageCreate):
-        db_obj = AvailableLanguage(**obj_in.dict())
+    def get_verification(self, db: Session, profile_id: int):
+        return (
+            db.query(StudentVerification)
+            .filter(StudentVerification.profile_id == profile_id)
+            .first()
+        )
+
+    def list_verification(self, db: Session):
+        return db.query(StudentVerification).all()
+
+    def update_verification(
+        self,
+        db: Session,
+        db_obj: StudentVerification,
+        obj_in: StudentVerificationUpdate,
+    ):
+        if isinstance(obj_in, dict):
+            update_data = obj_in
+        else:
+            update_data = obj_in.dict(exclude_unset=True)
+        return super().update(db, db_obj=db_obj, obj_in=update_data)
+
+    def create_verification(self, db: Session, obj_in: StudentVerificationCreate):
+        if not obj_in.profile_id:
+            raise ValueError("There is no profile_id")
+
+        profile = db.query(Profile).filter(Profile.id == obj_in.profile_id)
+        if not profile:
+            raise ValueError("There is no Profile")
+        print(12312312, obj_in)
+        db_obj = StudentVerification(**obj_in.dict())
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)
         return db_obj
 
-    def remove_ava_lan(self, db: Session, profile_id: int):
-        obj = (
-            db.query(AvailableLanguage)
-            .filter(AvailableLanguage.profile_id == profile_id)
-            .delete()
-        )
-        db.commit()
+    def remove_ava_lan(self, db: Session, profile_id: int, id: int):
+        if profile_id:
+            obj = (
+                db.query(AvailableLanguage)
+                .filter(AvailableLanguage.profile_id == profile_id)
+                .delete()
+            )
+            db.commit()
+        else:
+            obj = (
+                db.query(AvailableLanguage).filter(AvailableLanguage.id == id).delete()
+            )
+            db.commit()
         return obj
 
     def get_introduction(self, db: Session, id: int):
@@ -103,11 +141,6 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
 
     def get_ava_lan(self, db: Session, id: int):
         return db.query(AvailableLanguage).filter(AvailableLanguage.id == id).first()
-
-    def remove_ava_lan(self, db: Session, id: int):
-        obj = db.query(AvailableLanguage).filter(AvailableLanguage.id == id).delete()
-        db.commit()
-        return obj
 
     def create_ava_lan(self, db: Session, obj_in: AvailableLanguageCreate):
         db_obj = AvailableLanguage(**obj_in.dict())
@@ -144,12 +177,6 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
         """
         if not obj_in.user_id:
             raise ValueError("There is no user_id")
-
-        if obj_in.profile_photo:
-            random_str = generate_random_string()
-            file_path = f"profile_photo/{random_str}_{obj_in.profile_photo.filename}"
-            s3_url = save_upload_file(obj_in.profile_photo, file_path)
-            obj_in.profile_photo = file_path  # Update path
 
         db_obj = Profile(**obj_in.dict())
         db.add(db_obj)
@@ -189,7 +216,7 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
                     self.delete_file_from_s3(db_obj.profile_photo)
 
                 random_str = generate_random_string()
-                file_path = f"profile_photo/{random_str}_{photo.filename}"
+                file_path = f"profile_photo/{random_str}_{photo}"
                 save_upload_file(photo, file_path)
                 update_data["profile_photo"] = file_path  # Update path
             else:
@@ -222,7 +249,7 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
             self.delete_file_from_s3(profile.profile_photo)
 
         random_str = generate_random_string()
-        file_path = f"/profile_photo/{random_str}_{photo.filename}"
+        file_path = f"/profile_photo/{random_str}_{photo}"
         s3_url = self.save_upload_file(photo, file_path)
 
         profile.profile_photo = file_path

@@ -36,9 +36,6 @@ from schemas.user import (
     UserNationalityResponse,
     UserNationalityCreate,
     UserNationalityUpdate,
-    StudentVerificationBase,
-    StudentVerificationUpdate,
-    VerificationStatus,
     ConsentBase,
     ConsentResponse,
     UserUniversityBase,
@@ -57,8 +54,9 @@ from core.config import settings
 
 router = APIRouter()
 
+
 @router.get("/users/me", response_model=UserResponse)
-async def read_current_user(current_user= Depends(get_current_user)):
+async def read_current_user(current_user=Depends(get_current_user)):
     """
     현재 사용자의 정보를 반환합니다.
 
@@ -68,10 +66,8 @@ async def read_current_user(current_user= Depends(get_current_user)):
     **반환값:**
     - dict: 인증된 사용자의 정보.
     """
-    print(1212,current_user)
+    print(1212, current_user)
     return current_user
-
-
 
 
 @router.get("/users/", response_model=List[UserResponse])
@@ -133,7 +129,6 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
     return crud.user.remove(db, id=user_id)
 
 
-
 @router.post("/register/", response_model=Dict[str, Any])
 def register_user(
     user_in: UserRegister,
@@ -191,7 +186,6 @@ def register_user(
         nation = crud.utility.get(db=db, nationality_id=id)
         if not nation:
             raise HTTPException(status_code=400, detail="Nationality Not Found")
-
 
     hashed_password = crud.get_password_hash(password)
 
@@ -420,7 +414,7 @@ def validate_token(token: str = Depends(get_current_token)):
 @router.post("/change-password/")
 def change_password(
     password_data: PasswordChange,
-    user_id : int,
+    user_id: int,
     db: Session = Depends(get_db),
 ):
     """
@@ -434,7 +428,7 @@ def change_password(
     반환값:
     - dict: 비밀번호 변경 상태 메시지.
     """
-    current_user = crud.user.get(db=db,id=user_id)
+    current_user = crud.user.get(db=db, id=user_id)
     if not current_user:
         raise HTTPException(status_code=400, detail="User not found")
 
@@ -443,7 +437,6 @@ def change_password(
             status_code=400,
             detail="Password must only include letters, numbers, and special characters.",
         )
-
 
     if not crud.verify_password(password_data.old_password, current_user.password):
         raise HTTPException(status_code=400, detail="Incorrect old password")
@@ -543,109 +536,6 @@ async def certificate_check(
         # db.commit()
         return {"result": "success", "email": cert_check.email}
     return {"result": "fail"}
-
-
-@router.get("/student-cards", response_model=List[StudentVerificationBase])
-def read_student_cards(db: Session = Depends(get_db)):
-    """
-    학생증 인증을 대기 중인 목록을 반환합니다.
-
-    **인자:**
-    - db (Session): 데이터베이스 세션.
-
-    **반환값:**
-    - List[StudentVerificationBase]: 학생증 인증 대기 중인 목록.
-    """
-    obj_list = crud.user.list_verification(db=db)
-    return obj_list
-
-
-@router.post("/student-card", response_model=StudentVerificationBase)
-def student_varification(
-    student_card: UploadFile = File(...),
-    user_id: int = Form(...),
-    db: Session = Depends(get_db),
-):
-    """
-    학생증 인증 정보를 제출합니다.
-
-    **인자:**
-    - student_card (UploadFile): 업로드된 학생증 이미지 파일.
-    - user_id (int): 사용자 ID.
-    - db (Session): 데이터베이스 세션.
-
-    **반환값:**
-    - StudentVerificationBase: 학생증 인증 정보.
-    """
-    user = crud.user.get(db=db, id=user_id)
-    if user is None:
-        raise HTTPException(status_code=404, detail="user not found")
-
-    obj_in = StudentVerificationBase(
-        student_card=student_card,
-        user_id=user_id,
-    )
-
-    try:
-        user_verification = crud.user.create_verification(db=db, obj_in=obj_in)
-    except Exception as e:
-        log_error(e)
-        print(e)
-        raise HTTPException(status_code=500)
-    return user_verification
-
-
-@router.get("/student-card/{user_id}", response_model=StudentVerificationBase)
-def student_varification(
-    user_id: int,
-    db: Session = Depends(get_db),
-):
-    """
-    특정 사용자의 학생증 인증 정보를 조회합니다.
-
-    **인자:**
-    - user_id (int): 사용자 ID.
-    - db (Session): 데이터베이스 세션.
-
-    **반환값:**
-    - StudentVerificationBase: 학생증 인증 정보.
-    """
-    user = crud.user.get(db=db, id=user_id)
-    if user is None:
-        raise HTTPException(status_code=404, detail="user not found")
-
-    db_obj = crud.user.get_verification(db=db, user_id=user_id)
-    if not db_obj:
-        raise HTTPException(status_code=404, detail="StudentVerification not found")
-    return db_obj
-
-
-@router.post("/student-card/{user_id}/approve")
-def approve_varification(
-    user_id: int,
-    db: Session = Depends(get_db),
-):
-    """
-    특정 사용자의 학생증 인증을 승인합니다.
-
-    **인자:**
-    - user_id (int): 사용자 ID.
-    - db (Session): 데이터베이스 세션.
-
-    **반환값:**
-    - dict: 인증 승인 결과.
-    """
-    verification = crud.user.get_verification(db=db, user_id=user_id)
-    if verification is None:
-        raise HTTPException(status_code=404, detail="StudentVerification not found")
-
-    obj_in = StudentVerificationUpdate(
-        verification_status=VerificationStatus.VERIFIED.value
-    )
-    update_verification = crud.user.update_verification(
-        db=db, db_obj=verification, obj_in=obj_in
-    )
-    return update_verification
 
 
 @router.get("/user/{user_id}/consent", response_model=ConsentResponse)

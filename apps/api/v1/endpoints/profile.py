@@ -11,7 +11,7 @@ from fastapi import (
     UploadFile,
     Form,
     Path,
-    Query
+    Query,
 )
 from pydantic.networks import EmailStr
 from sqlalchemy.orm import Session, joinedload
@@ -24,6 +24,7 @@ from models.profile import Profile, AvailableLanguage, Introduction
 from schemas.profile import (
     ProfileCreate,
     ProfileResponse,
+    AvailableLanguageResponse,
     ProfileUpdate,
     ProfileBase,
     AvailableLanguageCreate,
@@ -32,6 +33,11 @@ from schemas.profile import (
     IntroductionResponse,
     IntroductionUpdate,
     AvailableLanguageUpdate,
+    ProfileRegister,
+    StudentVerificationUpdate,
+    VerificationStatus,
+    StudentVerificationBase,
+    StudentVerificationCreate,
 )
 from log import log_error
 
@@ -60,27 +66,17 @@ def get_profile_by_user_id(
 
 @router.post("/profile/", response_model=ProfileResponse)
 def create_profile(
-    user_id: int = Query(...),  
-    nick_name: Optional[str] = Query(None), 
-    profile_photo: Optional[UploadFile] = None,
+    profile: ProfileRegister,
+    user_id: int = Query(...),
     db: Session = Depends(get_db),
 ):
-    """
-    사용자 프로필 생성 API.
-
-    이 API는 주어진 사용자 정보로 새로운 프로필을 생성합니다.
-    이미 프로필이 존재하는 경우, 오류를 반환합니다.
-
-    매개변수:
-    - user_id (int): 사용자 ID.
-    - nick_name (str, optional): 사용자 별명.
-    - profile_photo (UploadFile, optional): 사용자 프로필 사진.
-    - db (Session): 데이터베이스 세션.
-
-    반환값:
-    - ProfileResponse: 생성된 사용자의 프로필 정보.
-    """
     new_profile = None
+    ava_list = []
+    intro_list = []
+
+    available_language: List[AvailableLanguageCreate] = profile.available_languages
+    Introductions: List[IntroductionCreate] = profile.introductions
+    student_card = profile.student_card
 
     user = crud.user.get(db=db, id=user_id)
     if not user:
@@ -92,59 +88,138 @@ def create_profile(
             status_code=409, detail="Profile already exists for the user"
         )
 
-    if re.search(r"[~!@#$%^&*()_+{}[\]:;<>,.?~]", nick_name):
+    if re.search(r"[~!@#$%^&*()_+{}[\]:;<>,.?~]", profile.nick_name):
         raise HTTPException(
             status_code=400, detail="Nick_name contains special characters."
         )
 
-    if not re.match("^[a-zA-Z0-9ㄱ-ㅎㅏ-ㅣ가-힣]{2,12}$", nick_name):
+    if not re.match("^[a-zA-Z0-9ㄱ-ㅎㅏ-ㅣ가-힣]{2,12}$", profile.nick_name):
         raise HTTPException(status_code=400, detail="Invalid nickname.")
+
+    if len(available_language) >= 5:
+        raise HTTPException(status_code=409, detail="Only up to 5 can be created.")
+
+    for ava_lang in available_language:
+        lang = crud.utility.get(db=db, language_id=ava_lang.language_id)
+
+        if not lang:
+            raise HTTPException(status_code=404, detail="Languag not found")
 
     try:
         obj_in = ProfileCreate(
-            nick_name=nick_name, profile_photo=profile_photo, user_id=user_id
+            nick_name=profile.nick_name,
+            profile_photo=profile.profile_photo,
+            user_id=user_id,
         )
+        new_profile = crud.profile.create(db=db, obj_in=obj_in)
     except Exception as e:
+        if new_profile:
+            crud.profile.remove(db=db, id=new_profile.id)
         log_error(e)
-        print(e)
         raise HTTPException(status_code=500)
-    new_profile = crud.profile.create(db=db, obj_in=obj_in)
+
+    try:
+        for ava_lang in available_language:
+            obj_in = AvailableLanguageCreate(
+                level=ava_lang.level,
+                language_id=ava_lang.language_id,
+                profile_id=new_profile.id,
+            )
+            new_ava = crud.profile.create_ava_lan(db=db, obj_in=obj_in)
+            ava_list.append(new_ava)
+    except Exception as e:
+        if available_language:
+            for ava in ava_list:
+                crud.profile.remove_ava_lan(db=db, id=ava.id)
+        log_error(e)
+        raise HTTPException(status_code=500)
+
+    try:
+        for intro in Introductions:
+            obj_in = IntroductionCreate(
+                keyword=intro.keyword, context=intro.context, profile_id=new_profile.id
+            )
+            new_introduction = crud.profile.create_introduction(db=db, obj_in=obj_in)
+            intro_list.append(new_introduction)
+    except Exception as e:
+        if available_language:
+            for ava in ava_list:
+                crud.profile.remove_ava_lan(db=db, id=ava.id)
+        log_error(e)
+        raise HTTPException(status_code=500)
+    if student_card:
+        try:
+            obj_in = StudentVerificationCreate(
+                student_card=student_card.student_card,
+                verification_status=student_card.verification_status,
+                profile_id=new_profile.id,
+            )
+
+            crud.profile.create_verification(db=db, obj_in=obj_in)
+        except Exception as e:
+            log_error(e)
+
     return new_profile
 
 
-@router.put("/profile/{profile_id}/", response_model=ProfileResponse)
-def update_profile(
-    profile_id: int,
-    nick_name: Optional[str] = None,
-    profile_photo: UploadFile = None,
-    db: Session = Depends(get_db),
+@router.post("/profile/photo")
+def update_profile_photo(
+    is_profile: bool, photo: UploadFile, db: Session = Depends(get_db)
 ):
     """
-    사용자 프로필 업데이트 API
+    photo upload API
 
-    이 API는 주어진 사용자 ID에 대한 프로필 정보를 업데이트합니다.
-    프로필이 존재하지 않는 경우 오류를 반환합니다.
-
-    Parameters:
-    - user_id: 업데이트하려는 프로필의 사용자 ID.
-    - profile: 업데이트를 위한 프로필 정보.
-
-    Returns:
-    - 업데이트된 프로필 정보.
+    - is_profile = True : /profile_photo 저장
+    - is_profile = False : /student_card 저장
     """
-    # 프로필 존재 확인
-    existing_profile = crud.profile.get(db=db, id=profile_id)
-    if not existing_profile:
-        raise HTTPException(status_code=404, detail="Profile not found")
+    file_path = None
+    if is_profile:
+        file_path = f"profile_photo/{crud.generate_random_string()}_{photo.filename}"
+    else:
+        file_path = f"student_card/{crud.generate_random_string()}_{photo.filename}"
 
-    if nick_name and re.search(r"[~!@#$%^&*()_+{}[\]:;<>,.?~]", nick_name):
-        raise HTTPException(
-            status_code=400, detail="Nick_name contains special characters."
-        )
+    try:
+        image_url = crud.save_upload_file(upload_file=photo, destination=file_path)
+    except Exception as e:  # 어떤 예외든지 캐치합니다.
+        log_error(e)
+        # 클라이언트에게 에러 메시지와 상태 코드를 반환합니다.
+        raise HTTPException(status_code=500)
+    return {"image_url": image_url}
 
-    obj_in = ProfileUpdate(nick_name=nick_name, profile_photo=profile_photo)
-    updated_profile = crud.profile.update(db=db, db_obj=existing_profile, obj_in=obj_in)
-    return updated_profile
+
+# @router.put("/profile/{profile_id}/", response_model=ProfileResponse)
+# def update_profile(
+#     profile_id: int,
+#     nick_name: Optional[str] = None,
+#     profile_photo: UploadFile = None,
+#     db: Session = Depends(get_db),
+# ):
+#     """
+#     사용자 프로필 업데이트 API
+
+#     이 API는 주어진 사용자 ID에 대한 프로필 정보를 업데이트합니다.
+#     프로필이 존재하지 않는 경우 오류를 반환합니다.
+
+#     Parameters:
+#     - user_id: 업데이트하려는 프로필의 사용자 ID.
+#     - profile: 업데이트를 위한 프로필 정보.
+
+#     Returns:
+#     - 업데이트된 프로필 정보.
+#     """
+#     # 프로필 존재 확인
+#     existing_profile = crud.profile.get(db=db, id=profile_id)
+#     if not existing_profile:
+#         raise HTTPException(status_code=404, detail="Profile not found")
+
+#     if nick_name and re.search(r"[~!@#$%^&*()_+{}[\]:;<>,.?~]", nick_name):
+#         raise HTTPException(
+#             status_code=400, detail="Nick_name contains special characters."
+#         )
+
+#     obj_in = ProfileUpdate(nick_name=nick_name, profile_photo=profile_photo)
+#     updated_profile = crud.profile.update(db=db, db_obj=existing_profile, obj_in=obj_in)
+#     return updated_profile
 
 
 @router.delete("/profile/{profile_id}", response_model=ProfileResponse)
@@ -410,3 +485,106 @@ async def update_available_language(
         db=db, db_obj=existing_ava_lang, obj_in=available_language
     )
     return update_introdu
+
+
+@router.post("/student-card", response_model=StudentVerificationBase)
+def student_varification(
+    student_card: UploadFile = File(...),
+    user_id: int = Form(...),
+    db: Session = Depends(get_db),
+):
+    """
+    학생증 인증 정보를 제출합니다.
+
+    **인자:**
+    - student_card (UploadFile): 업로드된 학생증 이미지 파일.
+    - user_id (int): 사용자 ID.
+    - db (Session): 데이터베이스 세션.
+
+    **반환값:**
+    - StudentVerificationBase: 학생증 인증 정보.
+    """
+    user = crud.user.get(db=db, id=user_id)
+    if user is None:
+        raise HTTPException(status_code=404, detail="user not found")
+
+    obj_in = StudentVerificationBase(
+        student_card=student_card,
+        user_id=user_id,
+    )
+
+    try:
+        user_verification = crud.user.create_verification(db=db, obj_in=obj_in)
+    except Exception as e:
+        log_error(e)
+        print(e)
+        raise HTTPException(status_code=500)
+    return user_verification
+
+
+@router.get("/student-card/{user_id}", response_model=StudentVerificationBase)
+def student_varification(
+    user_id: int,
+    db: Session = Depends(get_db),
+):
+    """
+    특정 사용자의 학생증 인증 정보를 조회합니다.
+
+    **인자:**
+    - user_id (int): 사용자 ID.
+    - db (Session): 데이터베이스 세션.
+
+    **반환값:**
+    - StudentVerificationBase: 학생증 인증 정보.
+    """
+    user = crud.user.get(db=db, id=user_id)
+    if user is None:
+        raise HTTPException(status_code=404, detail="user not found")
+
+    db_obj = crud.user.get_verification(db=db, user_id=user_id)
+    if not db_obj:
+        raise HTTPException(status_code=404, detail="StudentVerification not found")
+    return db_obj
+
+
+@router.post("/student-card/{user_id}/approve")
+def approve_varification(
+    user_id: int,
+    db: Session = Depends(get_db),
+):
+    """
+    특정 사용자의 학생증 인증을 승인합니다.
+
+    **인자:**
+    - user_id (int): 사용자 ID.
+    - db (Session): 데이터베이스 세션.
+
+    **반환값:**
+    - dict: 인증 승인 결과.
+    """
+    verification = crud.user.get_verification(db=db, user_id=user_id)
+    if verification is None:
+        raise HTTPException(status_code=404, detail="StudentVerification not found")
+
+    obj_in = StudentVerificationUpdate(
+        verification_status=VerificationStatus.VERIFIED.value
+    )
+    update_verification = crud.user.update_verification(
+        db=db, db_obj=verification, obj_in=obj_in
+    )
+    return update_verification
+
+
+@router.get("/student-cards", response_model=List[StudentVerificationBase])
+def read_student_cards(db: Session = Depends(get_db)):
+    """
+    학생증 인증을 대기 중인 목록을 반환합니다.
+
+    **인자:**
+    - db (Session): 데이터베이스 세션.
+
+    **반환값:**
+    - List[StudentVerificationBase]: 학생증 인증 대기 중인 목록.
+    """
+    obj_list = crud.user.list_verification(db=db)
+    return obj_list

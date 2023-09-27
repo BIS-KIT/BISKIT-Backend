@@ -17,7 +17,6 @@ from models.user import (
     Consent,
     UserNationality,
     UserUniversity,
-    StudentVerification,
 )
 from schemas.user import (
     UserCreate,
@@ -27,9 +26,6 @@ from schemas.user import (
     ConsentCreate,
     UserUniversityCreate,
     UserNationalityCreate,
-    StudentVerificationBase,
-    StudentVerificationCreate,
-    StudentVerificationUpdate,
 )
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -103,48 +99,6 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
     """
     CRUD operations for User model.
     """
-
-    def get_verification(self, db: Session, user_id: int):
-        return (
-            db.query(StudentVerification)
-            .filter(StudentVerification.user_id == user_id)
-            .first()
-        )
-
-    def list_verification(self, db: Session):
-        return db.query(StudentVerification).all()
-
-    def update_verification(
-        self,
-        db: Session,
-        db_obj: StudentVerification,
-        obj_in: StudentVerificationUpdate,
-    ):
-        if isinstance(obj_in, dict):
-            update_data = obj_in
-        else:
-            update_data = obj_in.dict(exclude_unset=True)
-        return super().update(db, db_obj=db_obj, obj_in=update_data)
-
-    def create_verification(self, db: Session, obj_in: StudentVerificationBase):
-        if not obj_in.user_id:
-            raise ValueError("There is no user_id")
-
-        user = db.query(User).filter(User.id == obj_in.user_id)
-        if not user:
-            raise ValueError("There is no user_id")
-
-        if obj_in.student_card:
-            random_str = generate_random_string()
-            file_path = f"student_card/{random_str}_{obj_in.student_card.filename}"
-            s3_url = save_upload_file(obj_in.student_card, file_path)
-            obj_in.student_card = file_path  # Update path
-
-        db_obj = StudentVerification(**obj_in.dict())
-        db.add(db_obj)
-        db.commit()
-        db.refresh(db_obj)
-        return db_obj
 
     def get_consent(self, db: Session, user_id: int):
         return db.query(Consent).filter(Consent.user_id == user_id).first()

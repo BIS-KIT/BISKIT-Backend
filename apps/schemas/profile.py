@@ -21,10 +21,45 @@ class LanguageLevel(Enum):
     PROFICIENT = "능숙"
 
 
+class VerificationStatus(str, Enum):
+    PENDING = "pending"
+    VERIFIED = "verified"
+    REJECTED = "rejected"
+    UNVERIFIED = "unverified"
+
+
+class StudentVerificationBase(CoreSchema):
+    profile_id: Optional[int] = None
+    student_card: Optional[Union[str, UploadFile]] = None
+    verification_status: Optional[str] = VerificationStatus.UNVERIFIED.value
+
+    class Config:
+        orm_mode = True
+
+
+class StudentVerificationReponse(BaseModel):
+    id: Optional[int] = None
+    student_card: Optional[Union[str, UploadFile]] = None
+    verification_status: str = VerificationStatus.UNVERIFIED.value
+
+    class Config:
+        orm_mode = True
+
+
+class StudentVerificationCreate(BaseModel):
+    profile_id: Optional[int] = None
+    student_card: Optional[Union[str, UploadFile]] = None
+    verification_status: str = VerificationStatus.UNVERIFIED.value
+
+
+class StudentVerificationUpdate(BaseModel):
+    verification_status: Optional[str] = VerificationStatus.UNVERIFIED.value
+
+
 class ProfileBase(CoreSchema):
     nick_name: Optional[str] = None
     profile_photo: Optional[Union[str, UploadFile]] = None
-    user_id: int
+    user_id: Optional[int] = None
 
 
 # 프로필 생성을 위한 스키마
@@ -51,7 +86,7 @@ class AvailableLanguageBase(CoreSchema):
 class AvailableLanguageCreate(BaseModel):
     level: str
     language_id: int
-    profile_id: int
+    profile_id: Optional[int] = None
 
 
 class AvailableLanguageUpdate(BaseModel):
@@ -78,7 +113,7 @@ class IntroductionResponse(IntroductionBase):
 class IntroductionCreate(BaseModel):
     keyword: Optional[str] = None
     context: Optional[str] = None
-    profile_id: int
+    profile_id: Optional[int] = None
 
 
 class IntroductionUpdate(BaseModel):
@@ -109,6 +144,15 @@ class ProfileResponse(BaseModel):
     profile_photo: Optional[str] = None
     available_languages: Optional[List[AvailableLanguageResponse]]
     introductions: Optional[List[IntroductionResponse]]
+    student_verification: Optional[StudentVerificationReponse] = None
 
     class Config:
         orm_mode = True
+
+
+class ProfileRegister(BaseModel):
+    nick_name: Optional[str] = None
+    profile_photo: Optional[str] = None
+    available_languages: Optional[List[AvailableLanguageCreate]]
+    introductions: Optional[List[IntroductionCreate]]
+    student_card: Optional[StudentVerificationCreate] = None

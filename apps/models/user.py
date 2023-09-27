@@ -16,9 +16,7 @@ class User(ModelBase):
 
     profile = relationship("Profile", back_populates="user", uselist=False)
     consents = relationship("Consent", back_populates="user")
-    student_verification = relationship(
-        "StudentVerification", back_populates="user", uselist=False
-    )
+
     user_university = relationship("UserUniversity", back_populates="user")
     user_nationality = relationship("UserNationality", back_populates="user")
 
@@ -63,11 +61,3 @@ class FirebaseAuth(ModelBase):
 
     user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))
     user = relationship("User", backref="firebase_auth")
-
-
-class StudentVerification(ModelBase):
-    student_card = Column(String)
-    verification_status = Column(String, default="pending")
-
-    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))
-    user = relationship("User", back_populates="student_verification")

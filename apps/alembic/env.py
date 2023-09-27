@@ -19,9 +19,8 @@ from models.user import (
     EmailCertification,
     UserNationality,
     UserUniversity,
-    StudentVerification,
 )
-from models.profile import Profile, AvailableLanguage
+from models.profile import Profile, AvailableLanguage, StudentVerification
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
