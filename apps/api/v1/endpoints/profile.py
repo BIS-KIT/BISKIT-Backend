@@ -70,6 +70,21 @@ def create_profile(
     user_id: int = Query(...),
     db: Session = Depends(get_db),
 ):
+    """
+    Profile 생성 API
+
+        - nick_name : str
+        - profile_photo : str : file_path
+        - available_languages
+            - level : 언어수준 ["BEGINNER","BASIC","INTERMEDIATE","ADVANCED","PROFICIENT"]
+            - language_id : 언어 id
+        - introductions
+            - keyword : 키워드
+            - context : 자기소개
+        - student_verification
+            - student_card : file_path
+            - verification_status : 인증 상태 ["PENDING","VERIFIED","REJECTED","UNVERIFIED"]
+    """
     new_profile = None
     ava_list = []
     intro_list = []
