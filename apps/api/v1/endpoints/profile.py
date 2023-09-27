@@ -11,6 +11,7 @@ from fastapi import (
     UploadFile,
     Form,
     Path,
+    Query
 )
 from pydantic.networks import EmailStr
 from sqlalchemy.orm import Session, joinedload
@@ -59,9 +60,9 @@ def get_profile_by_user_id(
 
 @router.post("/profile/", response_model=ProfileResponse)
 def create_profile(
-    user_id: int,
-    nick_name: str = None,
-    profile_photo: UploadFile = None,
+    user_id: int = Query(...),  
+    nick_name: Optional[str] = Query(None), 
+    profile_photo: Optional[UploadFile] = None,
     db: Session = Depends(get_db),
 ):
     """
