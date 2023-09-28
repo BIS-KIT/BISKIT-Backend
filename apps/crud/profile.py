@@ -27,7 +27,7 @@ def save_upload_file(upload_file: UploadFile, destination: str) -> None:
     try:
         s3_client.upload_fileobj(upload_file.file, bucket_name, destination)
     except NoCredentialsError:
-        print("Credentials not available")
+        log_error("Credentials not available")
     finally:
         upload_file.file.close()
 
@@ -93,7 +93,6 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
         profile = db.query(Profile).filter(Profile.id == obj_in.profile_id)
         if not profile:
             raise ValueError("There is no Profile")
-        print(12312312, obj_in)
         db_obj = StudentVerification(**obj_in.dict())
         db.add(db_obj)
         db.commit()
@@ -237,7 +236,7 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
         try:
             s3_client.delete_object(Bucket=bucket_name, Key=object_key)
         except Exception as e:
-            print(f"Error deleting {file_url} from S3:", e)
+            log_error(f"Error deleting {file_url} from S3:{e}")
 
     def upload_profile_photo(self, db: Session, user_id: int, photo: UploadFile):
         profile = self.get_by_user_id(db, user_id=user_id)

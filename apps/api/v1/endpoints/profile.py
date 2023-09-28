@@ -369,7 +369,6 @@ def create_introduction(
             created_introductions.append(new_introduction)
     except Exception as e:
         log_error(e)
-        print(e)
         if created_introductions:
             for intro in created_introductions:
                 crud.profile.remove_introduction(db=db, profile_id=intro.profile_id)
@@ -532,7 +531,6 @@ def student_varification(
         user_verification = crud.user.create_verification(db=db, obj_in=obj_in)
     except Exception as e:
         log_error(e)
-        print(e)
         raise HTTPException(status_code=500)
     return user_verification
 

@@ -8,6 +8,7 @@ from email.mime.multipart import MIMEMultipart
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 
+from log import log_error
 from core.config import settings
 from crud.base import CRUDBase
 from crud.profile import save_upload_file, generate_random_string
@@ -63,7 +64,7 @@ def send_email(certification: int, receiver_email: EmailStr, language_code: str 
             server.sendmail(settings.SMTP_USER, receiver_email, msg.as_string())
         return True
     except Exception as e:
-        print(f"Error occurred while sending email: {e}")
+        log_error(f"Error occurred while sending email: {e}")
         return False
 
 

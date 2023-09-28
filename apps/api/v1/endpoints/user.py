@@ -66,7 +66,6 @@ async def read_current_user(current_user=Depends(get_current_user)):
     **반환값:**
     - dict: 인증된 사용자의 정보.
     """
-    print(1212, current_user)
     return current_user
 
 
@@ -234,7 +233,6 @@ def register_user(
         if user_nationality_obj_list:
             for id in user_nationality_obj_list:
                 crud.user.remove_nationality(db=db, id=id)
-        print(e)
         log_error(e)
         raise HTTPException(status_code=500)
 
