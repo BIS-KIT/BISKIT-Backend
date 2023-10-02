@@ -15,7 +15,7 @@ from fastapi import (
     File,
 )
 from sqlalchemy.orm import Session
-from jose import jwt, JWTError
+from jose import jwt, JWTError, ExpiredSignatureError
 from sqlalchemy.exc import IntegrityError
 
 import crud
@@ -411,7 +411,7 @@ def login_for_access_token(login_obj: UserLogin, db: Session = Depends(get_db)):
 
 
 @router.post("/token/refresh/", response_model=Token)
-async def refresh_token(token: str = Depends(get_current_token)):
+async def refresh_token(token: str = Depends(get_current_token), db: Session = Depends(get_db)):
     """
     기존 토큰을 새로고침합니다.
 
@@ -428,9 +428,15 @@ async def refresh_token(token: str = Depends(get_current_token)):
         email = payload.get("sub")
         if email is None:
             raise HTTPException(status_code=400, detail="Could not validate email")
-        token_expired = payload.get("exp")
-        if token_expired:
-            raise HTTPException(status_code=400, detail="Token has expired")
+        user = crud.user.get_by_email(db=db, email=email)
+        if user is None:
+            raise HTTPException(
+                status_code=401,
+                detail="User not found",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+    except ExpiredSignatureError:
+        raise HTTPException(status_code=400, detail="Token has expired")
     except JWTError:
         raise HTTPException(status_code=400, detail="Could not validate credentials")
 
@@ -477,7 +483,7 @@ def validate_token(token: str = Depends(get_current_token)):
 @router.post("/change-password/")
 def change_password(
     password_data: PasswordChange,
-    user_id: int,
+    token: str = Depends(get_current_token),
     db: Session = Depends(get_db),
 ):
     """
@@ -486,14 +492,30 @@ def change_password(
     인자:
     - password_data (PasswordChange): 변경하려는 비밀번호에 대한 데이터.
     - db (Session): 데이터베이스 세션.
+    - token (str): 현재 access_token
     - current_user (User): 현재 인증된 사용자.
 
     반환값:
     - dict: 비밀번호 변경 상태 메시지.
     """
-    current_user = crud.user.get(db=db, id=user_id)
-    if not current_user:
-        raise HTTPException(status_code=400, detail="User not found")
+    try:
+        payload = jwt.decode(
+            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+        )
+        email = payload.get("sub")
+        if email is None:
+            raise HTTPException(status_code=400, detail="Could not validate email")
+        current_user = crud.user.get_by_email(db=db, email=email)
+        if current_user is None:
+            raise HTTPException(
+                status_code=401,
+                detail="User not found",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+    except ExpiredSignatureError:
+        raise HTTPException(status_code=400, detail="Token has expired")
+    except JWTError:
+        raise HTTPException(status_code=400, detail="Could not validate credentials")
 
     if not re.match("^[a-zA-Z\d@$!%*#?&]{8,16}$", password_data.new_password):
         raise HTTPException(
@@ -532,6 +554,70 @@ def check_mail_exists(email: str, db: Session = Depends(get_db)):
     if check_email:
         raise HTTPException(status_code=409, detail="Email already registered.")
     return {"status": "Email is available."}
+
+@router.post("/change-password/certificate/")
+async def certificate_email(
+    cert_in: EmailCertificationIn, db: Session = Depends(get_db)
+):
+    """
+    패스워드 변경 시 주어진 이메일에 인증번호를 발송합니다.
+
+    **인자:**
+    - cert_in (EmailCertificationIn): 인증을 받을 이메일 정보.
+    - db (Session): 데이터베이스 세션.
+
+    **반환값:**
+    - dict: 이메일 인증 결과.
+    """
+    if not "@" in cert_in.email:
+        raise HTTPException(status_code=409, detail="This is not Email Form.")
+
+    certification = str(randint(100000, 999999))
+    user_cert = EmailCertificationCheck(
+        email=cert_in.email, certification=certification
+    )
+
+    # DB에 인증 데이터 저장
+    try:
+        certi = crud.user.create_email_certification(db=db, obj_in=user_cert)
+        if crud.send_email(certification, cert_in.email):
+            return {
+                "result": "success",
+                "email": cert_in.email,
+                "certification": certification,
+            }
+    except Exception as e:
+        log_error(e)
+        crud.user.remove_email_certification(db=db, db_obj=certi)
+        return {"result": "fail"}
+
+
+@router.post("/change-password/certificate/check/")
+async def certificate_check(
+    cert_check: EmailCertificationCheck, db: Session = Depends(get_db)
+):
+    """
+    사용자로부터 입력받은 인증번호를 검증합니다.
+
+    **인자:**
+    - cert_check (EmailCertificationCheck): 사용자로부터 입력받은 인증번호.
+    - db (Session): 데이터베이스 세션.
+
+    **반환값:**
+    - dict: 인증번호 검증 결과 및 access token
+    """
+    user_cert = crud.user.get_email_certification(
+        db, email=cert_check.email, certification=str(cert_check.certification)
+    )
+    if user_cert:
+        access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token = create_access_token(
+            data={"sub": cert_check.email}, expires_delta=access_token_expires
+        )
+        # db.delete(user_cert)
+        # db.commit()
+        return {"result": "success", "email": cert_check.email,"token": access_token}
+    return {"result": "fail"}
 
 
 @router.post("/certificate/")

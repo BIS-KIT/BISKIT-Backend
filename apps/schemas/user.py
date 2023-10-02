@@ -81,7 +81,7 @@ class UserBaseUpdate(BaseModel):
     gender: Optional[str]
 
 
-class PasswordChange(CoreSchema):
+class PasswordChange(BaseModel):
     old_password: str
     new_password: str
     new_password_check: str
@@ -153,7 +153,7 @@ class EmailCertificationIn(BaseModel):
 
 class EmailCertificationCheck(BaseModel):
     email: str
-    certification: str
+    certification: Union[str,int]
 
 
 class UserUniversityBase(CoreSchema):
