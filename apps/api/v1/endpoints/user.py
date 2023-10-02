@@ -411,7 +411,9 @@ def login_for_access_token(login_obj: UserLogin, db: Session = Depends(get_db)):
 
 
 @router.post("/token/refresh/", response_model=Token)
-async def refresh_token(token: str = Depends(get_current_token), db: Session = Depends(get_db)):
+async def refresh_token(
+    token: str = Depends(get_current_token), db: Session = Depends(get_db)
+):
     """
     기존 토큰을 새로고침합니다.
 
@@ -555,6 +557,7 @@ def check_mail_exists(email: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=409, detail="Email already registered.")
     return {"status": "Email is available."}
 
+
 @router.post("/change-password/certificate/")
 async def certificate_email(
     cert_in: EmailCertificationIn, db: Session = Depends(get_db)
@@ -571,6 +574,10 @@ async def certificate_email(
     """
     if not "@" in cert_in.email:
         raise HTTPException(status_code=409, detail="This is not Email Form.")
+
+    check_user = crud.user.get_by_email(db=db, email=cert_in.email)
+    if not check_user:
+        raise HTTPException(status_code=409, detail="User Not Found")
 
     certification = str(randint(100000, 999999))
     user_cert = EmailCertificationCheck(
@@ -616,7 +623,7 @@ async def certificate_check(
         )
         # db.delete(user_cert)
         # db.commit()
-        return {"result": "success", "email": cert_check.email,"token": access_token}
+        return {"result": "success", "email": cert_check.email, "token": access_token}
     return {"result": "fail"}
 
 
