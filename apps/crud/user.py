@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional, Union, List
 from pydantic.networks import EmailStr
 import smtplib
 from jinja2 import Environment, FileSystemLoader
@@ -151,12 +151,41 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             db.query(UserNationality).filter(UserNationality.user_id == user_id).first()
         )
 
+    def read_nationalities(self, db: Session, user_id: int):
+        return (
+            db.query(UserNationality).filter(UserNationality.user_id == user_id).all()
+        )
+
     def create_nationality(self, db: Session, obj_in: UserNationalityCreate):
         db_obj = UserNationality(**obj_in.dict())
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)
         return db_obj
+
+    def update_user_nationalities(
+        self, db: Session, user_id: int, new_nationality_ids: List[int]
+    ):
+        # 기존 nationality_ids 불러오기
+        existing_nationalities = self.read_nationalities(db=db, user_id=user_id)
+        existing_nationality_ids = [
+            nationality.nationality_id for nationality in existing_nationalities
+        ]
+
+        # 새로 추가된 nationality_ids 찾기
+        to_add = set(new_nationality_ids) - set(existing_nationality_ids)
+
+        # 삭제된 nationality_ids 찾기
+        to_remove = set(existing_nationality_ids) - set(new_nationality_ids)
+
+        # 새로운 nationality_ids 추가
+        for id in to_add:
+            user_nationality = UserNationalityCreate(nationality_id=id, user_id=user_id)
+            self.create_nationality(db=db, obj_in=user_nationality)
+
+        # 삭제된 nationality_ids 제거
+        for id in to_remove:
+            self.remove_nationality(db=db, id=id)
 
     def remove_nationality(self, db: Session, id: int):
         obj = db.query(UserNationality).filter(UserNationality.id == id).first()
@@ -165,14 +194,14 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             db.commit()
             return obj
 
-    def update_nationality(
-        self, db: Session, db_obj: UserNationality, obj_in: UserNationalityCreate
-    ):
-        if isinstance(obj_in, dict):
-            update_data = obj_in
-        else:
-            update_data = obj_in.dict(exclude_unset=True)
-        return super().update(db, db_obj=db_obj, obj_in=update_data)
+    # def update_nationality(
+    #     self, db: Session, db_obj: UserNationality, obj_in: UserNationalityCreate
+    # ):
+    #     if isinstance(obj_in, dict):
+    #         update_data = obj_in
+    #     else:
+    #         update_data = obj_in.dict(exclude_unset=True)
+    #     return super().update(db, db_obj=db_obj, obj_in=update_data)
 
     def remove_email_certification(
         self, db: Session, *, db_obj: EmailCertificationCheck
@@ -281,7 +310,8 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             update_data = obj_in
         else:
             update_data = obj_in.dict(exclude_unset=True)
-        if update_data["password"]:
+
+        if "password" in update_data and update_data["password"]:
             hashed_password = get_password_hash(update_data["password"])
             del update_data["password"]
             update_data["password"] = hashed_password

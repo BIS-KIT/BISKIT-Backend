@@ -1,7 +1,7 @@
 from typing import Any, List, Optional, Dict
 from random import randint
 from datetime import timedelta
-import re
+import re, traceback
 
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi import (
@@ -40,6 +40,8 @@ from schemas.user import (
     ConsentResponse,
     UserUniversityBase,
     UserUniversityUpdate,
+    UserUpdate,
+    UserBaseUpdate,
 )
 from models.user import User
 from core.security import (
@@ -126,6 +128,69 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return crud.user.remove(db, id=user_id)
+
+
+@router.put("/user/{user_id}", response_model=UserResponse)
+def update_user(
+    user_in: UserUpdate,
+    user_id: int,
+    db: Session = Depends(get_db),
+):
+    """
+    Update user details using email address as identifier.
+
+    Returns:
+    - dict: Updated user details.
+    """
+    user_university = user_in.university_id
+    new_nationality_ids = user_in.nationality_ids
+
+    db_user = crud.user.get(db=db, id=user_id)
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found.")
+
+    # Ensure that the provided details are valid
+    if user_university:
+        university = crud.utility.get(db=db, university_id=user_in.university_id)
+        if not university:
+            raise HTTPException(status_code=400, detail="University Not Found")
+
+    if new_nationality_ids:
+        for id in user_in.nationality_ids:
+            nation = crud.utility.get(db=db, nationality_id=id)
+            if not nation:
+                raise HTTPException(status_code=400, detail="Nationality Not Found")
+
+    try:
+        # Update user details in the database
+        if user_in.name or user_in.birth or user_in.gender:
+            user_base_in = UserBaseUpdate(
+                name=user_in.name, birth=user_in.birth, gender=user_in.gender
+            )
+            update_user = crud.user.update(db=db, db_obj=db_user, obj_in=user_base_in)
+
+        if user_university:
+            current_university = crud.user.get_university(db=db, user_id=user_id)
+            update_university_in = UserUniversityUpdate(
+                university_id=user_in.university_id,
+                department=user_in.department,
+                education_status=user_in.education_status,
+            )
+            crud.user.update_university(
+                db=db, db_obj=current_university, obj_in=update_university_in
+            )
+
+        if new_nationality_ids:
+            crud.user.update_user_nationalities(
+                db=db, user_id=user_id, new_nationality_ids=new_nationality_ids
+            )
+
+    except Exception as e:
+        print(e, traceback.format_exc())
+        log_error(e)
+        raise HTTPException(status_code=500)
+
+    return db_user
 
 
 @router.post("/register/", response_model=Dict[str, Any])
@@ -727,28 +792,28 @@ def delete_user_nationality(
     return db_obj
 
 
-@router.put("/user/{user_id}/nationality", response_model=UserNationalityResponse)
-def update_user_nationality(
-    user_id: int,
-    user_univeristy: UserNationalityUpdate,
-    db: Session = Depends(get_db),
-):
-    """
-    특정 사용자의 국적 정보를 업데이트합니다.
+# @router.put("/user/{user_id}/nationality", response_model=UserNationalityResponse)
+# def update_user_nationality(
+#     user_id: int,
+#     user_univeristy: UserNationalityUpdate,
+#     db: Session = Depends(get_db),
+# ):
+#     """
+#     특정 사용자의 국적 정보를 업데이트합니다.
 
-    **인자:**
-    - user_id (int): 사용자 ID.
-    - user_nationality (UserNationalityUpdate): 업데이트할 국적 정보.
-    - db (Session): 데이터베이스 세션.
+#     **인자:**
+#     - user_id (int): 사용자 ID.
+#     - user_nationality (UserNationalityUpdate): 업데이트할 국적 정보.
+#     - db (Session): 데이터베이스 세션.
 
-    **반환값:**
-    - UserNationalityResponse: 업데이트된 국적 정보.
-    """
-    exsisting_user_nationality = crud.user.get_nationality(db=db, user_id=user_id)
-    if not exsisting_user_nationality:
-        raise HTTPException(status_code=404, detail="Usernationality not found")
+#     **반환값:**
+#     - UserNationalityResponse: 업데이트된 국적 정보.
+#     """
+#     exsisting_user_nationality = crud.user.get_nationality(db=db, user_id=user_id)
+#     if not exsisting_user_nationality:
+#         raise HTTPException(status_code=404, detail="Usernationality not found")
 
-    update_user_univer = crud.user.update_nationality(
-        db=db, db_obj=exsisting_user_nationality, obj_in=user_univeristy
-    )
-    return update_user_univer
+#     update_user_univer = crud.user.update_nationality(
+#         db=db, db_obj=exsisting_user_nationality, obj_in=user_univeristy
+#     )
+#     return update_user_univer
