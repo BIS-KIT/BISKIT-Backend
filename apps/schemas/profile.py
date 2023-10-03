@@ -171,6 +171,6 @@ class ProfileRegister(BaseModel):
 class ProfileUpdate(BaseModel):
     nick_name: Optional[str] = None
     profile_photo: Optional[str] = None
-    available_languages: Optional[List[AvailableLanguageIn]] = None
-    introductions: Optional[List[IntroductionIn]] = None
-    student_card: Optional[StudentVerificationIn] = None
+    # available_languages: Optional[List[AvailableLanguageIn]] = None
+    # introductions: Optional[List[IntroductionIn]] = None
+    # student_card: Optional[StudentVerificationIn] = None
