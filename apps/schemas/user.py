@@ -66,13 +66,13 @@ class UserLogin(BaseModel):
 
 
 class UserUpdate(BaseModel):
-    name: Optional[str]
-    birth: Optional[date]
+    name: Optional[str] = None
+    birth: Optional[date] = None
     gender: Optional[str] = None
-    nationality_ids: Optional[List[int]]
-    university_id: Optional[int]
-    department: Optional[str]
-    education_status: Optional[str]
+    nationality_ids: Optional[List[int]] = None
+    university_id: Optional[int] = None
+    department: Optional[str] = None
+    education_status: Optional[str] = None
 
 
 class UserBaseUpdate(BaseModel):
@@ -152,7 +152,7 @@ class EmailCertificationIn(BaseModel):
 
 class EmailCertificationCheck(BaseModel):
     email: str
-    certification: Union[str,int]
+    certification: Union[str, int]
 
 
 class UserUniversityBase(CoreSchema):

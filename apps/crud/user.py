@@ -171,24 +171,26 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         existing_nationality_ids = [
             nationality.nationality_id for nationality in existing_nationalities
         ]
-
         # 새로 추가된 nationality_ids 찾기
         to_add = set(new_nationality_ids) - set(existing_nationality_ids)
 
         # 삭제된 nationality_ids 찾기
         to_remove = set(existing_nationality_ids) - set(new_nationality_ids)
-
         # 새로운 nationality_ids 추가
         for id in to_add:
             user_nationality = UserNationalityCreate(nationality_id=id, user_id=user_id)
             self.create_nationality(db=db, obj_in=user_nationality)
 
         # 삭제된 nationality_ids 제거
-        for id in to_remove:
-            self.remove_nationality(db=db, id=id)
+        for nationality_id in to_remove:
+            self.remove_nationality(db=db, nationality_id=nationality_id)
 
-    def remove_nationality(self, db: Session, id: int):
-        obj = db.query(UserNationality).filter(UserNationality.id == id).first()
+    def remove_nationality(self, db: Session, nationality_id: int):
+        obj = (
+            db.query(UserNationality)
+            .filter(UserNationality.nationality_id == nationality_id)
+            .first()
+        )
         if obj:
             db.delete(obj)
             db.commit()
