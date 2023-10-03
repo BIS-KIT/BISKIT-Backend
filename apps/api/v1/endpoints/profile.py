@@ -356,7 +356,8 @@ async def get_random_nickname():
 
         data = response.json()
 
-        kr_nick_name = data.get("words")[0]
+        kr_nick_name = data.get("words")[0].split(" ")[:-1] + [" 비스킷"]
+        kr_nick_name = "".join(kr_nick_name)
         # TODO : random english nickname
         en_nick_name = data.get("en_nick_name")
 
