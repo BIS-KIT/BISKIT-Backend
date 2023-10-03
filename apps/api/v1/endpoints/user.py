@@ -525,9 +525,6 @@ def change_password(
             detail="Password must only include letters, numbers, and special characters.",
         )
 
-    if not crud.verify_password(password_data.old_password, current_user.password):
-        raise HTTPException(status_code=400, detail="Incorrect old password")
-
     if password_data.new_password != password_data.new_password_check:
         raise HTTPException(status_code=400, detail="New passwords do not match")
 
