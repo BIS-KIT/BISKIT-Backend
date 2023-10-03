@@ -205,8 +205,7 @@ def update_profile_photo(
 # @router.put("/profile/{profile_id}/", response_model=ProfileResponse)
 # def update_profile(
 #     profile_id: int,
-#     nick_name: Optional[str] = None,
-#     profile_photo: UploadFile = None,
+#     profile_in : ProfileUpdate,
 #     db: Session = Depends(get_db),
 # ):
 #     """
@@ -227,10 +226,18 @@ def update_profile_photo(
 #     if not existing_profile:
 #         raise HTTPException(status_code=404, detail="Profile not found")
 
-#     if nick_name and re.search(r"[~!@#$%^&*()_+{}[\]:;<>,.?~]", nick_name):
+#     if profile_in.nick_name and re.search(r"[~!@#$%^&*()_+{}[\]:;<>,.?~]", profile_in.nick_name):
 #         raise HTTPException(
 #             status_code=400, detail="Nick_name contains special characters."
 #         )
+
+#     availbale_languagnes = profile_in.available_languages
+#     introductions = profile_in.introductions
+
+#     for ava in availbale_languagnes:
+#         check_lang = crud.utility.get(db=db, language_id=ava.language_id)
+#         if not check_lang:
+#             raise HTTPException(status_code=404, detail="Language not found")
 
 #     obj_in = ProfileUpdate(nick_name=nick_name, profile_photo=profile_photo)
 #     updated_profile = crud.profile.update(db=db, db_obj=existing_profile, obj_in=obj_in)
