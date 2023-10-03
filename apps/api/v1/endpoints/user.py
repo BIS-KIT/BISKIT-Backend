@@ -458,9 +458,6 @@ def change_password(
             detail="Password must only include letters, numbers, and special characters.",
         )
 
-    if password_data.new_password != password_data.new_password_check:
-        raise HTTPException(status_code=400, detail="New passwords do not match")
-
     user_in = PasswordUpdate(password=password_data.new_password)
     updated_user = crud.user.update(db=db, db_obj=current_user, obj_in=user_in)
 

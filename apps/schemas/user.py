@@ -77,7 +77,6 @@ class UserUpdate(BaseModel):
 
 class PasswordChange(BaseModel):
     new_password: str
-    new_password_check: str
 
 
 class PasswordUpdate(BaseModel):
