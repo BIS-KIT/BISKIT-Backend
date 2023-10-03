@@ -21,7 +21,7 @@ class Profile(ModelBase):
 class AvailableLanguage(ModelBase):
     level = Column(String)
 
-    language_id = Column(Integer, ForeignKey("language.id", ondelete="SET NULL"))
+    language_id = Column(Integer, ForeignKey("language.id", ondelete="CASCADE"))
     language = relationship("Language", backref="available_language")
 
     profile_id = Column(Integer, ForeignKey("profile.id", ondelete="CASCADE"))
