@@ -65,14 +65,20 @@ class UserLogin(BaseModel):
     password: str
 
 
-# 유저 업데이트를 위한 스키마
 class UserUpdate(BaseModel):
-    name: str
-    birth: date
-    nationality: str
-    university: str
-    department: str
-    gender: str
+    name: Optional[str] = None
+    birth: Optional[date] = None
+    gender: Optional[str] = None
+    nationality_ids: Optional[List[int]] = None
+    university_id: Optional[int] = None
+    department: Optional[str] = None
+    education_status: Optional[str] = None
+
+
+class UserBaseUpdate(BaseModel):
+    name: Optional[str]
+    birth: Optional[date]
+    gender: Optional[str]
 
 
 class PasswordChange(BaseModel):
@@ -145,7 +151,7 @@ class EmailCertificationIn(BaseModel):
 
 class EmailCertificationCheck(BaseModel):
     email: str
-    certification: Union[str,int]
+    certification: Union[str, int]
 
 
 class UserUniversityBase(CoreSchema):
@@ -162,8 +168,8 @@ class UserUniversityBase(CoreSchema):
 class UserUniversityUpdate(BaseModel):
     department: Optional[str] = None
     education_status: Optional[str] = None
-    university_id: Optional[int] = 0
-    user_id: Optional[int] = 0
+    university_id: Optional[int] = None
+    user_id: Optional[int] = None
 
 
 class UserUniversityCreate(BaseModel):
