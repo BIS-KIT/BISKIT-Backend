@@ -196,15 +196,6 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             db.commit()
             return obj
 
-    # def update_nationality(
-    #     self, db: Session, db_obj: UserNationality, obj_in: UserNationalityCreate
-    # ):
-    #     if isinstance(obj_in, dict):
-    #         update_data = obj_in
-    #     else:
-    #         update_data = obj_in.dict(exclude_unset=True)
-    #     return super().update(db, db_obj=db_obj, obj_in=update_data)
-
     def remove_email_certification(
         self, db: Session, *, db_obj: EmailCertificationCheck
     ):
