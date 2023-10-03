@@ -22,7 +22,7 @@ class User(ModelBase):
 
 
 class UserNationality(ModelBase):
-    nationality_id = Column(Integer, ForeignKey("nationality.id"))
+    nationality_id = Column(Integer, ForeignKey("nationality.id", ondelete="CASCADE"))
     nationality = relationship("Nationality", backref="user_nationality")
 
     user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))
@@ -33,7 +33,7 @@ class UserUniversity(ModelBase):
     department = Column(String, nullable=True)
     education_status = Column(String, nullable=True)
 
-    university_id = Column(Integer, ForeignKey("university.id"))
+    university_id = Column(Integer, ForeignKey("university.id", ondelete="CASCADE"))
     university = relationship("University", backref="user_university")
 
     user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))

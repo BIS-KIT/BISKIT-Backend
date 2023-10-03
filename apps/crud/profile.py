@@ -206,23 +206,9 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
         else:
             update_data = obj_in.dict(exclude_unset=True)
 
-        # Handle profile photo upload if provided
-        if "profile_photo" in update_data:
-            if update_data["profile_photo"]:
-                photo = update_data["profile_photo"]
-                # Delete old photo if exists
-                if db_obj.profile_photo:
-                    self.delete_file_from_s3(db_obj.profile_photo)
-
-                random_str = generate_random_string()
-                file_path = f"profile_photo/{random_str}_{photo}"
-                save_upload_file(photo, file_path)
-                update_data["profile_photo"] = file_path  # Update path
-            else:
-                del update_data["profile_photo"]
-
         if not update_data["nick_name"]:
             del update_data["nick_name"]
+
         return super().update(db, db_obj=db_obj, obj_in=update_data)
 
     def delete_file_from_s3(self, file_url: str) -> None:

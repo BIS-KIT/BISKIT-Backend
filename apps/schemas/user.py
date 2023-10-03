@@ -172,6 +172,12 @@ class UserUniversityUpdate(BaseModel):
     user_id: Optional[int] = None
 
 
+class UserUniversityUpdateIn(BaseModel):
+    department: Optional[str] = None
+    education_status: Optional[str] = None
+    university_id: Optional[int] = None
+
+
 class UserUniversityCreate(BaseModel):
     department: Optional[str] = None
     education_status: Optional[str] = None
@@ -207,12 +213,12 @@ class UserNationalityUpdate(BaseModel):
 
 class UserResponse(BaseModel):
     id: int
-    email: str
-    name: str
-    birth: date
-    gender: str
-    is_active: bool
-    is_admin: bool
+    email: str = None
+    name: str = None
+    birth: date = None
+    gender: str = None
+    is_active: bool = None
+    is_admin: bool = None
 
     profile: Optional[ProfileResponse] = None
     consents: Optional[List[ConsentResponse]] = None

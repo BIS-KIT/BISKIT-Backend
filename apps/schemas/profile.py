@@ -52,6 +52,11 @@ class StudentVerificationCreate(BaseModel):
     verification_status: str = VerificationStatus.UNVERIFIED.value
 
 
+class StudentVerificationIn(BaseModel):
+    student_card: Optional[Union[str, UploadFile]] = None
+    verification_status: str = VerificationStatus.UNVERIFIED.value
+
+
 class StudentVerificationUpdate(BaseModel):
     verification_status: Optional[str] = VerificationStatus.UNVERIFIED.value
 
@@ -68,11 +73,6 @@ class ProfileCreate(ProfileBase):
         orm_mode = True
 
 
-class ProfileUpdate(BaseModel):
-    nick_name: Optional[str] = None
-    profile_photo: Optional[Union[str, UploadFile]] = None
-
-
 class ProfilePhoto(BaseModel):
     profile_photo: str
 
@@ -87,6 +87,11 @@ class AvailableLanguageCreate(BaseModel):
     level: str
     language_id: int
     profile_id: Optional[int] = None
+
+
+class AvailableLanguageIn(BaseModel):
+    level: Optional[str] = None
+    language_id: Optional[int] = None
 
 
 class AvailableLanguageUpdate(BaseModel):
@@ -114,6 +119,11 @@ class IntroductionCreate(BaseModel):
     keyword: Optional[str] = None
     context: Optional[str] = None
     profile_id: Optional[int] = None
+
+
+class IntroductionIn(BaseModel):
+    keyword: Optional[str] = None
+    context: Optional[str] = None
 
 
 class IntroductionUpdate(BaseModel):
@@ -153,6 +163,14 @@ class ProfileResponse(BaseModel):
 class ProfileRegister(BaseModel):
     nick_name: Optional[str] = None
     profile_photo: Optional[str] = None
-    available_languages: Optional[List[AvailableLanguageCreate]]
-    introductions: Optional[List[IntroductionCreate]]
-    student_card: Optional[StudentVerificationCreate] = None
+    available_languages: Optional[List[AvailableLanguageIn]]
+    introductions: Optional[List[IntroductionIn]]
+    student_card: Optional[StudentVerificationIn] = None
+
+
+class ProfileUpdate(BaseModel):
+    nick_name: Optional[str] = None
+    profile_photo: Optional[str] = None
+    # available_languages: Optional[List[AvailableLanguageIn]] = None
+    # introductions: Optional[List[IntroductionIn]] = None
+    # student_card: Optional[StudentVerificationIn] = None

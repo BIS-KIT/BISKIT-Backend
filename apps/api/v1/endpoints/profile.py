@@ -202,35 +202,58 @@ def update_profile_photo(
     return {"image_url": image_url}
 
 
-# @router.put("/profile/{profile_id}/", response_model=ProfileResponse)
-# def update_profile(
-#     profile_id: int,
-#     nick_name: Optional[str] = None,
-#     profile_photo: UploadFile = None,
-#     db: Session = Depends(get_db),
-# ):
-#     """
-#     사용자 프로필 업데이트 API
+@router.put("/profile/{profile_id}/", response_model=ProfileResponse)
+def update_profile(
+    profile_id: int,
+    profile_in: ProfileUpdate,
+    db: Session = Depends(get_db),
+):
+    """
+    사용자 프로필 업데이트 API
 
-#     이 API는 주어진 사용자 ID에 대한 프로필 정보를 업데이트합니다.
-#     프로필이 존재하지 않는 경우 오류를 반환합니다.
+    이 API는 주어진 사용자 ID에 대한 프로필 정보를 업데이트합니다.
+    프로필이 존재하지 않는 경우 오류를 반환합니다.
 
-#     Parameters:
-#     - user_id: 업데이트하려는 프로필의 사용자 ID.
-#     - profile: 업데이트를 위한 프로필 정보.
+    Parameters:
+    - user_id: 업데이트하려는 프로필의 사용자 ID.
+    - profile: 업데이트를 위한 프로필 정보.
 
-#     Returns:
-#     - 업데이트된 프로필 정보.
-#     """
-#     # 프로필 존재 확인
-#     existing_profile = crud.profile.get(db=db, id=profile_id)
-#     if not existing_profile:
-#         raise HTTPException(status_code=404, detail="Profile not found")
+    Returns:
+    - 업데이트된 프로필 정보.
+    """
+    # 프로필 존재 확인
+    existing_profile = crud.profile.get(db=db, id=profile_id)
+    if not existing_profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
 
-#     if nick_name and re.search(r"[~!@#$%^&*()_+{}[\]:;<>,.?~]", nick_name):
-#         raise HTTPException(
-#             status_code=400, detail="Nick_name contains special characters."
-#         )
+    new_nickname = profile_in.nick_name
+    new_photo = profile_in.profile_photo
+    if new_nickname:
+        if re.search(r"[~!@#$%^&*()_+{}[\]:;<>,.?~]", new_nickname):
+            raise HTTPException(
+                status_code=400, detail="Nick_name contains special characters."
+            )
+        check_exists_nickname = crud.profile.get_by_nick_name(
+            db=db, nick_name=new_nickname
+        )
+        if check_exists_nickname:
+            raise HTTPException(status_code=409, detail="nick_name already used")
+
+    if new_photo:
+        if existing_profile.profile_photo:
+            crud.profile.delete_file_from_s3(file_url=existing_profile.profile_photo)
+
+    new_profile = crud.profile.update(db=db, db_obj=existing_profile, obj_in=profile_in)
+    return new_profile
+
+
+#     availbale_languagnes = profile_in.available_languages
+#     introductions = profile_in.introductions
+
+#     for ava in availbale_languagnes:
+#         check_lang = crud.utility.get(db=db, language_id=ava.language_id)
+#         if not check_lang:
+#             raise HTTPException(status_code=404, detail="Language not found")
 
 #     obj_in = ProfileUpdate(nick_name=nick_name, profile_photo=profile_photo)
 #     updated_profile = crud.profile.update(db=db, db_obj=existing_profile, obj_in=obj_in)
