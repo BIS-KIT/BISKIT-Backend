@@ -266,6 +266,22 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         """
         return db.query(User).filter(User.email == email).first()
 
+    def get_by_sns(self, db: Session, sns_type: str, sns_id: str):
+        return (
+            db.query(User)
+            .filter(User.sns_id == sns_id)
+            .filter(User.sns_type == sns_type)
+            .first()
+        )
+
+    def get_by_birth(self, db: Session, name: str, birth:str):
+        return (
+            db.query(User)
+            .filter(User.name == name)
+            .filter(User.birth == birth)
+            .first()
+        )
+
     def create(self, db: Session, *, obj_in: UserCreate) -> User:
         """
         Create a new user.
