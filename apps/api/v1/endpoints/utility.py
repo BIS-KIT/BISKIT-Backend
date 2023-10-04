@@ -15,7 +15,11 @@ router = APIRouter()
 
 @router.get("/languages", response_model=List[LanguageBase])
 def get_languages(
-    os_language: OsLanguage = None, search: str = None, db: Session = Depends(get_db)
+    os_language: OsLanguage = None,
+    search: str = None,
+    db: Session = Depends(get_db),
+    skip: int = 0,
+    limit: int = 0,
 ):
     """
     데이터베이스에서 언어 목록을 검색하여 반환합니다.
@@ -39,7 +43,11 @@ def get_languages(
     else:
         query = db.query(Language)
 
-    languages = query.all()
+    if skip and limit:
+        languages = query.offset(skip).limit(limit).all()
+    else:
+        languages = query.all()
+
     if os_language and os_language.value == OsLanguage.EN:
         # Extract the objects for id=1 and id=2
         id1_obj = next((lang for lang in languages if lang.id == 1), None)
@@ -56,7 +64,11 @@ def get_languages(
 
 @router.get("/universty", response_model=List[UniversityBase])
 def get_universities(
-    os_language: OsLanguage = None, search: str = None, db: Session = Depends(get_db)
+    os_language: OsLanguage = None,
+    search: str = None,
+    db: Session = Depends(get_db),
+    skip: int = 0,
+    limit: int = 0,
 ):
     if search:
         query = db.query(University).filter(
@@ -67,13 +79,22 @@ def get_universities(
         )
     else:
         query = db.query(University)
-    universities = query.all()
+
+    if skip and limit:
+        universities = query.offset(skip).limit(limit).all()
+    else:
+        universities = query.all()
+
     return universities
 
 
 @router.get("/nationality", response_model=List[NationalityBase])
-def get_Countries(
-    os_language: OsLanguage = None, search: str = None, db: Session = Depends(get_db)
+def get_countries(
+    os_language: OsLanguage = None,
+    search: str = None,
+    db: Session = Depends(get_db),
+    skip: int = 0,
+    limit: int = 0,
 ):
     if search:
         query = db.query(Nationality).filter(
@@ -90,5 +111,9 @@ def get_Countries(
     else:
         query = query.order_by(Nationality.id)
 
-    countries = query.all()
+    if skip and limit:
+        countries = query.offset(skip).limit(limit).all()
+    else:
+        countries = query.all()
+
     return [NationalityBase.from_orm(country) for country in countries]
