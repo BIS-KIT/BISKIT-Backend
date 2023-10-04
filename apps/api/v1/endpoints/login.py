@@ -56,6 +56,8 @@ def register_user(
     - name: str
     - birth: date
     - gender: str
+    - sns_type : str : [kakao, google, apple,...]
+    - sns_id : str
 
     - nationality_ids: List[int]
 
@@ -74,6 +76,7 @@ def register_user(
     new_user = None
     consent_obj = None
     user_university_obj = None
+    hashed_password = None
     user_nationality_obj_list = []
 
     # 데이터베이스에서 이메일로 사용자 확인
@@ -81,13 +84,18 @@ def register_user(
     if db_user:
         raise HTTPException(status_code=409, detail="User already registered.")
 
-    password = user_in.password
+    check_user = crud.user.get_by_birth(db=db, name=user_in.name, birth=user_in.birth)
+    if check_user:
+        raise HTTPException(status_code=409, detail="User already registered.")
 
-    if not re.match("^[a-zA-Z\d@$!%*#?&]{8,16}$", password):
-        raise HTTPException(
-            status_code=400,
-            detail="Password must only include letters, numbers, and special characters.",
-        )
+    password = user_in.password
+    if password:
+        if not re.match("^[a-zA-Z\d@$!%*#?&]{8,16}$", password):
+            raise HTTPException(
+                status_code=400,
+                detail="Password must only include letters, numbers, and special characters.",
+            )
+        hashed_password = crud.get_password_hash(password)
 
     university = crud.utility.get(db=db, university_id=user_in.university_id)
     if not university:
@@ -99,8 +107,6 @@ def register_user(
         if not nation:
             raise HTTPException(status_code=400, detail="Nationality Not Found")
 
-    hashed_password = crud.get_password_hash(password)
-
     try:
         obj_in = UserCreate(
             email=user_in.email,
@@ -108,6 +114,8 @@ def register_user(
             name=user_in.name,
             birth=user_in.birth,
             gender=user_in.gender,
+            sns_type=user_in.sns_type,
+            sns_id=user_in.sns_id,
         )
 
         new_user = crud.user.create(db=db, obj_in=obj_in)
@@ -163,59 +171,59 @@ def register_user(
     }
 
 
-@router.post("/register/firebase", response_model=UserResponse)
-def create_user(
-    db: Session = Depends(get_db),
-    current_user: dict = Depends(get_user_by_fb),
-):
-    """
-    Firebase 토큰에서의 이메일을 사용하여 새 사용자를 등록합니다.
+# @router.post("/register/firebase", response_model=UserResponse)
+# def create_user(
+#     db: Session = Depends(get_db),
+#     current_user: dict = Depends(get_user_by_fb),
+# ):
+#     """
+#     Firebase 토큰에서의 이메일을 사용하여 새 사용자를 등록합니다.
 
-    인자:
-    - db (Session): 데이터베이스 세션.
-    - current_user (dict): 현재 인증된 사용자의 데이터.
-    - authorization: Bearer 형식의 Firebase 토큰.
+#     인자:
+#     - db (Session): 데이터베이스 세션.
+#     - current_user (dict): 현재 인증된 사용자의 데이터.
+#     - authorization: Bearer 형식의 Firebase 토큰.
 
-    반환값:
-    - dict: 새로 등록된 사용자의 ID와 이메일.
-    """
-    user_email = current_user.get("email")  # Firebase 토큰에서 이메일 가져오기
-    if not user_email:
-        raise HTTPException(
-            status_code=400, detail="Email not found in Firebase token."
-        )
+#     반환값:
+#     - dict: 새로 등록된 사용자의 ID와 이메일.
+#     """
+#     user_email = current_user.get("email")  # Firebase 토큰에서 이메일 가져오기
+#     if not user_email:
+#         raise HTTPException(
+#             status_code=400, detail="Email not found in Firebase token."
+#         )
 
-    # 데이터베이스에서 이메일로 사용자 확인
-    db_user = crud.user.get_by_email(db=db, email=user_email)
-    if db_user:
-        raise HTTPException(status_code=409, detail="User already registered.")
+#     # 데이터베이스에서 이메일로 사용자 확인
+#     db_user = crud.user.get_by_email(db=db, email=user_email)
+#     if db_user:
+#         raise HTTPException(status_code=409, detail="User already registered.")
 
-    # 새로운 사용자 생성 및 저장
-    obj_in = UserCreate(email=user_email)
-    new_user = crud.user.create(db=db, obj_in=obj_in)
-    return {"id": new_user.id, "email": new_user.email}
+#     # 새로운 사용자 생성 및 저장
+#     obj_in = UserCreate(email=user_email)
+#     new_user = crud.user.create(db=db, obj_in=obj_in)
+#     return {"id": new_user.id, "email": new_user.email}
 
 
-@router.post("/login/firebase", response_model=Token)
-async def login_for_access_token_firebase(authorization: str = Depends(get_user_by_fb)):
-    """
-    Firebase 인증 정보를 사용하여 사용자를 인증하고, JWT 토큰을 반환합니다.
+# @router.post("/login/firebase", response_model=Token)
+# async def login_for_access_token_firebase(authorization: str = Depends(get_user_by_fb)):
+#     """
+#     Firebase 인증 정보를 사용하여 사용자를 인증하고, JWT 토큰을 반환합니다.
 
-    Firebase 인증을 통해 사용자의 이메일 주소를 확인하고, 해당 이메일을 주체로하는 JWT 토큰을 생성합니다.
-    생성된 토큰은 클라이언트에 반환되어 다른 API 엔드포인트에 대한 인증 수단으로 사용될 수 있습니다.
+#     Firebase 인증을 통해 사용자의 이메일 주소를 확인하고, 해당 이메일을 주체로하는 JWT 토큰을 생성합니다.
+#     생성된 토큰은 클라이언트에 반환되어 다른 API 엔드포인트에 대한 인증 수단으로 사용될 수 있습니다.
 
-    Args:
-    - authorization (str): Bearer 형식의 Firebase 토큰.
+#     Args:
+#     - authorization (str): Bearer 형식의 Firebase 토큰.
 
-    Returns:
-    - Token: 생성된 JWT 토큰을 포함하는 객체.
-    """
-    email = authorization["email"]
-    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"sub": email}, expires_delta=access_token_expires
-    )
-    return {"access_token": access_token, "token_type": "bearer"}
+#     Returns:
+#     - Token: 생성된 JWT 토큰을 포함하는 객체.
+#     """
+#     email = authorization["email"]
+#     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+#     access_token = create_access_token(
+#         data={"sub": email}, expires_delta=access_token_expires
+#     )
+#     return {"access_token": access_token, "token_type": "bearer"}
 
 
 @router.post("/login", response_model=Dict[str, Any])
@@ -227,7 +235,10 @@ def login_for_access_token(login_obj: UserLogin, db: Session = Depends(get_db)):
     올바른 사용자 정보일 경우, JWT 형식의 엑세스 토큰을 발행하여 반환
 
     Parameters:
-    - db (Session): 데이터베이스 세션 객체.
+    - email
+    - password = None
+    - sns_type : str : [kakao, google, apple,...]
+    - sns_id = None
 
     Returns:
     - dict: 엑세스 토큰,리프레쉬 토큰과 토큰 유형을 포함
@@ -240,9 +251,18 @@ def login_for_access_token(login_obj: UserLogin, db: Session = Depends(get_db)):
     user = crud.user.get_by_email(db=db, email=login_obj.email)
     if not user:
         raise HTTPException(status_code=400, detail="Incorrect email")
+
     # 비밀번호 검증
-    if not crud.verify_password(login_obj.password, user.password):
-        raise HTTPException(status_code=400, detail="Incorrect password")
+    ## 일반 로그인
+    if login_obj.password and user.password:
+        if not crud.verify_password(login_obj.password, user.password):
+            raise HTTPException(status_code=400, detail="Incorrect credentials")
+    ## SNS 로그인
+    elif login_obj.sns_type and login_obj.sns_id:
+        if user.sns_type != login_obj.sns_type or user.sns_id != login_obj.sns_id:
+            raise HTTPException(status_code=400, detail="Incorrect SNS credentials")
+    else:
+        raise HTTPException(status_code=400, detail="Incomplete login information")
 
     # 토큰 생성 및 반환
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)

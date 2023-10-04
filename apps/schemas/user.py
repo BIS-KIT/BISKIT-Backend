@@ -36,18 +36,23 @@ class UserWithStatus(UserBase):
 # 유저 생성을 위한 스키마
 class UserCreate(BaseModel):
     email: EmailStr
-    password: str
+    password: Optional[str] = None
     name: str
     birth: date
     gender: str
+    sns_type: Optional[str] = None
+    sns_id: Optional[str] = None
 
 
 class UserRegister(BaseModel):
     email: EmailStr
-    password: str
+    password: Optional[str] = None
     name: str
     birth: date
     gender: str
+
+    sns_type: Optional[str] = None
+    sns_id: Optional[str] = None
 
     nationality_ids: List[int] = None
 
@@ -62,7 +67,9 @@ class UserRegister(BaseModel):
 
 class UserLogin(BaseModel):
     email: EmailStr
-    password: str
+    password: Optional[str] = None
+    sns_type: Optional[str] = None
+    sns_id: Optional[str] = None
 
 
 class UserUpdate(BaseModel):
@@ -219,6 +226,8 @@ class UserResponse(BaseModel):
     gender: str = None
     is_active: bool = None
     is_admin: bool = None
+    sns_type: Optional[str] = None
+    sns_id: Optional[str] = None
 
     profile: Optional[ProfileResponse] = None
     consents: Optional[List[ConsentResponse]] = None
