@@ -78,7 +78,6 @@ def register_user(
     user_university_obj = None
     hashed_password = None
     user_nationality_obj_list = []
-
     # 데이터베이스에서 이메일로 사용자 확인
     db_user = crud.user.get_by_email(db=db, email=user_in.email)
     if db_user:
@@ -90,11 +89,6 @@ def register_user(
 
     password = user_in.password
     if password:
-        if not re.match("^[a-zA-Z\d@$!%*#?&]{8,16}$", password):
-            raise HTTPException(
-                status_code=400,
-                detail="Password must only include letters, numbers, and special characters.",
-            )
         hashed_password = crud.get_password_hash(password)
 
     university = crud.utility.get(db=db, university_id=user_in.university_id)
@@ -106,7 +100,6 @@ def register_user(
         nation = crud.utility.get(db=db, nationality_id=id)
         if not nation:
             raise HTTPException(status_code=400, detail="Nationality Not Found")
-
     try:
         obj_in = UserCreate(
             email=user_in.email,
@@ -145,6 +138,7 @@ def register_user(
         consent_obj = crud.user.create_consent(db=db, obj_in=consent)
         user_university_obj = crud.user.create_university(db=db, obj_in=user_university)
     except Exception as e:
+        log_error(e)
         if new_user:
             crud.user.remove(db=db, id=new_user.id)
         if consent_obj:
@@ -154,7 +148,6 @@ def register_user(
         if user_nationality_obj_list:
             for id in user_nationality_obj_list:
                 crud.user.remove_nationality(db=db, id=id)
-        log_error(e)
         raise HTTPException(status_code=500)
 
     # 토큰 생성
@@ -395,12 +388,6 @@ def change_password(
         raise HTTPException(status_code=400, detail="Token has expired")
     except JWTError:
         raise HTTPException(status_code=400, detail="Could not validate credentials")
-
-    if not re.match("^[a-zA-Z\d@$!%*#?&]{8,16}$", password_data.new_password):
-        raise HTTPException(
-            status_code=400,
-            detail="Password must only include letters, numbers, and special characters.",
-        )
 
     user_in = PasswordUpdate(password=password_data.new_password)
     updated_user = crud.user.update(db=db, db_obj=current_user, obj_in=user_in)
