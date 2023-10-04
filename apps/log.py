@@ -19,7 +19,4 @@ logger.addHandler(handler)
 
 def log_error(exception: Exception):
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    current_function_name = traceback.extract_stack(None, 2)[0][2]
-    logger.error(
-        f"[{current_time}] Error occured in {current_function_name}. Exception: {exception}"
-    )
+    logger.error(f"{exception} \n {traceback.format_exc()}")

@@ -242,8 +242,12 @@ def update_profile(
     if new_photo:
         if existing_profile.profile_photo:
             crud.profile.delete_file_from_s3(file_url=existing_profile.profile_photo)
-
-    new_profile = crud.profile.update(db=db, db_obj=existing_profile, obj_in=profile_in)
+    try:
+        new_profile = crud.profile.update(
+            db=db, db_obj=existing_profile, obj_in=profile_in
+        )
+    except Exception as e:
+        log_error(e)
     return new_profile
 
 
