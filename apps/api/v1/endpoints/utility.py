@@ -19,7 +19,7 @@ def get_languages(
     search: str = None,
     db: Session = Depends(get_db),
     skip: int = 0,
-    limit: int = 0,
+    limit: Optional[int] = None,
 ):
     """
     데이터베이스에서 언어 목록을 검색하여 반환합니다.
@@ -43,10 +43,12 @@ def get_languages(
     else:
         query = db.query(Language)
 
-    if skip and limit:
-        languages = query.offset(skip).limit(limit).all()
-    else:
-        languages = query.all()
+    query = query.offset(skip)
+
+    if limit is not None:
+        query = query.limit(limit)
+
+    languages = query.all()
 
     if os_language and os_language.value == OsLanguage.EN:
         # Extract the objects for id=1 and id=2
@@ -68,7 +70,7 @@ def get_universities(
     search: str = None,
     db: Session = Depends(get_db),
     skip: int = 0,
-    limit: int = 0,
+    limit: Optional[int] = None,
 ):
     if search:
         query = db.query(University).filter(
@@ -80,10 +82,12 @@ def get_universities(
     else:
         query = db.query(University)
 
-    if skip and limit:
-        universities = query.offset(skip).limit(limit).all()
-    else:
-        universities = query.all()
+    query = query.offset(skip)
+
+    if limit is not None:
+        query = query.limit(limit)
+
+    universities = query.all()
 
     return universities
 
@@ -94,7 +98,7 @@ def get_countries(
     search: str = None,
     db: Session = Depends(get_db),
     skip: int = 0,
-    limit: int = 0,
+    limit: Optional[int] = None,
 ):
     if search:
         query = db.query(Nationality).filter(
@@ -111,9 +115,11 @@ def get_countries(
     else:
         query = query.order_by(Nationality.id)
 
-    if skip and limit:
-        countries = query.offset(skip).limit(limit).all()
-    else:
-        countries = query.all()
+    query = query.offset(skip)
+
+    if limit is not None:
+        query = query.limit(limit)
+
+    countries = query.all()
 
     return [NationalityBase.from_orm(country) for country in countries]
