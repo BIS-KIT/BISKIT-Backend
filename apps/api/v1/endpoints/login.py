@@ -79,13 +79,20 @@ def register_user(
     hashed_password = None
     user_nationality_obj_list = []
     # 데이터베이스에서 이메일로 사용자 확인
-    db_user = crud.user.get_by_email(db=db, email=user_in.email)
-    if db_user:
-        raise HTTPException(status_code=409, detail="User already registered.")
+    if user_in.email:
+        user = crud.user.get_by_email(db=db, email=user_in.email)
+        if user:
+            raise HTTPException(status_code=409, detail="User already registered.")
+    elif user_in.sns_type and user_in.sns_id:
+        user = crud.user.get_by_sns(
+            db=db, sns_type=user_in.sns_type, sns_id=user_in.sns_id
+        )
+        if user:
+            raise HTTPException(status_code=409, detail="User already registered.")
 
     check_user = crud.user.get_by_birth(db=db, name=user_in.name, birth=user_in.birth)
     if check_user:
-        raise HTTPException(status_code=409, detail="User already registered.")
+        raise HTTPException(status_code=409, detail="User with same name and birthdate already registered.")
 
     password = user_in.password
     if password:
@@ -160,8 +167,10 @@ def register_user(
     return {
         "id": new_user.id,
         "token": access_token,
-        "email": new_user.email,
         "refresh_token": refresh_token,
+        "email": new_user.email,
+        "sns_type": new_user.sns_type,
+        "sns_id": new_user.sns_id,
     }
 
 
@@ -248,7 +257,7 @@ def login_for_access_token(login_obj: UserLogin, db: Session = Depends(get_db)):
             raise HTTPException(status_code=400, detail="User Not Found")
     elif login_obj.sns_type and login_obj.sns_id:
         user = crud.user.get_by_sns(
-            db=db, sns_type=login_obj.sns_type, sns_id=login_obj
+            db=db, sns_type=login_obj.sns_type, sns_id=login_obj.sns_id
         )
         if not user:
             raise HTTPException(status_code=400, detail="User Not Found")

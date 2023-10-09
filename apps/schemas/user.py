@@ -35,7 +35,7 @@ class UserWithStatus(UserBase):
 
 # 유저 생성을 위한 스키마
 class UserCreate(BaseModel):
-    email: EmailStr
+    email: Optional[EmailStr]=None
     password: Optional[str] = None
     name: str
     birth: date
@@ -46,7 +46,7 @@ class UserCreate(BaseModel):
 
 
 class UserRegister(BaseModel):
-    email: EmailStr
+    email: Optional[EmailStr]=None
     password: Optional[str] = None
     name: str
     birth: date
@@ -152,15 +152,15 @@ class RefreshToken(BaseModel):
 
 
 class TokenData(BaseModel):
-    email: str = None
+    email: Optional[EmailStr]=None
 
 
 class EmailCertificationIn(BaseModel):
-    email: str
+    email: Optional[EmailStr]=None
 
 
 class EmailCertificationCheck(BaseModel):
-    email: str
+    email: Optional[EmailStr]=None
     certification: Union[str, int]
 
 
@@ -223,7 +223,7 @@ class UserNationalityUpdate(BaseModel):
 
 class UserResponse(BaseModel):
     id: int
-    email: str = None
+    email: Optional[EmailStr]=None
     name: str = None
     birth: date = None
     gender: str = None
