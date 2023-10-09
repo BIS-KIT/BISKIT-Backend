@@ -282,6 +282,26 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             .first()
         )
 
+    def update_fcm_token(self, db: Session, user_id: int, fcm_token: str):
+        user = db.query(User).filter(User.id == user_id).first()
+        
+        if not user:
+            raise ValueError("User with given ID not found")
+        
+        user.fcm_token = fcm_token
+        
+        try:
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+        except:
+            db.rollback()
+            raise
+        finally:
+            db.close()
+        
+        return user
+
     def create(self, db: Session, *, obj_in: UserCreate) -> User:
         """
         Create a new user.

@@ -109,6 +109,7 @@ def register_user(
             gender=user_in.gender,
             sns_type=user_in.sns_type,
             sns_id=user_in.sns_id,
+            fcm_token=user_in.fcm_token,
         )
 
         new_user = crud.user.create(db=db, obj_in=obj_in)
@@ -241,9 +242,18 @@ def login_for_access_token(login_obj: UserLogin, db: Session = Depends(get_db)):
     """
 
     # 데이터베이스에서 사용자 조회
-    user = crud.user.get_by_email(db=db, email=login_obj.email)
-    if not user:
-        raise HTTPException(status_code=400, detail="Incorrect email")
+    if login_obj.email:
+        user = crud.user.get_by_email(db=db, email=login_obj.email)
+        if not user:
+            raise HTTPException(status_code=400, detail="User Not Found")
+    elif login_obj.sns_type and login_obj.sns_id:
+        user = crud.user.get_by_sns(
+            db=db, sns_type=login_obj.sns_type, sns_id=login_obj
+        )
+        if not user:
+            raise HTTPException(status_code=400, detail="User Not Found")
+    else:
+        raise HTTPException(status_code=400, detail="Incorrect credentials")
 
     # 비밀번호 검증
     ## 일반 로그인
@@ -257,6 +267,10 @@ def login_for_access_token(login_obj: UserLogin, db: Session = Depends(get_db)):
     else:
         raise HTTPException(status_code=400, detail="Incomplete login information")
 
+    if login_obj.fcm_token:
+        crud.user.update_fcm_token(
+            db=db, user_id=user.id, fcm_token=login_obj.fcm_token
+        )
     # 토큰 생성 및 반환
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(

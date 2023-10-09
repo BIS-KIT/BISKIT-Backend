@@ -42,6 +42,7 @@ class UserCreate(BaseModel):
     gender: str
     sns_type: Optional[str] = None
     sns_id: Optional[str] = None
+    fcm_token: Optional[str] = None
 
 
 class UserRegister(BaseModel):
@@ -53,6 +54,7 @@ class UserRegister(BaseModel):
 
     sns_type: Optional[str] = None
     sns_id: Optional[str] = None
+    fcm_token: Optional[str] = None
 
     nationality_ids: List[int] = None
 
@@ -66,10 +68,11 @@ class UserRegister(BaseModel):
 
 
 class UserLogin(BaseModel):
-    email: EmailStr
+    email: Optional[EmailStr] = None
     password: Optional[str] = None
     sns_type: Optional[str] = None
     sns_id: Optional[str] = None
+    fcm_token: Optional[str] = None
 
 
 class UserUpdate(BaseModel):
@@ -228,6 +231,7 @@ class UserResponse(BaseModel):
     is_admin: bool = None
     sns_type: Optional[str] = None
     sns_id: Optional[str] = None
+    fcm_token: Optional[str] = None
 
     profile: Optional[ProfileResponse] = None
     consents: Optional[List[ConsentResponse]] = None

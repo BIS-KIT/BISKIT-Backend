@@ -13,6 +13,7 @@ class User(ModelBase):
 
     sns_type = Column(String, nullable=True)
     sns_id = Column(String, nullable=True)
+    fcm_token = Column(String, nullable=True)
 
     is_active = Column(Boolean, default=True)
     is_admin = Column(Boolean, default=False)
