@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from typing import Any, Union, Optional, Annotated
 import secrets
 
-from jose import jwt, JWTError
+from jose import jwt, JWTError, ExpiredSignatureError
 from firebase_admin import auth
 from fastapi import HTTPException, Header, status, Depends, Security
 from fastapi.security import (
@@ -61,7 +61,7 @@ def create_refresh_token(data: dict):
     """
     ...
     to_encode = data.copy()
-    expire = datetime.utcnow() + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_MINUTES)
+    expire = datetime.utcnow() + timedelta(minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(
         to_encode, settings.REFRESH_SECRET_KEY, algorithm=settings.ALGORITHM
@@ -161,15 +161,28 @@ def get_current_user(
         payload = jwt.decode(
             token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
         )
-        email: str = payload.get("sub")
-        if email is None:
-            raise credentials_exception
-        token_data = TokenData(email=email)
-    except (JWTError, ValueError):
-        raise credentials_exception
-    user = crud.user.get_by_email(db=db, email=token_data.email)
-    if user is None:
-        raise credentials_exception
+        auth_method = payload.get("auth_method")
+        
+        if auth_method == "email":
+            email = payload.get("sub")
+            user = crud.user.get_by_email(db=db, email=email)
+        elif auth_method == "sns":
+            sns_id = payload.get("sub")
+            sns_type = payload.get("sns_type")
+            user = crud.user.get_by_sns(db=db, sns_id=sns_id, sns_type=sns_type)
+        else:
+            raise HTTPException(status_code=400, detail="Unknown auth_method")
+        
+        if user is None:
+            raise HTTPException(
+                status_code=401,
+                detail="User not found",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+    except ExpiredSignatureError:
+        raise HTTPException(status_code=400, detail="Token has expired")
+    except JWTError:
+        raise HTTPException(status_code=400, detail="Could not validate credentials")
     return user
 
 

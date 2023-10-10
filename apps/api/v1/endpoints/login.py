@@ -174,61 +174,6 @@ def register_user(
     }
 
 
-# @router.post("/register/firebase", response_model=UserResponse)
-# def create_user(
-#     db: Session = Depends(get_db),
-#     current_user: dict = Depends(get_user_by_fb),
-# ):
-#     """
-#     Firebase 토큰에서의 이메일을 사용하여 새 사용자를 등록합니다.
-
-#     인자:
-#     - db (Session): 데이터베이스 세션.
-#     - current_user (dict): 현재 인증된 사용자의 데이터.
-#     - authorization: Bearer 형식의 Firebase 토큰.
-
-#     반환값:
-#     - dict: 새로 등록된 사용자의 ID와 이메일.
-#     """
-#     user_email = current_user.get("email")  # Firebase 토큰에서 이메일 가져오기
-#     if not user_email:
-#         raise HTTPException(
-#             status_code=400, detail="Email not found in Firebase token."
-#         )
-
-#     # 데이터베이스에서 이메일로 사용자 확인
-#     db_user = crud.user.get_by_email(db=db, email=user_email)
-#     if db_user:
-#         raise HTTPException(status_code=409, detail="User already registered.")
-
-#     # 새로운 사용자 생성 및 저장
-#     obj_in = UserCreate(email=user_email)
-#     new_user = crud.user.create(db=db, obj_in=obj_in)
-#     return {"id": new_user.id, "email": new_user.email}
-
-
-# @router.post("/login/firebase", response_model=Token)
-# async def login_for_access_token_firebase(authorization: str = Depends(get_user_by_fb)):
-#     """
-#     Firebase 인증 정보를 사용하여 사용자를 인증하고, JWT 토큰을 반환합니다.
-
-#     Firebase 인증을 통해 사용자의 이메일 주소를 확인하고, 해당 이메일을 주체로하는 JWT 토큰을 생성합니다.
-#     생성된 토큰은 클라이언트에 반환되어 다른 API 엔드포인트에 대한 인증 수단으로 사용될 수 있습니다.
-
-#     Args:
-#     - authorization (str): Bearer 형식의 Firebase 토큰.
-
-#     Returns:
-#     - Token: 생성된 JWT 토큰을 포함하는 객체.
-#     """
-#     email = authorization["email"]
-#     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-#     access_token = create_access_token(
-#         data={"sub": email}, expires_delta=access_token_expires
-#     )
-#     return {"access_token": access_token, "token_type": "bearer"}
-
-
 @router.post("/login", response_model=Dict[str, Any])
 def login_for_access_token(login_obj: UserLogin, db: Session = Depends(get_db)):
     """
@@ -272,7 +217,7 @@ def login_for_access_token(login_obj: UserLogin, db: Session = Depends(get_db)):
     ## SNS 로그인
     elif login_obj.sns_type and login_obj.sns_id:
         if user.sns_type != login_obj.sns_type or user.sns_id != login_obj.sns_id:
-            raise HTTPException(status_code=400, detail="Incorrect SNS credentials")
+            raise HTTPException(status_code=400, detail="Incorrect credentials")
     else:
         raise HTTPException(status_code=400, detail="Incomplete login information")
 
@@ -280,12 +225,18 @@ def login_for_access_token(login_obj: UserLogin, db: Session = Depends(get_db)):
         crud.user.update_fcm_token(
             db=db, user_id=user.id, fcm_token=login_obj.fcm_token
         )
+
     # 토큰 생성 및 반환
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    if user.email:
+        token_data = {"sub": user.email, "auth_method": "email"}
+    else:
+        token_data = {"sub": user.sns_id,"sns_type":user.sns_type, "auth_method": "sns"}
+
     access_token = create_access_token(
-        data={"sub": user.email}, expires_delta=access_token_expires
+        data=token_data, expires_delta=access_token_expires
     )
-    refresh_token = create_refresh_token(data={"sub": user.email})
+    refresh_token = create_refresh_token(data=token_data)
 
     return {
         "access_token": access_token,
@@ -294,7 +245,7 @@ def login_for_access_token(login_obj: UserLogin, db: Session = Depends(get_db)):
     }
 
 
-@router.post("/token/refresh/", response_model=Token)
+@router.post("/token/refresh/")
 async def refresh_token(
     token: str = Depends(get_current_token), db: Session = Depends(get_db)
 ):
@@ -307,14 +258,24 @@ async def refresh_token(
     반환값:
     - Token: 새로고침된 토큰.
     """
+    payload = jwt.decode(
+            token, settings.REFRESH_SECRET_KEY, algorithms=[settings.ALGORITHM]
+        )
     try:
         payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+            token, settings.REFRESH_SECRET_KEY, algorithms=[settings.ALGORITHM]
         )
-        email = payload.get("sub")
-        if email is None:
-            raise HTTPException(status_code=400, detail="Could not validate email")
-        user = crud.user.get_by_email(db=db, email=email)
+        
+        auth_method = payload.get("auth_method")
+        if auth_method == "email":
+            email = payload.get("sub")
+            user = crud.user.get_by_email(db=db, email=email)
+        elif auth_method == "sns":
+            sns_id = payload.get("sub")
+            sns_type = payload.get("sns_type")
+            user = crud.user.get_by_sns(db=db, sns_id=sns_id, sns_type=sns_type)
+        else:
+            raise HTTPException(status_code=400, detail="Unknown auth_method")
         if user is None:
             raise HTTPException(
                 status_code=401,
@@ -323,11 +284,18 @@ async def refresh_token(
             )
     except ExpiredSignatureError:
         raise HTTPException(status_code=400, detail="Token has expired")
-    except JWTError:
+    except JWTError as e:
         raise HTTPException(status_code=400, detail="Could not validate credentials")
+    
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    if user.email:
+        token_data = {"sub": user.email, "auth_method": "email"}
+    else:
+        token_data = {"sub": user.sns_id,"sns_type":user.sns_type, "auth_method": "sns"}
 
-    # 새로운 access_token 생성
-    access_token = create_access_token(data={"email": email})
+    access_token = create_access_token(
+        data=token_data, expires_delta=access_token_expires
+    )
     return {"access_token": access_token, "token_type": "bearer"}
 
 
@@ -349,21 +317,39 @@ def validate_token(
         payload = jwt.decode(
             token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
         )
-        email: str = payload.get("sub")
-        if email is None:
-            credentials_exception = HTTPException(
-                status_code=401,
-                detail="Could not validate credentials",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-            raise credentials_exception
-        user = crud.user.get_by_email(db=db, email=email)
+        
+        auth_method = payload.get("auth_method")
+        
+        if auth_method == "email":
+            email = payload.get("sub")
+            if email is None:
+                credentials_exception = HTTPException(
+                    status_code=401,
+                    detail="Could not validate credentials",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+                raise credentials_exception
+            user = crud.user.get_by_email(db=db, email=email)
+        elif auth_method == "sns":
+            sns_id = payload.get("sub")
+            sns_type = payload.get("sns_type")
+            if sns_id is None:
+                credentials_exception = HTTPException(
+                    status_code=401,
+                    detail="Could not validate credentials",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+            user = crud.user.get_by_sns(db=db, sns_id=sns_id, sns_type=sns_type)
+        else:
+            raise HTTPException(status_code=400, detail="Unknown auth_method")
+
         if user is None:
             raise HTTPException(
                 status_code=401,
                 detail="User not found",
                 headers={"WWW-Authenticate": "Bearer"},
             )
+        
     except JWTError:
         raise HTTPException(
             status_code=401,
@@ -397,23 +383,32 @@ def change_password(
         payload = jwt.decode(
             token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
         )
-        email = payload.get("sub")
-        if email is None:
-            raise HTTPException(status_code=400, detail="Could not validate email")
-        current_user = crud.user.get_by_email(db=db, email=email)
-        if current_user is None:
+        auth_method = payload.get("auth_method")
+        
+        if auth_method == "email":
+            email = payload.get("sub")
+            user = crud.user.get_by_email(db=db, email=email)
+        elif auth_method == "sns":
+            sns_id = payload.get("sub")
+            sns_type = payload.get("sns_type")
+            user = crud.user.get_by_sns(db=db, sns_id=sns_id, sns_type=sns_type)
+        else:
+            raise HTTPException(status_code=400, detail="Unknown auth_method")
+        
+        if user is None:
             raise HTTPException(
                 status_code=401,
                 detail="User not found",
                 headers={"WWW-Authenticate": "Bearer"},
             )
+        
     except ExpiredSignatureError:
         raise HTTPException(status_code=400, detail="Token has expired")
     except JWTError:
         raise HTTPException(status_code=400, detail="Could not validate credentials")
 
     user_in = PasswordUpdate(password=password_data.new_password)
-    updated_user = crud.user.update(db=db, db_obj=current_user, obj_in=user_in)
+    updated_user = crud.user.update(db=db, db_obj=user, obj_in=user_in)
 
     return {"detail": "Password changed successfully"}
 
