@@ -9,9 +9,12 @@ from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from starlette.middleware.cors import CORSMiddleware
 from firebase_admin import credentials, initialize_app
 from fastapi.openapi.docs import get_swagger_ui_html
+from sqladmin import Admin
+from database.session import engine
 
 from core.config import settings
 from core.security import get_admin
+from admin.base import register_all
 from api.v1.router import api_router as v1_router
 from log import logger
 
@@ -32,6 +35,9 @@ app = FastAPI(
     docs_url=None,
 )
 app.mount("/media", StaticFiles(directory="media"), name="media")
+
+admin = Admin(app, engine)
+register_all(admin)
 
 
 @app.exception_handler(Exception)

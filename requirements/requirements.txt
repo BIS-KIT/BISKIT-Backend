@@ -77,3 +77,4 @@ jinja2
 boto3
 pandas
 openpyxl
+sqladmin[full]
