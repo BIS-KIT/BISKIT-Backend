@@ -41,7 +41,7 @@ from core.config import settings
 router = APIRouter()
 
 
-@router.post("/register/", response_model=Dict[str, Any])
+@router.post("/register", response_model=Dict[str, Any])
 def register_user(
     user_in: UserRegister,
     db: Session = Depends(get_db),
@@ -92,7 +92,10 @@ def register_user(
 
     check_user = crud.user.get_by_birth(db=db, name=user_in.name, birth=user_in.birth)
     if check_user:
-        raise HTTPException(status_code=409, detail="User with same name and birthdate already registered.")
+        raise HTTPException(
+            status_code=409,
+            detail="User with same name and birthdate already registered.",
+        )
 
     password = user_in.password
     if password:
@@ -231,7 +234,11 @@ def login_for_access_token(login_obj: UserLogin, db: Session = Depends(get_db)):
     if user.email:
         token_data = {"sub": user.email, "auth_method": "email"}
     else:
-        token_data = {"sub": user.sns_id,"sns_type":user.sns_type, "auth_method": "sns"}
+        token_data = {
+            "sub": user.sns_id,
+            "sns_type": user.sns_type,
+            "auth_method": "sns",
+        }
 
     access_token = create_access_token(
         data=token_data, expires_delta=access_token_expires
@@ -245,7 +252,7 @@ def login_for_access_token(login_obj: UserLogin, db: Session = Depends(get_db)):
     }
 
 
-@router.post("/token/refresh/")
+@router.post("/token/refresh")
 async def refresh_token(
     token: str = Depends(get_current_token), db: Session = Depends(get_db)
 ):
@@ -259,13 +266,13 @@ async def refresh_token(
     - Token: 새로고침된 토큰.
     """
     payload = jwt.decode(
-            token, settings.REFRESH_SECRET_KEY, algorithms=[settings.ALGORITHM]
-        )
+        token, settings.REFRESH_SECRET_KEY, algorithms=[settings.ALGORITHM]
+    )
     try:
         payload = jwt.decode(
             token, settings.REFRESH_SECRET_KEY, algorithms=[settings.ALGORITHM]
         )
-        
+
         auth_method = payload.get("auth_method")
         if auth_method == "email":
             email = payload.get("sub")
@@ -286,12 +293,16 @@ async def refresh_token(
         raise HTTPException(status_code=400, detail="Token has expired")
     except JWTError as e:
         raise HTTPException(status_code=400, detail="Could not validate credentials")
-    
+
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     if user.email:
         token_data = {"sub": user.email, "auth_method": "email"}
     else:
-        token_data = {"sub": user.sns_id,"sns_type":user.sns_type, "auth_method": "sns"}
+        token_data = {
+            "sub": user.sns_id,
+            "sns_type": user.sns_type,
+            "auth_method": "sns",
+        }
 
     access_token = create_access_token(
         data=token_data, expires_delta=access_token_expires
@@ -299,7 +310,7 @@ async def refresh_token(
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@router.get("/token/validate/")
+@router.get("/token/validate")
 def validate_token(
     token: str = Depends(get_current_token), db: Session = Depends(get_db)
 ):
@@ -317,9 +328,9 @@ def validate_token(
         payload = jwt.decode(
             token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
         )
-        
+
         auth_method = payload.get("auth_method")
-        
+
         if auth_method == "email":
             email = payload.get("sub")
             if email is None:
@@ -349,7 +360,7 @@ def validate_token(
                 detail="User not found",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-        
+
     except JWTError:
         raise HTTPException(
             status_code=401,
@@ -361,7 +372,7 @@ def validate_token(
     return {"detail": "Token is valid"}
 
 
-@router.post("/change-password/")
+@router.post("/change-password")
 def change_password(
     password_data: PasswordChange,
     token: str = Depends(get_current_token),
@@ -384,7 +395,7 @@ def change_password(
             token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
         )
         auth_method = payload.get("auth_method")
-        
+
         if auth_method == "email":
             email = payload.get("sub")
             user = crud.user.get_by_email(db=db, email=email)
@@ -394,14 +405,14 @@ def change_password(
             user = crud.user.get_by_sns(db=db, sns_id=sns_id, sns_type=sns_type)
         else:
             raise HTTPException(status_code=400, detail="Unknown auth_method")
-        
+
         if user is None:
             raise HTTPException(
                 status_code=401,
                 detail="User not found",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-        
+
     except ExpiredSignatureError:
         raise HTTPException(status_code=400, detail="Token has expired")
     except JWTError:
@@ -413,7 +424,7 @@ def change_password(
     return {"detail": "Password changed successfully"}
 
 
-@router.post("/check-email/")
+@router.post("/check-email")
 def check_mail_exists(email: str, db: Session = Depends(get_db)):
     """
     입력받은 이메일이 이미 존재하는지 확인합니다.
@@ -434,7 +445,7 @@ def check_mail_exists(email: str, db: Session = Depends(get_db)):
     return {"status": "Email is available."}
 
 
-@router.post("/change-password/certificate/")
+@router.post("/change-password/certificate")
 async def certificate_email(
     cert_in: EmailCertificationIn, db: Session = Depends(get_db)
 ):
@@ -475,7 +486,7 @@ async def certificate_email(
         return {"result": "fail"}
 
 
-@router.post("/change-password/certificate/check/")
+@router.post("/change-password/certificate/check")
 async def certificate_check(
     cert_check: EmailCertificationCheck, db: Session = Depends(get_db)
 ):
@@ -503,7 +514,7 @@ async def certificate_check(
     return {"result": "fail"}
 
 
-@router.post("/certificate/")
+@router.post("/certificate")
 async def certificate_email(
     cert_in: EmailCertificationIn, db: Session = Depends(get_db)
 ):
@@ -546,7 +557,7 @@ async def certificate_email(
         return {"result": "fail"}
 
 
-@router.post("/certificate/check/")
+@router.post("/certificate/check")
 async def certificate_check(
     cert_check: EmailCertificationCheck, db: Session = Depends(get_db)
 ):

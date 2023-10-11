@@ -42,7 +42,7 @@ async def read_current_user(current_user=Depends(get_current_user)):
     return current_user
 
 
-@router.get("/users/", response_model=List[UserResponse])
+@router.get("/users", response_model=List[UserResponse])
 def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     """
     사용자 목록을 반환합니다.

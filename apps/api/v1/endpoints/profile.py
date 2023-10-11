@@ -44,7 +44,7 @@ from log import log_error
 router = APIRouter()
 
 
-@router.get("/profile/{user_id}/", response_model=ProfileResponse)
+@router.get("/profile/{user_id}", response_model=ProfileResponse)
 def get_profile_by_user_id(
     user_id: int = Path(..., title="The ID of the user"), db: Session = Depends(get_db)
 ):
@@ -64,7 +64,7 @@ def get_profile_by_user_id(
     return db_profile
 
 
-@router.post("/profile/", response_model=ProfileResponse)
+@router.post("/profile", response_model=ProfileResponse)
 def create_profile(
     profile: ProfileRegister,
     user_id: int = Query(...),
@@ -202,7 +202,7 @@ def update_profile_photo(
     return {"image_url": image_url}
 
 
-@router.put("/profile/{profile_id}/", response_model=ProfileResponse)
+@router.put("/profile/{profile_id}", response_model=ProfileResponse)
 def update_profile(
     profile_id: int,
     profile_in: ProfileUpdate,
