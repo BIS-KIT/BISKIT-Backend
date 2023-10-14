@@ -14,7 +14,7 @@ from database.session import engine
 
 from core.config import settings
 from core.security import get_admin
-from admin.base import register_all
+from admin.base import register_all, templates_dir
 from api.v1.router import api_router as v1_router
 from log import logger
 
@@ -36,7 +36,7 @@ app = FastAPI(
 )
 app.mount("/media", StaticFiles(directory="media"), name="media")
 
-admin = Admin(app, engine)
+admin = Admin(app, engine, templates_dir=templates_dir)
 register_all(admin)
 
 
