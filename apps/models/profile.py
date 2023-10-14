@@ -42,3 +42,7 @@ class StudentVerification(ModelBase):
 
     profile_id = Column(Integer, ForeignKey("profile.id", ondelete="CASCADE"))
     profile = relationship("Profile", back_populates="student_verification")
+
+    @property
+    def user_email(self):
+        return self.profile.user.email

@@ -24,11 +24,7 @@ class Language(ModelBase):
     kr_name = Column(String)
     en_name = Column(String)
 
-    # available_language = relationship("AvailableLanguage", back_populates="language")
-
 
 class University(ModelBase):
     kr_name = Column(String)
     en_name = Column(String)
-
-    # user_university = relationship("UserUniversity", back_populates="university")
