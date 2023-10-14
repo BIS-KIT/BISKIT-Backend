@@ -161,12 +161,21 @@ def register_user(
                 crud.user.remove_nationality(db=db, id=id)
         raise HTTPException(status_code=500)
 
-    # 토큰 생성
+    # 토큰 생성 및 반환
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    if new_user.email:
+        token_data = {"sub": new_user.email, "auth_method": "email"}
+    else:
+        token_data = {
+            "sub": new_user.sns_id,
+            "sns_type": new_user.sns_type,
+            "auth_method": "sns",
+        }
+
     access_token = create_access_token(
-        data={"sub": new_user.email}, expires_delta=access_token_expires
+        data=token_data, expires_delta=access_token_expires
     )
-    refresh_token = create_refresh_token(data={"sub": new_user.email})
+    refresh_token = create_refresh_token(data=token_data)
     return {
         "id": new_user.id,
         "token": access_token,

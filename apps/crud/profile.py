@@ -206,7 +206,7 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
         else:
             update_data = obj_in.dict(exclude_unset=True)
 
-        if not update_data["nick_name"]:
+        if "nick_name" in update_data and not update_data["nick_name"]:
             del update_data["nick_name"]
 
         return super().update(db, db_obj=db_obj, obj_in=update_data)
@@ -244,10 +244,12 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
 
     def remove_profile_photo(self, db: Session, user_id: int):
         profile = self.get_by_user_id(db, user_id=user_id)
+        print(profile, profile.profile_photo)
         if not profile or not profile.profile_photo:
             return None
 
         # 필요하다면 실제 이미지 파일도 제거합니다.
+        print(333,profile.profile_photo)
         self.delete_file_from_s3(profile.profile_photo)
 
         profile.profile_photo = None
