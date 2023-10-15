@@ -20,6 +20,7 @@ class UserAdmin(ModelView, model=User):
 class StudentVerificationAdmin(ModelView, model=StudentVerification):
     list_template = "photo_list.html"
     column_list = [
+        StudentVerification.id,
         StudentVerification.student_card,
         StudentVerification.verification_status,
     ]

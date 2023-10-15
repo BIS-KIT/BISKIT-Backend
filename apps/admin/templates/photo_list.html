@@ -158,10 +158,14 @@
             {% endif %}
             {% endif %}
             {% endfor %}
+            <td>
+              <form method="post" action="/v1/student-card/{{row.id}}/approve">
+                <button type="submit" class="btn btn-primary">승인</button>
+              </form>
+            </td>
           </tr>
           {% endfor %}
         </tbody>
-      </table>
     </div>
     <div class="card-footer d-flex justify-content-between align-items-center gap-2">
       <p class="m-0 text-muted">Showing <span>{{ ((pagination.page - 1) * pagination.page_size) + 1 }}</span> to
