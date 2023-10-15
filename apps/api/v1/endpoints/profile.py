@@ -12,7 +12,9 @@ from fastapi import (
     Form,
     Path,
     Query,
+    Request,
 )
+from fastapi.responses import RedirectResponse
 from pydantic.networks import EmailStr
 from sqlalchemy.orm import Session, joinedload
 
@@ -42,6 +44,7 @@ from schemas.profile import (
 from log import log_error
 
 router = APIRouter()
+
 
 @router.get("/profile/photos")
 def get_profile_photos(
@@ -99,6 +102,7 @@ def update_profile_photo(
         raise HTTPException(status_code=500)
     return {"image_url": image_url}
 
+
 @router.get("/profile/nick-name")
 async def check_nick_name(nick_name: str, db: Session = Depends(get_db)):
     """
@@ -127,6 +131,7 @@ async def check_nick_name(nick_name: str, db: Session = Depends(get_db)):
 
     return {"status": "Nick_name is available."}
 
+
 @router.get("/profile/random-nickname")
 async def get_random_nickname():
     async with httpx.AsyncClient() as client:
@@ -147,6 +152,7 @@ async def get_random_nickname():
         en_nick_name = data.get("en_nick_name")
 
     return {"kr_nick_name": kr_nick_name, "en_nick_name": en_nick_name}
+
 
 @router.post("/profile/introduction", response_model=List[IntroductionResponse])
 def create_introduction(
@@ -184,6 +190,7 @@ def create_introduction(
 
     return created_introductions
 
+
 @router.put(
     "/profile/introduction/{introduction_id}", response_model=IntroductionResponse
 )
@@ -218,6 +225,7 @@ def get_introduction(introduction_id: int, db: Session = Depends(get_db)):
 def delete_introduction(introduction_id: int, db: Session = Depends(get_db)):
     db_obj = crud.profile.remove_introduction(db=db, id=introduction_id)
     return db_obj
+
 
 @router.post("/profile/available-language", response_model=List[AvailableLanguageBase])
 async def create_available_language(
@@ -306,6 +314,7 @@ async def update_available_language(
     )
     return update_introdu
 
+
 @router.post("/student-card", response_model=StudentVerificationBase)
 def student_varification(
     student_card: str,
@@ -327,7 +336,7 @@ def student_varification(
     if user is None:
         raise HTTPException(status_code=404, detail="user not found")
 
-    profile = crud.profile.get_by_user_id(db=db,user_id=user_id)
+    profile = crud.profile.get_by_user_id(db=db, user_id=user_id)
     if profile is None:
         raise HTTPException(status_code=404, detail="profile not found")
 
@@ -342,6 +351,36 @@ def student_varification(
         log_error(e)
         raise HTTPException(status_code=500)
     return user_verification
+
+
+@router.post("/student-card/approve/{id}")
+def approve_varification(
+    request: Request,
+    id: int,
+    db: Session = Depends(get_db),
+):
+    """
+    특정 사용자의 학생증 인증을 승인합니다.
+
+    **인자:**
+    - user_id (int): 사용자 ID.
+    - db (Session): 데이터베이스 세션.
+
+    **반환값:**
+    - dict: 인증 승인 결과.
+    """
+    verification = crud.profile.get_verification(db=db, id=id)
+    if verification is None:
+        raise HTTPException(status_code=404, detail="StudentVerification not found")
+
+    obj_in = StudentVerificationUpdate(
+        verification_status=VerificationStatus.VERIFIED.value
+    )
+    update_verification = crud.profile.update_verification(
+        db=db, db_obj=verification, obj_in=obj_in
+    )
+
+    return RedirectResponse(url="/admin/student-verification/list", status_code=303)
 
 
 @router.get("/student-card/{user_id}", response_model=StudentVerificationBase)
@@ -362,8 +401,8 @@ def student_varification(
     user = crud.user.get(db=db, id=user_id)
     if user is None:
         raise HTTPException(status_code=404, detail="user not found")
-    
-    profile = crud.profile.get_by_user_id(db=db,user_id=user_id)
+
+    profile = crud.profile.get_by_user_id(db=db, user_id=user_id)
     if profile is None:
         raise HTTPException(status_code=404, detail="profile not found")
 
@@ -371,42 +410,6 @@ def student_varification(
     if not db_obj:
         raise HTTPException(status_code=404, detail="StudentVerification not found")
     return db_obj
-
-
-@router.post("/student-card/{user_id}/approve")
-def approve_varification(
-    user_id: int,
-    db: Session = Depends(get_db),
-):
-    """
-    특정 사용자의 학생증 인증을 승인합니다.
-
-    **인자:**
-    - user_id (int): 사용자 ID.
-    - db (Session): 데이터베이스 세션.
-
-    **반환값:**
-    - dict: 인증 승인 결과.
-    """
-    user = crud.user.get(db=db, id=user_id)
-    if user is None:
-        raise HTTPException(status_code=404, detail="user not found")
-    
-    profile = crud.profile.get_by_user_id(db=db,user_id=user_id)
-    if profile is None:
-        raise HTTPException(status_code=404, detail="profile not found")
-
-    verification = crud.profile.get_verification(db=db, profile_id=profile.id)
-    if verification is None:
-        raise HTTPException(status_code=404, detail="StudentVerification not found")
-
-    obj_in = StudentVerificationUpdate(
-        verification_status=VerificationStatus.VERIFIED.value
-    )
-    update_verification = crud.profile.update_verification(
-        db=db, db_obj=verification, obj_in=obj_in
-    )
-    return update_verification
 
 
 @router.get("/student-cards", response_model=List[StudentVerificationBase])
@@ -423,6 +426,7 @@ def read_student_cards(db: Session = Depends(get_db)):
     obj_list = crud.profile.list_verification(db=db)
     return obj_list
 
+
 @router.delete("/profile/user/{user_id}", response_model=ProfileBase)
 def delete_profile_by_user(user_id: int, db: Session = Depends(get_db)):
     """
@@ -434,6 +438,7 @@ def delete_profile_by_user(user_id: int, db: Session = Depends(get_db)):
             status_code=404, detail="Profile not found for the given user_id"
         )
     return crud.profile.remove(db, id=profile.id)
+
 
 @router.delete("/profile/{user_id}/photo")
 async def delete_profile_photo(user_id: int, db: Session = Depends(get_db)):
@@ -452,6 +457,7 @@ async def delete_profile_photo(user_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="User not found")
 
     return crud.profile.remove_profile_photo(db=db, user_id=user_id)
+
 
 @router.get("/profile/{user_id}", response_model=ProfileResponse)
 def get_profile_by_user_id(
@@ -472,6 +478,7 @@ def get_profile_by_user_id(
         raise HTTPException(status_code=404, detail="Profile not found")
     return db_profile
 
+
 @router.delete("/profile/{profile_id}", response_model=ProfileResponse)
 def delete_profile(profile_id: int, db: Session = Depends(get_db)):
     """
@@ -491,6 +498,7 @@ def delete_profile(profile_id: int, db: Session = Depends(get_db)):
     if not profile:
         raise HTTPException(status_code=404, detail="Profile not found")
     return crud.profile.remove(db, id=profile_id)
+
 
 @router.post("/profile", response_model=ProfileResponse)
 def create_profile(
@@ -603,6 +611,7 @@ def create_profile(
             log_error(e)
 
     return new_profile
+
 
 @router.put("/profile/{profile_id}", response_model=ProfileResponse)
 def update_profile(

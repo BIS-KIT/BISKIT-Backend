@@ -159,7 +159,7 @@
             {% endif %}
             {% endfor %}
             <td>
-              <form method="post" action="/v1/student-card/{{row.id}}/approve">
+              <form method="post" action="/v1/student-card/approve/{{row.id}}">
                 <button type="submit" class="btn btn-primary">승인</button>
               </form>
             </td>
