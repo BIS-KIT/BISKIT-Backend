@@ -44,7 +44,9 @@ from log import log_error
 router = APIRouter()
 
 @router.get("/profile/photos")
-def get_profile_photos(user_ids: List[str] = Query(None), db: Session = Depends(get_db)):
+def get_profile_photos(
+    user_ids: List[str] = Query(None), db: Session = Depends(get_db)
+):
     """
     user_ids 받아서 해당 user의 photo, nick-name return
 
@@ -52,12 +54,26 @@ def get_profile_photos(user_ids: List[str] = Query(None), db: Session = Depends(
     """
     return_list = []
     for id in user_ids:
-        profile = crud.profile.get_by_user_id(db=db, user_id=id)
-        if not profile:
+        national_list = []
+        user = crud.user.get(db=db, id=id)
+        if not user:
             continue
-        photo_dict = {"user_id":id, "profile_photo":profile.profile_photo, "nick_name":profile.nick_name}
+        profile = crud.profile.get_by_user_id(db=db, user_id=id)
+        nationalites = crud.user.read_nationalities(db=db, user_id=id)
+        if nationalites:
+            for nan in nationalites:
+                nationality = crud.utility.get(db=db, nationality_id=nan.nationality_id)
+                national_list.append(nationality.to_dict())
+
+        photo_dict = {
+            "user_id": int(id),
+            "profile_photo": profile.profile_photo if profile else None,
+            "nick_name": profile.nick_name if profile else None,
+            "nationalities": national_list,
+        }
         return_list.append(photo_dict)
     return return_list
+
 
 @router.post("/profile/photo")
 def update_profile_photo(
