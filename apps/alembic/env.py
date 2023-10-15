@@ -21,6 +21,7 @@ from models.user import (
     UserUniversity,
 )
 from models.profile import Profile, AvailableLanguage, StudentVerification
+from models.chat import ChatImage
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
