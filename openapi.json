@@ -1,0 +1,3999 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "BISKIT",
+        "version": "0.1.0"
+    },
+    "paths": {
+        "/v1/register": {
+            "post": {
+                "tags": [
+                    "login"
+                ],
+                "summary": "Register User",
+                "description": "이메일과 비밀번호를 사용하여 새 사용자를 등록합니다.\n\nArgs:\n\n- email: EmailStr\n- password: str\n- name: str\n- birth: date\n- gender: str\n- sns_type : str : [kakao, google, apple,...]\n- sns_id : str\n\n- nationality_ids: List[int]\n\n- university_id: Optional[int]\n- department: Optional[str] : 소속 선택 [\"학부\",\"대학원\",\"교환학생\",\"어학당\"]\n- education_status: Optional[str] : 학적 선택 [\"재학\", \"졸업\",\"수료\"]\n\n- terms_mandatory: Optional[bool]\n- terms_optional: Optional[bool]\n- terms_push: Optional[bool]\n\nReturns:\n- dict: 새로 등록된 사용자의 ID와 이메일.",
+                "operationId": "register_user_v1_register_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UserRegister"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response Register User V1 Register Post"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/login": {
+            "post": {
+                "tags": [
+                    "login"
+                ],
+                "summary": "Login For Access Token",
+                "description": "로그인을 위한 엑세스 토큰을 발급\n\n사용자로부터 이메일(또는 사용자 이름)과 비밀번호를 받아, 해당 정보가 올바른지 검증\n올바른 사용자 정보일 경우, JWT 형식의 엑세스 토큰을 발행하여 반환\n\nParameters:\n- email\n- password = None\n- sns_type : str : [kakao, google, apple,...]\n- sns_id = None\n\nReturns:\n- dict: 엑세스 토큰,리프레쉬 토큰과 토큰 유형을 포함\n\nRaises:\n- HTTPException: 사용자 정보가 잘못되었거나, 해당 사용자가 데이터베이스에 없는 경우 발생.",
+                "operationId": "login_for_access_token_v1_login_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UserLogin"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "title": "Response Login For Access Token V1 Login Post"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/token/refresh": {
+            "post": {
+                "tags": [
+                    "login"
+                ],
+                "summary": "Refresh Token",
+                "description": "기존 토큰을 새로고침합니다.\n\n인자:\n- token (str): 현재 refresh_token.\n\n반환값:\n- Token: 새로고침된 토큰.",
+                "operationId": "refresh_token_v1_token_refresh_post",
+                "parameters": [
+                    {
+                        "name": "authorization",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Authorization"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/token/validate": {
+            "get": {
+                "tags": [
+                    "login"
+                ],
+                "summary": "Validate Token",
+                "description": "제공된 토큰을 검증합니다.\n\n인자:\n- token (str): 'Bearer [토큰]' 형식의 인증 헤더.\n\n반환값:\n- dict: 토큰의 검증 상태.",
+                "operationId": "validate_token_v1_token_validate_get",
+                "parameters": [
+                    {
+                        "name": "authorization",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Authorization"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/change-password": {
+            "post": {
+                "tags": [
+                    "login"
+                ],
+                "summary": "Change Password",
+                "description": "사용자의 비밀번호를 변경합니다.\n\n인자:\n- password_data (PasswordChange): 변경하려는 비밀번호에 대한 데이터.\n- db (Session): 데이터베이스 세션.\n- token (str): 현재 access_token\n- current_user (User): 현재 인증된 사용자.\n\n반환값:\n- dict: 비밀번호 변경 상태 메시지.",
+                "operationId": "change_password_v1_change_password_post",
+                "parameters": [
+                    {
+                        "name": "authorization",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Authorization"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PasswordChange"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/check-email": {
+            "post": {
+                "tags": [
+                    "login"
+                ],
+                "summary": "Check Mail Exists",
+                "description": "입력받은 이메일이 이미 존재하는지 확인합니다.\n\n**인자:**\n- email (str): 확인할 이메일 주소.\n- db (Session): 데이터베이스 세션.\n\n**반환값:**\n- dict: 이메일 사용 가능 여부.",
+                "operationId": "check_mail_exists_v1_check_email_post",
+                "parameters": [
+                    {
+                        "name": "email",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Email"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/change-password/certificate": {
+            "post": {
+                "tags": [
+                    "login"
+                ],
+                "summary": "Certificate Email",
+                "description": "패스워드 변경 시 주어진 이메일에 인증번호를 발송합니다.\n\n**인자:**\n- cert_in (EmailCertificationIn): 인증을 받을 이메일 정보.\n- db (Session): 데이터베이스 세션.\n\n**반환값:**\n- dict: 이메일 인증 결과.",
+                "operationId": "certificate_email_v1_change_password_certificate_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/EmailCertificationIn"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/change-password/certificate/check": {
+            "post": {
+                "tags": [
+                    "login"
+                ],
+                "summary": "Certificate Check",
+                "description": "사용자로부터 입력받은 인증번호를 검증합니다.\n\n**인자:**\n- cert_check (EmailCertificationCheck): 사용자로부터 입력받은 인증번호.\n- db (Session): 데이터베이스 세션.\n\n**반환값:**\n- dict: 인증번호 검증 결과 및 access token",
+                "operationId": "certificate_check_v1_change_password_certificate_check_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/EmailCertificationCheck"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/certificate": {
+            "post": {
+                "tags": [
+                    "login"
+                ],
+                "summary": "Certificate Email",
+                "description": "주어진 이메일에 인증번호를 발송합니다.\n\n**인자:**\n- cert_in (EmailCertificationIn): 인증을 받을 이메일 정보.\n- db (Session): 데이터베이스 세션.\n\n**반환값:**\n- dict: 이메일 인증 결과.",
+                "operationId": "certificate_email_v1_certificate_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/EmailCertificationIn"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/certificate/check": {
+            "post": {
+                "tags": [
+                    "login"
+                ],
+                "summary": "Certificate Check",
+                "description": "사용자로부터 입력받은 인증번호를 검증합니다.\n\n**인자:**\n- cert_check (EmailCertificationCheck): 사용자로부터 입력받은 인증번호.\n- db (Session): 데이터베이스 세션.\n\n**반환값:**\n- dict: 인증번호 검증 결과.",
+                "operationId": "certificate_check_v1_certificate_check_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/EmailCertificationCheck"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/users/me": {
+            "get": {
+                "tags": [
+                    "user"
+                ],
+                "summary": "Read Current User",
+                "description": "현재 사용자의 정보를 반환합니다.\n\n**인자:**\n- current_user (User): 현재 인증된 사용자.\n\n**반환값:**\n- dict: 인증된 사용자의 정보.",
+                "operationId": "read_current_user_v1_users_me_get",
+                "parameters": [
+                    {
+                        "name": "authorization",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Authorization"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/users": {
+            "get": {
+                "tags": [
+                    "user"
+                ],
+                "summary": "Read Users",
+                "description": "사용자 목록을 반환합니다.\n\n**파라미터**\n\n* `skip`: 건너뛸 항목의 수\n* `limit`: 반환할 최대 항목 수\n\n**반환**\n\n* 사용자 목록",
+                "operationId": "read_users_v1_users_get",
+                "parameters": [
+                    {
+                        "name": "skip",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 0,
+                            "title": "Skip"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 100,
+                            "title": "Limit"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/UserResponse"
+                                    },
+                                    "title": "Response Read Users V1 Users Get"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/users/{user_id}": {
+            "get": {
+                "tags": [
+                    "user"
+                ],
+                "summary": "Read User",
+                "description": "특정 사용자의 정보를 조회합니다.\n\n**파라미터**\n\n* `user_id`: 조회하려는 사용자의 ID\n\n**반환값**\n\n* 조회된 사용자의 정보",
+                "operationId": "read_user_v1_users__user_id__get",
+                "parameters": [
+                    {
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "User Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/user/{user_id}": {
+            "delete": {
+                "tags": [
+                    "user"
+                ],
+                "summary": "Delete User",
+                "description": "특정 사용자를 삭제합니다.\n\n**파라미터**\n\n* `user_id`: 삭제하려는 사용자의 ID\n\n**반환값**\n\n* 삭제된 사용자의 정보",
+                "operationId": "delete_user_v1_user__user_id__delete",
+                "parameters": [
+                    {
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "User Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "user"
+                ],
+                "summary": "Update User",
+                "description": "Update user details using email address as identifier.\n\nReturns:\n- dict: Updated user details.",
+                "operationId": "update_user_v1_user__user_id__put",
+                "parameters": [
+                    {
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "User Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UserUpdate"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/user/{user_id}/consent": {
+            "get": {
+                "tags": [
+                    "user"
+                ],
+                "summary": "Get User Consent",
+                "description": "특정 사용자의 동의 정보를 반환합니다.\n\n**인자:**\n- user_id (int): 사용자 ID.\n- db (Session): 데이터베이스 세션.\n\n**반환값:**\n- ConsentResponse: 사용자의 동의 정보.",
+                "operationId": "get_user_consent_v1_user__user_id__consent_get",
+                "parameters": [
+                    {
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "User Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ConsentResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "user"
+                ],
+                "summary": "Delete User Consent",
+                "description": "특정 사용자의 동의 정보를 삭제합니다.\n\n**인자:**\n- user_id (int): 사용자 ID.\n- db (Session): 데이터베이스 세션.\n\n**반환값:**\n- ConsentResponse: 삭제된 동의 정보.",
+                "operationId": "delete_user_consent_v1_user__user_id__consent_delete",
+                "parameters": [
+                    {
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "User Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ConsentResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/user/{user_id}/university": {
+            "get": {
+                "tags": [
+                    "user"
+                ],
+                "summary": "Get User University",
+                "description": "특정 사용자의 대학 정보를 반환합니다.\n\n**인자:**\n- user_id (int): 사용자 ID.\n- db (Session): 데이터베이스 세션.\n\n**반환값:**\n- UserUniversityBase: 사용자의 대학 정보.",
+                "operationId": "get_user_university_v1_user__user_id__university_get",
+                "parameters": [
+                    {
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "User Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserUniversityBase"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "user"
+                ],
+                "summary": "Delete User University",
+                "description": "특정 사용자의 대학 정보를 삭제합니다.\n\n**인자:**\n- user_id (int): 사용자 ID.\n- db (Session): 데이터베이스 세션.\n\n**반환값:**\n- UserUniversityBase: 삭제된 대학 정보.",
+                "operationId": "delete_user_university_v1_user__user_id__university_delete",
+                "parameters": [
+                    {
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "User Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserUniversityBase"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "user"
+                ],
+                "summary": "Update User University",
+                "description": "특정 사용자의 대학 정보를 업데이트합니다.\n\n**인자:**\n- user_id (int): 사용자 ID.\n- user_university (UserUniversityUpdate): 업데이트할 대학 정보.\n- db (Session): 데이터베이스 세션.\n\n**반환값:**\n- UserUniversityBase: 업데이트된 대학 정보.",
+                "operationId": "update_user_university_v1_user__user_id__university_put",
+                "parameters": [
+                    {
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "User Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UserUniversityUpdateIn"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserUniversityBase"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/user/{user_id}/nationality": {
+            "get": {
+                "tags": [
+                    "user"
+                ],
+                "summary": "Get User Nationality",
+                "description": "특정 사용자의 국적 정보를 반환합니다.\n\n**인자:**\n- user_id (int): 사용자 ID.\n- db (Session): 데이터베이스 세션.\n\n**반환값:**\n- UserNationalityResponse: 사용자의 국적 정보.",
+                "operationId": "get_user_nationality_v1_user__user_id__nationality_get",
+                "parameters": [
+                    {
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "User Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserNationalityResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "user"
+                ],
+                "summary": "Delete User Nationality",
+                "description": "특정 사용자의 국적 정보를 삭제합니다.\n\n**인자:**\n- user_id (int): 사용자 ID.\n- db (Session): 데이터베이스 세션.\n\n**반환값:**\n- UserNationalityResponse: 삭제된 국적 정보.",
+                "operationId": "delete_user_nationality_v1_user__user_id__nationality_delete",
+                "parameters": [
+                    {
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "User Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserNationalityResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/profile/photos": {
+            "get": {
+                "tags": [
+                    "profile"
+                ],
+                "summary": "Get Profile Photos",
+                "description": "user_ids 받아서 해당 user의 photo, nick-name return\n\n- ex) /profiles/photos?user_ids=1&user_ids=2&user_ids=3",
+                "operationId": "get_profile_photos_v1_profile_photos_get",
+                "parameters": [
+                    {
+                        "name": "user_ids",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            },
+                            "title": "User Ids"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/profile/photo": {
+            "post": {
+                "tags": [
+                    "profile"
+                ],
+                "summary": "Update Profile Photo",
+                "description": "photo upload API\n\n- is_profile = True : /profile_photo 저장\n- is_profile = False : /student_card 저장",
+                "operationId": "update_profile_photo_v1_profile_photo_post",
+                "parameters": [
+                    {
+                        "name": "is_profile",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "boolean",
+                            "title": "Is Profile"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Body_update_profile_photo_v1_profile_photo_post"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/profile/nick-name": {
+            "get": {
+                "tags": [
+                    "profile"
+                ],
+                "summary": "Check Nick Name",
+                "description": "닉네임 사용 가능 여부 확인 API\n\n이 API는 주어진 닉네임의 사용 가능 여부를 확인합니다.\n- 닉네임에 특수문자가 포함된 경우, 에러를 반환합니다.\n- 닉네임이 이미 사용 중인 경우, 에러를 반환합니다.\n\nParameters:\n- nick_name: 사용 가능 여부를 확인하려는 닉네임.\n\nReturns:\n- 닉네임 사용 가능 여부에 대한 메시지.",
+                "operationId": "check_nick_name_v1_profile_nick_name_get",
+                "parameters": [
+                    {
+                        "name": "nick_name",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Nick Name"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/profile/random-nickname": {
+            "get": {
+                "tags": [
+                    "profile"
+                ],
+                "summary": "Get Random Nickname",
+                "operationId": "get_random_nickname_v1_profile_random_nickname_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/profile/introduction": {
+            "post": {
+                "tags": [
+                    "profile"
+                ],
+                "summary": "Create Introduction",
+                "description": "사용자 소개 생성 API.\n\n이 API는 주어진 사용자 소개 정보로 새로운 사용자 소개를 생성합니다.\n\n매개변수:\n- introduction (List[IntroductionCreate]): 사용자 소개 목록.\n- db (Session): 데이터베이스 세션.\n\n반환값:\n- List[IntroductionResponse]: 생성된 사용자 소개 목록.",
+                "operationId": "create_introduction_v1_profile_introduction_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "items": {
+                                    "$ref": "#/components/schemas/IntroductionCreate"
+                                },
+                                "type": "array",
+                                "title": "Introduction"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "items": {
+                                        "$ref": "#/components/schemas/IntroductionResponse"
+                                    },
+                                    "type": "array",
+                                    "title": "Response Create Introduction V1 Profile Introduction Post"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/profile/introduction/{introduction_id}": {
+            "put": {
+                "tags": [
+                    "profile"
+                ],
+                "summary": "Update Introduction",
+                "operationId": "update_introduction_v1_profile_introduction__introduction_id__put",
+                "parameters": [
+                    {
+                        "name": "introduction_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Introduction Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/IntroductionUpdate"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/IntroductionResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "get": {
+                "tags": [
+                    "profile"
+                ],
+                "summary": "Get Introduction",
+                "operationId": "get_introduction_v1_profile_introduction__introduction_id__get",
+                "parameters": [
+                    {
+                        "name": "introduction_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Introduction Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/IntroductionResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "profile"
+                ],
+                "summary": "Delete Introduction",
+                "operationId": "delete_introduction_v1_profile_introduction__introduction_id__delete",
+                "parameters": [
+                    {
+                        "name": "introduction_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Introduction Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/IntroductionResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/profile/available-language": {
+            "post": {
+                "tags": [
+                    "profile"
+                ],
+                "summary": "Create Available Language",
+                "description": "사용자의 사용 가능 언어 생성 API.\n\n매개변수:\n- available_language (List[AvailableLanguageCreate]): 사용자의 사용 가능 언어 목록.\n- db (Session): 데이터베이스 세션.\n\n반환값:\n- List[AvailableLanguageBase]: 생성된 사용 가능 언어 목록.",
+                "operationId": "create_available_language_v1_profile_available_language_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "items": {
+                                    "$ref": "#/components/schemas/AvailableLanguageCreate"
+                                },
+                                "type": "array",
+                                "title": "Available Language"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "items": {
+                                        "$ref": "#/components/schemas/AvailableLanguageBase"
+                                    },
+                                    "type": "array",
+                                    "title": "Response Create Available Language V1 Profile Available Language Post"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/profile/available-language/{ava_lang_id}": {
+            "get": {
+                "tags": [
+                    "profile"
+                ],
+                "summary": "Get Available Language",
+                "operationId": "get_available_language_v1_profile_available_language__ava_lang_id__get",
+                "parameters": [
+                    {
+                        "name": "ava_lang_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Ava Lang Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AvailableLanguageBase"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "profile"
+                ],
+                "summary": "Delete Available Language",
+                "operationId": "delete_available_language_v1_profile_available_language__ava_lang_id__delete",
+                "parameters": [
+                    {
+                        "name": "ava_lang_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Ava Lang Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AvailableLanguageBase"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "profile"
+                ],
+                "summary": "Update Available Language",
+                "description": "사용자의 사용 가능 언어 업데이트 API.\n\n매개변수:\n- ava_lang_id (int): 업데이트할 사용 가능 언어의 ID.\n- available_language (AvailableLanguageUpdate): 업데이트할 사용 가능 언어 정보.\n- db (Session): 데이터베이스 세션.\n\n반환값:\n- AvailableLanguageBase: 업데이트된 사용 가능 언어 정보.",
+                "operationId": "update_available_language_v1_profile_available_language__ava_lang_id__put",
+                "parameters": [
+                    {
+                        "name": "ava_lang_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Ava Lang Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AvailableLanguageUpdate"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AvailableLanguageBase"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/student-card": {
+            "post": {
+                "tags": [
+                    "profile"
+                ],
+                "summary": "Student Varification",
+                "description": "학생증 인증 정보를 제출합니다.\n\n**인자:**\n- student_card (UploadFile): 업로드된 학생증 이미지 파일.\n- user_id (int): 사용자 ID.\n- db (Session): 데이터베이스 세션.\n\n**반환값:**\n- StudentVerificationBase: 학생증 인증 정보.",
+                "operationId": "student_varification_v1_student_card_post",
+                "parameters": [
+                    {
+                        "name": "student_card",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Student Card"
+                        }
+                    },
+                    {
+                        "name": "user_id",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "User Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/StudentVerificationBase"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/student-card/{user_id}": {
+            "get": {
+                "tags": [
+                    "profile"
+                ],
+                "summary": "Student Varification",
+                "description": "특정 사용자의 학생증 인증 정보를 조회합니다.\n\n**인자:**\n- user_id (int): 사용자 ID.\n- db (Session): 데이터베이스 세션.\n\n**반환값:**\n- StudentVerificationBase: 학생증 인증 정보.",
+                "operationId": "student_varification_v1_student_card__user_id__get",
+                "parameters": [
+                    {
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "User Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/StudentVerificationBase"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/student-card/{user_id}/approve": {
+            "post": {
+                "tags": [
+                    "profile"
+                ],
+                "summary": "Approve Varification",
+                "description": "특정 사용자의 학생증 인증을 승인합니다.\n\n**인자:**\n- user_id (int): 사용자 ID.\n- db (Session): 데이터베이스 세션.\n\n**반환값:**\n- dict: 인증 승인 결과.",
+                "operationId": "approve_varification_v1_student_card__user_id__approve_post",
+                "parameters": [
+                    {
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "User Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/student-cards": {
+            "get": {
+                "tags": [
+                    "profile"
+                ],
+                "summary": "Read Student Cards",
+                "description": "학생증 인증을 대기 중인 목록을 반환합니다.\n\n**인자:**\n- db (Session): 데이터베이스 세션.\n\n**반환값:**\n- List[StudentVerificationBase]: 학생증 인증 대기 중인 목록.",
+                "operationId": "read_student_cards_v1_student_cards_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "items": {
+                                        "$ref": "#/components/schemas/StudentVerificationBase"
+                                    },
+                                    "type": "array",
+                                    "title": "Response Read Student Cards V1 Student Cards Get"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/profile/user/{user_id}": {
+            "delete": {
+                "tags": [
+                    "profile"
+                ],
+                "summary": "Delete Profile By User",
+                "description": "사용자 ID를 기반으로 프로필 삭제 API",
+                "operationId": "delete_profile_by_user_v1_profile_user__user_id__delete",
+                "parameters": [
+                    {
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "User Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProfileBase"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/profile/{user_id}/photo": {
+            "delete": {
+                "tags": [
+                    "profile"
+                ],
+                "summary": "Delete Profile Photo",
+                "description": "사용자 프로필 사진 삭제 API.\n\n매개변수:\n- user_id (int): 사용자 ID.\n- db (Session): 데이터베이스 세션.\n\n반환값:\n- 메시지: 프로필 사진 삭제 성공 메시지.",
+                "operationId": "delete_profile_photo_v1_profile__user_id__photo_delete",
+                "parameters": [
+                    {
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "User Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/profile/{user_id}": {
+            "get": {
+                "tags": [
+                    "profile"
+                ],
+                "summary": "Get Profile By User Id",
+                "description": "user_id를 이용하여 프로필 정보를 가져옵니다.\n\n매개변수:\n- user_id (int): 프로필 정보를 검색할 사용자의 ID.\n- db (Session): 데이터베이스 세션.\n\n반환값:\n- ProfileBase: 지정된 user_id에 해당하는 사용자의 프로필 정보.",
+                "operationId": "get_profile_by_user_id_v1_profile__user_id__get",
+                "parameters": [
+                    {
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "The ID of the user"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProfileResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/profile/{profile_id}": {
+            "delete": {
+                "tags": [
+                    "profile"
+                ],
+                "summary": "Delete Profile",
+                "description": "프로필 삭제 API\n\n해당 API는 주어진 프로필 ID로 프로필을 삭제합니다.\n프로필이 존재하지 않는 경우 오류를 반환합니다.\n\nParameters:\n- profile_id: 삭제하려는 프로필의 ID.\n\nReturns:\n- 삭제된 프로필의 정보.",
+                "operationId": "delete_profile_v1_profile__profile_id__delete",
+                "parameters": [
+                    {
+                        "name": "profile_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Profile Id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProfileResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "profile"
+                ],
+                "summary": "Update Profile",
+                "description": "사용자 프로필 업데이트 API\n\n이 API는 주어진 사용자 ID에 대한 프로필 정보를 업데이트합니다.\n프로필이 존재하지 않는 경우 오류를 반환합니다.\n\nParameters:\n- user_id: 업데이트하려는 프로필의 사용자 ID.\n- profile: 업데이트를 위한 프로필 정보.\n\nReturns:\n- 업데이트된 프로필 정보.",
+                "operationId": "update_profile_v1_profile__profile_id__put",
+                "parameters": [
+                    {
+                        "name": "profile_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "Profile Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ProfileUpdate"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProfileResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/profile": {
+            "post": {
+                "tags": [
+                    "profile"
+                ],
+                "summary": "Create Profile",
+                "description": "Profile 생성 API\n\n    - nick_name : str\n    - profile_photo : str : file_path\n    - available_languages\n        - level : 언어수준 [\"BEGINNER\",\"BASIC\",\"INTERMEDIATE\",\"ADVANCED\",\"PROFICIENT\"]\n        - language_id : 언어 id\n    - introductions\n        - keyword : 키워드\n        - context : 자기소개\n    - student_verification\n        - student_card : file_path\n        - verification_status : 인증 상태 [\"PENDING\",\"VERIFIED\",\"REJECTED\",\"UNVERIFIED\"]",
+                "operationId": "create_profile_v1_profile_post",
+                "parameters": [
+                    {
+                        "name": "user_id",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "title": "User Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ProfileRegister"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProfileResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/languages": {
+            "get": {
+                "tags": [
+                    "utility"
+                ],
+                "summary": "Get Languages",
+                "description": "데이터베이스에서 언어 목록을 검색하여 반환합니다.\n\n매개변수:\n- os_language (OsLanguage, 선택사항): EN / KR\n- search (str, 선택사항): 영어 또는 한국어 이름으로 언어를 필터링하기 위한 키워드입니다.\n- db (Session): FastAPI의 의존성 주입을 통해 제공되는 데이터베이스 세션입니다.\n\n반환값:\n- List[LanguageBase]: 지정된 조건에 맞는 언어 객체의 목록입니다.",
+                "operationId": "get_languages_v1_languages_get",
+                "parameters": [
+                    {
+                        "name": "os_language",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/components/schemas/OsLanguage"
+                                }
+                            ],
+                            "title": "Os Language"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "title": "Search"
+                        }
+                    },
+                    {
+                        "name": "skip",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 0,
+                            "title": "Skip"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "integer"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Limit"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LanguageBase"
+                                    },
+                                    "title": "Response Get Languages V1 Languages Get"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/universty": {
+            "get": {
+                "tags": [
+                    "utility"
+                ],
+                "summary": "Get Universities",
+                "operationId": "get_universities_v1_universty_get",
+                "parameters": [
+                    {
+                        "name": "os_language",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/components/schemas/OsLanguage"
+                                }
+                            ],
+                            "title": "Os Language"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "title": "Search"
+                        }
+                    },
+                    {
+                        "name": "skip",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 0,
+                            "title": "Skip"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "integer"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Limit"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/UniversityBase"
+                                    },
+                                    "title": "Response Get Universities V1 Universty Get"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/nationality": {
+            "get": {
+                "tags": [
+                    "utility"
+                ],
+                "summary": "Get Countries",
+                "operationId": "get_countries_v1_nationality_get",
+                "parameters": [
+                    {
+                        "name": "os_language",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/components/schemas/OsLanguage"
+                                }
+                            ],
+                            "title": "Os Language"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "title": "Search"
+                        }
+                    },
+                    {
+                        "name": "skip",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 0,
+                            "title": "Skip"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "integer"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Limit"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/NationalityBase"
+                                    },
+                                    "title": "Response Get Countries V1 Nationality Get"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/chat/upload": {
+            "post": {
+                "tags": [
+                    "chat"
+                ],
+                "summary": "Upload File Chat",
+                "operationId": "upload_file_chat_v1_chat_upload_post",
+                "parameters": [
+                    {
+                        "name": "chat_id",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Chat Id"
+                        }
+                    },
+                    {
+                        "name": "message_id",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Message Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Body_upload_file_chat_v1_chat_upload_post"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ChatImageResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "AvailableLanguageBase": {
+                "properties": {
+                    "id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Id"
+                    },
+                    "level": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Level"
+                    },
+                    "language": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/LanguageBase"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "profile_id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Profile Id"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "level",
+                    "language",
+                    "profile_id"
+                ],
+                "title": "AvailableLanguageBase"
+            },
+            "AvailableLanguageCreate": {
+                "properties": {
+                    "level": {
+                        "type": "string",
+                        "title": "Level"
+                    },
+                    "language_id": {
+                        "type": "integer",
+                        "title": "Language Id"
+                    },
+                    "profile_id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Profile Id"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "level",
+                    "language_id"
+                ],
+                "title": "AvailableLanguageCreate"
+            },
+            "AvailableLanguageIn": {
+                "properties": {
+                    "level": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Level"
+                    },
+                    "language_id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Language Id"
+                    }
+                },
+                "type": "object",
+                "title": "AvailableLanguageIn"
+            },
+            "AvailableLanguageResponse": {
+                "properties": {
+                    "id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Id"
+                    },
+                    "level": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Level"
+                    },
+                    "language": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/LanguageBase"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "profile_id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Profile Id"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "level",
+                    "language",
+                    "profile_id"
+                ],
+                "title": "AvailableLanguageResponse"
+            },
+            "AvailableLanguageUpdate": {
+                "properties": {
+                    "level": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Level"
+                    },
+                    "language_id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Language Id"
+                    }
+                },
+                "type": "object",
+                "title": "AvailableLanguageUpdate"
+            },
+            "Body_update_profile_photo_v1_profile_photo_post": {
+                "properties": {
+                    "photo": {
+                        "type": "string",
+                        "format": "binary",
+                        "title": "Photo"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "photo"
+                ],
+                "title": "Body_update_profile_photo_v1_profile_photo_post"
+            },
+            "Body_upload_file_chat_v1_chat_upload_post": {
+                "properties": {
+                    "photo": {
+                        "type": "string",
+                        "format": "binary",
+                        "title": "Photo"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "photo"
+                ],
+                "title": "Body_upload_file_chat_v1_chat_upload_post"
+            },
+            "ChatImageResponse": {
+                "properties": {
+                    "id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Id"
+                    },
+                    "image_url": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Image Url"
+                    },
+                    "chat_id": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Chat Id"
+                    },
+                    "message_id": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Message Id"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "image_url",
+                    "chat_id",
+                    "message_id"
+                ],
+                "title": "ChatImageResponse"
+            },
+            "ConsentResponse": {
+                "properties": {
+                    "id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Id"
+                    },
+                    "terms_mandatory": {
+                        "anyOf": [
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Terms Mandatory",
+                        "default": true
+                    },
+                    "terms_optional": {
+                        "anyOf": [
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Terms Optional",
+                        "default": false
+                    },
+                    "terms_push": {
+                        "anyOf": [
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Terms Push",
+                        "default": false
+                    },
+                    "user_id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "User Id"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "terms_mandatory",
+                    "terms_optional",
+                    "terms_push",
+                    "user_id"
+                ],
+                "title": "ConsentResponse"
+            },
+            "EmailCertificationCheck": {
+                "properties": {
+                    "email": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "email"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Email"
+                    },
+                    "certification": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "integer"
+                            }
+                        ],
+                        "title": "Certification"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "certification"
+                ],
+                "title": "EmailCertificationCheck"
+            },
+            "EmailCertificationIn": {
+                "properties": {
+                    "email": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "email"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Email"
+                    }
+                },
+                "type": "object",
+                "title": "EmailCertificationIn"
+            },
+            "HTTPValidationError": {
+                "properties": {
+                    "detail": {
+                        "items": {
+                            "$ref": "#/components/schemas/ValidationError"
+                        },
+                        "type": "array",
+                        "title": "Detail"
+                    }
+                },
+                "type": "object",
+                "title": "HTTPValidationError"
+            },
+            "IntroductionCreate": {
+                "properties": {
+                    "keyword": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Keyword"
+                    },
+                    "context": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Context"
+                    },
+                    "profile_id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Profile Id"
+                    }
+                },
+                "type": "object",
+                "title": "IntroductionCreate"
+            },
+            "IntroductionIn": {
+                "properties": {
+                    "keyword": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Keyword"
+                    },
+                    "context": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Context"
+                    }
+                },
+                "type": "object",
+                "title": "IntroductionIn"
+            },
+            "IntroductionResponse": {
+                "properties": {
+                    "id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Id"
+                    },
+                    "keyword": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Keyword"
+                    },
+                    "context": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Context"
+                    },
+                    "profile_id": {
+                        "type": "integer",
+                        "title": "Profile Id"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "keyword",
+                    "context",
+                    "profile_id"
+                ],
+                "title": "IntroductionResponse"
+            },
+            "IntroductionUpdate": {
+                "properties": {
+                    "keyword": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Keyword"
+                    },
+                    "context": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Context"
+                    }
+                },
+                "type": "object",
+                "title": "IntroductionUpdate"
+            },
+            "LanguageBase": {
+                "properties": {
+                    "id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Id"
+                    },
+                    "kr_name": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Kr Name"
+                    },
+                    "en_name": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "En Name"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "kr_name",
+                    "en_name"
+                ],
+                "title": "LanguageBase"
+            },
+            "NationalityBase": {
+                "properties": {
+                    "id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Id"
+                    },
+                    "kr_name": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Kr Name"
+                    },
+                    "en_name": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "En Name"
+                    },
+                    "code": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Code"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "kr_name",
+                    "en_name",
+                    "code"
+                ],
+                "title": "NationalityBase"
+            },
+            "OsLanguage": {
+                "type": "string",
+                "enum": [
+                    "english",
+                    "korean"
+                ],
+                "title": "OsLanguage"
+            },
+            "PasswordChange": {
+                "properties": {
+                    "new_password": {
+                        "type": "string",
+                        "title": "New Password"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "new_password"
+                ],
+                "title": "PasswordChange"
+            },
+            "ProfileBase": {
+                "properties": {
+                    "id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Id"
+                    },
+                    "nick_name": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Nick Name"
+                    },
+                    "profile_photo": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "string",
+                                "format": "binary"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Profile Photo"
+                    },
+                    "user_id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "User Id"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "nick_name",
+                    "profile_photo",
+                    "user_id"
+                ],
+                "title": "ProfileBase"
+            },
+            "ProfileRegister": {
+                "properties": {
+                    "nick_name": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Nick Name"
+                    },
+                    "profile_photo": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Profile Photo"
+                    },
+                    "available_languages": {
+                        "anyOf": [
+                            {
+                                "items": {
+                                    "$ref": "#/components/schemas/AvailableLanguageIn"
+                                },
+                                "type": "array"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Available Languages"
+                    },
+                    "introductions": {
+                        "anyOf": [
+                            {
+                                "items": {
+                                    "$ref": "#/components/schemas/IntroductionIn"
+                                },
+                                "type": "array"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Introductions"
+                    },
+                    "student_card": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/StudentVerificationIn"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "available_languages",
+                    "introductions"
+                ],
+                "title": "ProfileRegister"
+            },
+            "ProfileResponse": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "title": "Id"
+                    },
+                    "user_id": {
+                        "type": "integer",
+                        "title": "User Id"
+                    },
+                    "nick_name": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Nick Name"
+                    },
+                    "profile_photo": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Profile Photo"
+                    },
+                    "available_languages": {
+                        "anyOf": [
+                            {
+                                "items": {
+                                    "$ref": "#/components/schemas/AvailableLanguageResponse"
+                                },
+                                "type": "array"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Available Languages"
+                    },
+                    "introductions": {
+                        "anyOf": [
+                            {
+                                "items": {
+                                    "$ref": "#/components/schemas/IntroductionResponse"
+                                },
+                                "type": "array"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Introductions"
+                    },
+                    "student_verification": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/StudentVerificationReponse"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "user_id",
+                    "nick_name",
+                    "profile_photo",
+                    "available_languages",
+                    "introductions",
+                    "student_verification"
+                ],
+                "title": "ProfileResponse"
+            },
+            "ProfileUpdate": {
+                "properties": {
+                    "nick_name": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Nick Name"
+                    },
+                    "profile_photo": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Profile Photo"
+                    }
+                },
+                "type": "object",
+                "title": "ProfileUpdate"
+            },
+            "StudentVerificationBase": {
+                "properties": {
+                    "id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Id"
+                    },
+                    "profile_id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Profile Id"
+                    },
+                    "student_card": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "string",
+                                "format": "binary"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Student Card"
+                    },
+                    "verification_status": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Verification Status",
+                        "default": "unverified"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "profile_id",
+                    "student_card",
+                    "verification_status"
+                ],
+                "title": "StudentVerificationBase"
+            },
+            "StudentVerificationIn": {
+                "properties": {
+                    "student_card": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "string",
+                                "format": "binary"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Student Card"
+                    },
+                    "verification_status": {
+                        "type": "string",
+                        "title": "Verification Status",
+                        "default": "unverified"
+                    }
+                },
+                "type": "object",
+                "title": "StudentVerificationIn"
+            },
+            "StudentVerificationReponse": {
+                "properties": {
+                    "id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Id"
+                    },
+                    "student_card": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "string",
+                                "format": "binary"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Student Card"
+                    },
+                    "verification_status": {
+                        "type": "string",
+                        "title": "Verification Status",
+                        "default": "unverified"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "student_card",
+                    "verification_status"
+                ],
+                "title": "StudentVerificationReponse"
+            },
+            "UniversityBase": {
+                "properties": {
+                    "id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Id"
+                    },
+                    "kr_name": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Kr Name"
+                    },
+                    "en_name": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "En Name"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "kr_name",
+                    "en_name"
+                ],
+                "title": "UniversityBase"
+            },
+            "UserLogin": {
+                "properties": {
+                    "email": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "email"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Email"
+                    },
+                    "password": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Password"
+                    },
+                    "sns_type": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Sns Type"
+                    },
+                    "sns_id": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Sns Id"
+                    },
+                    "fcm_token": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Fcm Token"
+                    }
+                },
+                "type": "object",
+                "title": "UserLogin"
+            },
+            "UserNationalityBase": {
+                "properties": {
+                    "id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Id"
+                    },
+                    "nationality": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/NationalityBase"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "user_id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "User Id"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "nationality",
+                    "user_id"
+                ],
+                "title": "UserNationalityBase"
+            },
+            "UserNationalityResponse": {
+                "properties": {
+                    "user_id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "User Id"
+                    },
+                    "nationality": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/NationalityBase"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "user_id",
+                    "nationality"
+                ],
+                "title": "UserNationalityResponse"
+            },
+            "UserRegister": {
+                "properties": {
+                    "email": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "email"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Email"
+                    },
+                    "password": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Password"
+                    },
+                    "name": {
+                        "type": "string",
+                        "title": "Name"
+                    },
+                    "birth": {
+                        "type": "string",
+                        "format": "date",
+                        "title": "Birth"
+                    },
+                    "gender": {
+                        "type": "string",
+                        "title": "Gender"
+                    },
+                    "sns_type": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Sns Type"
+                    },
+                    "sns_id": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Sns Id"
+                    },
+                    "fcm_token": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Fcm Token"
+                    },
+                    "nationality_ids": {
+                        "items": {
+                            "type": "integer"
+                        },
+                        "type": "array",
+                        "title": "Nationality Ids"
+                    },
+                    "university_id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "University Id"
+                    },
+                    "department": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Department"
+                    },
+                    "education_status": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Education Status"
+                    },
+                    "terms_mandatory": {
+                        "anyOf": [
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Terms Mandatory",
+                        "default": true
+                    },
+                    "terms_optional": {
+                        "anyOf": [
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Terms Optional",
+                        "default": false
+                    },
+                    "terms_push": {
+                        "anyOf": [
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Terms Push",
+                        "default": false
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name",
+                    "birth",
+                    "gender"
+                ],
+                "title": "UserRegister"
+            },
+            "UserResponse": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "title": "Id"
+                    },
+                    "email": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "email"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Email"
+                    },
+                    "name": {
+                        "type": "string",
+                        "title": "Name"
+                    },
+                    "birth": {
+                        "type": "string",
+                        "format": "date",
+                        "title": "Birth"
+                    },
+                    "gender": {
+                        "type": "string",
+                        "title": "Gender"
+                    },
+                    "is_active": {
+                        "type": "boolean",
+                        "title": "Is Active"
+                    },
+                    "is_admin": {
+                        "type": "boolean",
+                        "title": "Is Admin"
+                    },
+                    "sns_type": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Sns Type"
+                    },
+                    "sns_id": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Sns Id"
+                    },
+                    "fcm_token": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Fcm Token"
+                    },
+                    "profile": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/ProfileResponse"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "consents": {
+                        "anyOf": [
+                            {
+                                "items": {
+                                    "$ref": "#/components/schemas/ConsentResponse"
+                                },
+                                "type": "array"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Consents"
+                    },
+                    "user_university": {
+                        "anyOf": [
+                            {
+                                "items": {
+                                    "$ref": "#/components/schemas/UserUniversityBase"
+                                },
+                                "type": "array"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "User University"
+                    },
+                    "user_nationality": {
+                        "anyOf": [
+                            {
+                                "items": {
+                                    "$ref": "#/components/schemas/UserNationalityBase"
+                                },
+                                "type": "array"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "User Nationality"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "email",
+                    "name",
+                    "birth",
+                    "gender",
+                    "is_active",
+                    "is_admin",
+                    "sns_type",
+                    "sns_id",
+                    "fcm_token",
+                    "profile",
+                    "consents",
+                    "user_university",
+                    "user_nationality"
+                ],
+                "title": "UserResponse"
+            },
+            "UserUniversityBase": {
+                "properties": {
+                    "id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Id"
+                    },
+                    "department": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Department"
+                    },
+                    "education_status": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Education Status"
+                    },
+                    "university": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/UniversityBase"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "user_id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "User Id"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "department",
+                    "education_status",
+                    "university",
+                    "user_id"
+                ],
+                "title": "UserUniversityBase"
+            },
+            "UserUniversityUpdateIn": {
+                "properties": {
+                    "department": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Department"
+                    },
+                    "education_status": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Education Status"
+                    },
+                    "university_id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "University Id"
+                    }
+                },
+                "type": "object",
+                "title": "UserUniversityUpdateIn"
+            },
+            "UserUpdate": {
+                "properties": {
+                    "name": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Name"
+                    },
+                    "birth": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "date"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Birth"
+                    },
+                    "gender": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Gender"
+                    },
+                    "nationality_ids": {
+                        "anyOf": [
+                            {
+                                "items": {
+                                    "type": "integer"
+                                },
+                                "type": "array"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Nationality Ids"
+                    },
+                    "university_id": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "University Id"
+                    },
+                    "department": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Department"
+                    },
+                    "education_status": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Education Status"
+                    }
+                },
+                "type": "object",
+                "title": "UserUpdate"
+            },
+            "ValidationError": {
+                "properties": {
+                    "loc": {
+                        "items": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "integer"
+                                }
+                            ]
+                        },
+                        "type": "array",
+                        "title": "Location"
+                    },
+                    "msg": {
+                        "type": "string",
+                        "title": "Message"
+                    },
+                    "type": {
+                        "type": "string",
+                        "title": "Error Type"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "loc",
+                    "msg",
+                    "type"
+                ],
+                "title": "ValidationError"
+            }
+        }
+    }
+}

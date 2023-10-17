@@ -160,6 +160,6 @@ cython_debug/
 #.idea/
 
 encoded_key.txt
-*.json
+# *.json
 apps/alembic/versions/*
 media/
