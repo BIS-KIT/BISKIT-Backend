@@ -14,9 +14,8 @@ from fastapi import (
     Query,
     Request,
 )
-from fastapi.responses import RedirectResponse
 from pydantic.networks import EmailStr
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session
 
 import crud
 from database.session import get_db
@@ -36,8 +35,6 @@ from schemas.profile import (
     IntroductionUpdate,
     AvailableLanguageUpdate,
     ProfileRegister,
-    StudentVerificationUpdate,
-    VerificationStatus,
     StudentVerificationBase,
     StudentVerificationCreate,
 )
@@ -351,36 +348,6 @@ def student_varification(
         log_error(e)
         raise HTTPException(status_code=500)
     return user_verification
-
-
-@router.post("/student-card/approve/{id}")
-def approve_varification(
-    request: Request,
-    id: int,
-    db: Session = Depends(get_db),
-):
-    """
-    특정 사용자의 학생증 인증을 승인합니다.
-
-    **인자:**
-    - user_id (int): 사용자 ID.
-    - db (Session): 데이터베이스 세션.
-
-    **반환값:**
-    - dict: 인증 승인 결과.
-    """
-    verification = crud.profile.get_verification(db=db, id=id)
-    if verification is None:
-        raise HTTPException(status_code=404, detail="StudentVerification not found")
-
-    obj_in = StudentVerificationUpdate(
-        verification_status=VerificationStatus.VERIFIED.value
-    )
-    update_verification = crud.profile.update_verification(
-        db=db, db_obj=verification, obj_in=obj_in
-    )
-
-    return RedirectResponse(url="/admin/student-verification/list", status_code=303)
 
 
 @router.get("/student-card/{user_id}", response_model=StudentVerificationBase)
