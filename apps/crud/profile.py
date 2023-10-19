@@ -64,12 +64,19 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
     CRUD operations for User model.
     """
 
-    def get_verification(self, db: Session, profile_id: int):
-        return (
-            db.query(StudentVerification)
-            .filter(StudentVerification.profile_id == profile_id)
-            .first()
-        )
+    def get_verification(self, db: Session, profile_id: int = None, id: int = None):
+        if profile_id:
+            return (
+                db.query(StudentVerification)
+                .filter(StudentVerification.profile_id == profile_id)
+                .first()
+            )
+        else:
+            return (
+                db.query(StudentVerification)
+                .filter(StudentVerification.id == id)
+                .first()
+            )
 
     def list_verification(self, db: Session):
         return db.query(StudentVerification).all()
@@ -249,7 +256,7 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
             return None
 
         # 필요하다면 실제 이미지 파일도 제거합니다.
-        print(333,profile.profile_photo)
+        print(333, profile.profile_photo)
         self.delete_file_from_s3(profile.profile_photo)
 
         profile.profile_photo = None
