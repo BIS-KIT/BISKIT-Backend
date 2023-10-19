@@ -7,6 +7,7 @@ class Setting(BaseSettings):
     BISKIT_USER: str
     BISKIT_USER_PW: str
     POSTGRES_DB: str
+    TEST_DB: str
     DB_ROOT_PASSWORD: str
     CORS_ORIGINS: str
     SECRET_KEY: str
