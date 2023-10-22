@@ -13,7 +13,6 @@ from sqladmin import Admin
 from database.session import engine
 
 from core.config import settings
-from core.security import get_admin
 from admin.base import register_all, templates_dir
 from api.v1.router import api_router as v1_router
 from log import logger
@@ -32,7 +31,6 @@ load_dotenv()
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
-    docs_url=None,
 )
 app.mount("/media", StaticFiles(directory="media"), name="media")
 
@@ -47,12 +45,6 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 
 app.include_router(v1_router, prefix="/v1")
-
-
-@app.get("/docs", include_in_schema=False)
-async def get_documentation(username: str = Depends(get_admin)):
-    return get_swagger_ui_html(openapi_url="/openapi.json", title="docs")
-
 
 # Set all CORS enabled origins
 if settings.CORS_ORIGINS:
