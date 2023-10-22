@@ -299,9 +299,9 @@ async def refresh_token(
                 headers={"WWW-Authenticate": "Bearer"},
             )
     except ExpiredSignatureError:
-        raise HTTPException(status_code=400, detail="Token has expired")
+        raise HTTPException(status_code=401, detail="Token has expired")
     except JWTError as e:
-        raise HTTPException(status_code=400, detail="Could not validate credentials")
+        raise HTTPException(status_code=401, detail="Could not validate credentials")
 
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     if user.email:
@@ -423,9 +423,9 @@ def change_password(
             )
 
     except ExpiredSignatureError:
-        raise HTTPException(status_code=400, detail="Token has expired")
+        raise HTTPException(status_code=401, detail="Token has expired")
     except JWTError:
-        raise HTTPException(status_code=400, detail="Could not validate credentials")
+        raise HTTPException(status_code=401, detail="Could not validate credentials")
 
     user_in = PasswordUpdate(password=password_data.new_password)
     updated_user = crud.user.update(db=db, db_obj=user, obj_in=user_in)
@@ -514,8 +514,9 @@ async def certificate_check(
     )
     if user_cert:
         access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        token_data = {"sub": cert_check.email, "auth_method": "email"}
         access_token = create_access_token(
-            data={"sub": cert_check.email}, expires_delta=access_token_expires
+            data=token_data, expires_delta=access_token_expires
         )
         # db.delete(user_cert)
         # db.commit()

@@ -180,9 +180,9 @@ def get_current_user(
                 headers={"WWW-Authenticate": "Bearer"},
             )
     except ExpiredSignatureError:
-        raise HTTPException(status_code=400, detail="Token has expired")
+        raise HTTPException(status_code=401, detail="Token has expired")
     except JWTError:
-        raise HTTPException(status_code=400, detail="Could not validate credentials")
+        raise HTTPException(status_code=401, detail="Could not validate credentials")
     return user
 
 
