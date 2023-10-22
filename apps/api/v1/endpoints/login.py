@@ -7,7 +7,9 @@ from fastapi import (
     APIRouter,
     Depends,
     HTTPException,
+    Header
 )
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from jose import jwt, JWTError, ExpiredSignatureError
 from sqlalchemy.exc import IntegrityError
@@ -30,15 +32,43 @@ from schemas.user import (
 )
 from models.user import User
 from core.security import (
-    get_current_token,
+    get_current_user,
     create_access_token,
-    get_user_by_fb,
     create_refresh_token,
+    get_current_active_user,
+    create_token_data
 )
 from database.session import get_db
 from core.config import settings
 
 router = APIRouter()
+
+@router.post("/token", response_model=Dict[str, Any])
+def login_access_token(db:Session=Depends(get_db), form_data: OAuth2PasswordRequestForm = Depends()):
+    user = crud.user.authenticate(
+        db, email=form_data.username, password=form_data.password
+    )
+    if not user:
+        raise HTTPException(status_code=400, detail="Incorrect email or password")
+    elif not crud.user.is_active(user):
+        raise HTTPException(status_code=400, detail="Inactive user")
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+
+    if user.email:
+        token_data = {"sub": user.email, "auth_method": "email"}
+    else:
+        token_data = {
+            "sub": user.sns_id,
+            "sns_type": user.sns_type,
+            "auth_method": "sns",
+        }
+
+    return {
+        "access_token": create_access_token(
+            token_data, expires_delta=access_token_expires
+        ),
+        "token_type": "bearer",
+    }
 
 
 @router.post("/register", response_model=Dict[str, Any])
@@ -163,14 +193,7 @@ def register_user(
 
     # 토큰 생성 및 반환
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    if new_user.email:
-        token_data = {"sub": new_user.email, "auth_method": "email"}
-    else:
-        token_data = {
-            "sub": new_user.sns_id,
-            "sns_type": new_user.sns_type,
-            "auth_method": "sns",
-        }
+    token_data = create_token_data(user=new_user)
 
     access_token = create_access_token(
         data=token_data, expires_delta=access_token_expires
@@ -240,14 +263,7 @@ def login_for_access_token(login_obj: UserLogin, db: Session = Depends(get_db)):
 
     # 토큰 생성 및 반환
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    if user.email:
-        token_data = {"sub": user.email, "auth_method": "email"}
-    else:
-        token_data = {
-            "sub": user.sns_id,
-            "sns_type": user.sns_type,
-            "auth_method": "sns",
-        }
+    token_data = create_token_data(user=user)
 
     access_token = create_access_token(
         data=token_data, expires_delta=access_token_expires
@@ -263,7 +279,7 @@ def login_for_access_token(login_obj: UserLogin, db: Session = Depends(get_db)):
 
 @router.post("/token/refresh")
 async def refresh_token(
-    token: str = Depends(get_current_token), db: Session = Depends(get_db)
+    token: str = Header(...), db: Session = Depends(get_db)
 ):
     """
     기존 토큰을 새로고침합니다.
@@ -321,7 +337,7 @@ async def refresh_token(
 
 @router.get("/token/validate")
 def validate_token(
-    token: str = Depends(get_current_token), db: Session = Depends(get_db)
+    token: str = Depends(get_current_active_user), db: Session = Depends(get_db)
 ):
     """
     제공된 토큰을 검증합니다.
@@ -333,50 +349,6 @@ def validate_token(
     - dict: 토큰의 검증 상태.
     """
 
-    try:
-        payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
-        )
-
-        auth_method = payload.get("auth_method")
-
-        if auth_method == "email":
-            email = payload.get("sub")
-            if email is None:
-                credentials_exception = HTTPException(
-                    status_code=401,
-                    detail="Could not validate credentials",
-                    headers={"WWW-Authenticate": "Bearer"},
-                )
-                raise credentials_exception
-            user = crud.user.get_by_email(db=db, email=email)
-        elif auth_method == "sns":
-            sns_id = payload.get("sub")
-            sns_type = payload.get("sns_type")
-            if sns_id is None:
-                credentials_exception = HTTPException(
-                    status_code=401,
-                    detail="Could not validate credentials",
-                    headers={"WWW-Authenticate": "Bearer"},
-                )
-            user = crud.user.get_by_sns(db=db, sns_id=sns_id, sns_type=sns_type)
-        else:
-            raise HTTPException(status_code=400, detail="Unknown auth_method")
-
-        if user is None:
-            raise HTTPException(
-                status_code=401,
-                detail="User not found",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-
-    except JWTError:
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid authentication credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
     # 토큰이 유효하면 아래 메시지 반환
     return {"detail": "Token is valid"}
 
@@ -384,7 +356,7 @@ def validate_token(
 @router.post("/change-password")
 def change_password(
     password_data: PasswordChange,
-    token: str = Depends(get_current_token),
+    token: str = Depends(get_current_active_user),
     db: Session = Depends(get_db),
 ):
     """
@@ -399,36 +371,9 @@ def change_password(
     반환값:
     - dict: 비밀번호 변경 상태 메시지.
     """
-    try:
-        payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
-        )
-        auth_method = payload.get("auth_method")
-
-        if auth_method == "email":
-            email = payload.get("sub")
-            user = crud.user.get_by_email(db=db, email=email)
-        elif auth_method == "sns":
-            sns_id = payload.get("sub")
-            sns_type = payload.get("sns_type")
-            user = crud.user.get_by_sns(db=db, sns_id=sns_id, sns_type=sns_type)
-        else:
-            raise HTTPException(status_code=400, detail="Unknown auth_method")
-
-        if user is None:
-            raise HTTPException(
-                status_code=401,
-                detail="User not found",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-
-    except ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token has expired")
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Could not validate credentials")
 
     user_in = PasswordUpdate(password=password_data.new_password)
-    updated_user = crud.user.update(db=db, db_obj=user, obj_in=user_in)
+    updated_user = crud.user.update(db=db, db_obj=token, obj_in=user_in)
 
     return {"detail": "Password changed successfully"}
 

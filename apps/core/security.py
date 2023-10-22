@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import Any, Union, Optional, Annotated
+from typing import Any, Union, Optional, Annotated, Dict
 import secrets
 
 from jose import jwt, JWTError, ExpiredSignatureError
@@ -8,8 +8,7 @@ from fastapi import HTTPException, Header, status, Depends, Security
 from fastapi.security import (
     HTTPBasic,
     HTTPBasicCredentials,
-    HTTPBearer,
-    HTTPAuthorizationCredentials,
+    OAuth2PasswordBearer,
 )
 from sqlalchemy.orm import Session
 
@@ -20,8 +19,10 @@ from models.user import User
 from core.config import settings
 
 security = HTTPBasic()
-bearer_security = HTTPBearer()
 
+reusable_oauth2 = OAuth2PasswordBearer(
+    tokenUrl=f"v1/token"
+)
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
     """
@@ -112,36 +113,36 @@ def get_user_by_fb(authorization: Optional[str] = Header(None)) -> dict:
     return verify_id_token(firebase_token)
 
 
-def get_current_token(authorization: str = Header(...)) -> str:
-    """
-    헤더에서 JWT 토큰을 추출합니다.
+# def get_current_user(authorization: str = Header(...)) -> str:
+#     """
+#     헤더에서 JWT 토큰을 추출합니다.
 
-    Args:
-    - authorization (str): 'Bearer [토큰]' 형식의 인증 헤더.
+#     Args:
+#     - authorization (str): 'Bearer [토큰]' 형식의 인증 헤더.
 
-    Returns:
-    - str: 추출된 JWT 토큰 문자열.
+#     Returns:
+#     - str: 추출된 JWT 토큰 문자열.
 
-    헤더 예시:
-    Authorization: Bearer [YOUR_JWT_TOKEN]
-    """
+#     헤더 예시:
+#     Authorization: Bearer [YOUR_JWT_TOKEN]
+#     """
 
-    if not authorization:
-        raise HTTPException(status_code=403, detail="Token is missing")
+#     if not authorization:
+#         raise HTTPException(status_code=403, detail="Token is missing")
 
-    token_parts = authorization.split(" ")
-    if len(token_parts) != 2:
-        raise HTTPException(status_code=403, detail="Invalid token format")
+#     token_parts = authorization.split(" ")
+#     if len(token_parts) != 2:
+#         raise HTTPException(status_code=403, detail="Invalid token format")
 
-    token_prefix, token = token_parts
-    if token_prefix != "Bearer":
-        raise HTTPException(status_code=403, detail="Invalid token prefix")
+#     token_prefix, token = token_parts
+#     if token_prefix != "Bearer":
+#         raise HTTPException(status_code=403, detail="Invalid token prefix")
 
-    return token
+#     return token
 
 
 def get_current_user(
-    token: str = Depends(get_current_token), db: Session = Depends(get_db)
+    token: str = Depends(reusable_oauth2), db: Session = Depends(get_db)
 ):
     """
     현재의 JWT 토큰을 사용하여 사용자 정보를 검색한다.
@@ -152,11 +153,6 @@ def get_current_user(
     Returns:
     - 검증된 사용자의 정보를 포함하는 User 객체.
     """
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
     try:
         payload = jwt.decode(
             token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
@@ -185,14 +181,21 @@ def get_current_user(
         raise HTTPException(status_code=401, detail="Could not validate credentials")
     return user
 
+def get_current_active_user(
+    current_user: User = Depends(get_current_user),
+) -> User:
+    if not crud.user.is_active(current_user):
+        raise HTTPException(status_code=400, detail="Inactive user")
+    return current_user
 
-def get_admin(credentials: Annotated[HTTPBasicCredentials, Depends(security)]):
-    correct_username = secrets.compare_digest(credentials.username, settings.DOCS_USER)
-    correct_password = secrets.compare_digest(credentials.password, settings.DOCS_PW)
-    if not (correct_username and correct_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
-            headers={"WWW-Authenticate": "Basic"},
-        )
-    return credentials.username
+
+def create_token_data(user:User) -> Dict[str,any]:
+    if user.email:
+        token_data = {"sub": user.email, "auth_method": "email"}
+    else:
+        token_data = {
+            "sub": user.sns_id,
+            "sns_type": user.sns_type,
+            "auth_method": "sns",
+        }
+    return token_data

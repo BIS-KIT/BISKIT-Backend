@@ -21,6 +21,7 @@ from schemas.user import (
 from models.user import User
 from core.security import (
     get_current_user,
+    get_current_active_user
 )
 from database.session import get_db
 from core.config import settings
@@ -29,7 +30,8 @@ router = APIRouter()
 
 
 @router.get("/users/me", response_model=UserResponse)
-async def read_current_user(current_user=Depends(get_current_user)):
+async def read_current_user(current_user=Depends(get_current_active_user)
+):
     """
     현재 사용자의 정보를 반환합니다.
 
@@ -43,7 +45,7 @@ async def read_current_user(current_user=Depends(get_current_user)):
 
 
 @router.get("/users", response_model=List[UserResponse])
-def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db),token: str = Depends(get_current_active_user)):
     """
     사용자 목록을 반환합니다.
 
@@ -63,7 +65,7 @@ def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
 
 
 @router.get("/users/{user_id}", response_model=UserResponse)
-def read_user(user_id: int, db: Session = Depends(get_db)):
+def read_user(user_id: int, db: Session = Depends(get_db),token: str = Depends(get_current_active_user)):
     """
     특정 사용자의 정보를 조회합니다.
 
@@ -82,7 +84,7 @@ def read_user(user_id: int, db: Session = Depends(get_db)):
 
 
 @router.delete("/user/{user_id}")
-def delete_user(user_id: int, db: Session = Depends(get_db)):
+def delete_user(user_id: int, db: Session = Depends(get_db),token: str = Depends(get_current_active_user)):
     """
     특정 사용자를 삭제합니다.
 
@@ -106,6 +108,7 @@ def update_user(
     user_in: UserUpdate,
     user_id: int,
     db: Session = Depends(get_db),
+    token: str = Depends(get_current_active_user)
 ):
     """
     Update user details using email address as identifier.
@@ -168,6 +171,7 @@ def update_user(
 def get_user_consent(
     user_id: int,
     db: Session = Depends(get_db),
+    token: str = Depends(get_current_active_user)
 ):
     """
     특정 사용자의 동의 정보를 반환합니다.
@@ -193,6 +197,7 @@ def get_user_consent(
 def delete_user_consent(
     user_id: int,
     db: Session = Depends(get_db),
+    token: str = Depends(get_current_active_user)
 ):
     """
     특정 사용자의 동의 정보를 삭제합니다.
@@ -220,6 +225,7 @@ def delete_user_consent(
 def get_user_university(
     user_id: int,
     db: Session = Depends(get_db),
+    token: str = Depends(get_current_active_user)
 ):
     """
     특정 사용자의 대학 정보를 반환합니다.
@@ -245,6 +251,7 @@ def get_user_university(
 def delete_user_university(
     user_id: int,
     db: Session = Depends(get_db),
+    token: str = Depends(get_current_active_user)
 ):
     """
     특정 사용자의 대학 정보를 삭제합니다.
@@ -273,6 +280,7 @@ def update_user_university(
     user_id: int,
     user_univeristy: UserUniversityUpdateIn,
     db: Session = Depends(get_db),
+    token: str = Depends(get_current_active_user)
 ):
     """
     특정 사용자의 대학 정보를 업데이트합니다.
@@ -299,6 +307,7 @@ def update_user_university(
 def get_user_nationality(
     user_id: int,
     db: Session = Depends(get_db),
+    token: str = Depends(get_current_active_user)
 ):
     """
     특정 사용자의 국적 정보를 반환합니다.
@@ -324,6 +333,7 @@ def get_user_nationality(
 def delete_user_nationality(
     user_id: int,
     db: Session = Depends(get_db),
+    token: str = Depends(get_current_active_user)
 ):
     """
     특정 사용자의 국적 정보를 삭제합니다.

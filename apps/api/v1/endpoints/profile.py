@@ -20,6 +20,7 @@ from sqlalchemy.orm import Session
 import crud
 from database.session import get_db
 from core.config import settings
+from core.security import get_current_active_user
 from models.user import User
 from models.profile import Profile, AvailableLanguage, Introduction
 from schemas.profile import (
@@ -45,7 +46,7 @@ router = APIRouter()
 
 @router.get("/profile/photos")
 def get_profile_photos(
-    user_ids: List[str] = Query(None), db: Session = Depends(get_db)
+    user_ids: List[str] = Query(None), db: Session = Depends(get_db),
 ):
     """
     user_ids 받아서 해당 user의 photo, nick-name return
@@ -77,7 +78,7 @@ def get_profile_photos(
 
 @router.post("/profile/photo")
 def update_profile_photo(
-    is_profile: bool, photo: UploadFile, db: Session = Depends(get_db)
+    is_profile: bool, photo: UploadFile, db: Session = Depends(get_db), token: str = Depends(get_current_active_user)
 ):
     """
     photo upload API
@@ -151,50 +152,51 @@ async def get_random_nickname():
     return {"kr_nick_name": kr_nick_name, "en_nick_name": en_nick_name}
 
 
-@router.post("/profile/introduction", response_model=List[IntroductionResponse])
-def create_introduction(
-    introduction: List[IntroductionCreate],
-    db: Session = Depends(get_db),
-):
-    """
-    사용자 소개 생성 API.
+# @router.post("/profile/introduction", response_model=List[IntroductionResponse])
+# def create_introduction(
+#     introduction: List[IntroductionCreate],
+#     db: Session = Depends(get_db),
+# ):
+#     """
+#     사용자 소개 생성 API.
 
-    이 API는 주어진 사용자 소개 정보로 새로운 사용자 소개를 생성합니다.
+#     이 API는 주어진 사용자 소개 정보로 새로운 사용자 소개를 생성합니다.
 
-    매개변수:
-    - introduction (List[IntroductionCreate]): 사용자 소개 목록.
-    - db (Session): 데이터베이스 세션.
+#     매개변수:
+#     - introduction (List[IntroductionCreate]): 사용자 소개 목록.
+#     - db (Session): 데이터베이스 세션.
 
-    반환값:
-    - List[IntroductionResponse]: 생성된 사용자 소개 목록.
-    """
-    created_introductions = []
+#     반환값:
+#     - List[IntroductionResponse]: 생성된 사용자 소개 목록.
+#     """
+#     created_introductions = []
 
-    profile = crud.profile.get(db=db, id=introduction[0].profile_id)
-    if not profile:
-        raise HTTPException(status_code=400, detail="Profile not found")
+#     profile = crud.profile.get(db=db, id=introduction[0].profile_id)
+#     if not profile:
+#         raise HTTPException(status_code=400, detail="Profile not found")
 
-    try:
-        for intro in introduction:
-            new_introduction = crud.profile.create_introduction(db=db, obj_in=intro)
-            created_introductions.append(new_introduction)
-    except Exception as e:
-        log_error(e)
-        if created_introductions:
-            for intro in created_introductions:
-                crud.profile.remove_introduction(db=db, profile_id=intro.profile_id)
-        raise HTTPException(status_code=500)
+#     try:
+#         for intro in introduction:
+#             new_introduction = crud.profile.create_introduction(db=db, obj_in=intro)
+#             created_introductions.append(new_introduction)
+#     except Exception as e:
+#         log_error(e)
+#         if created_introductions:
+#             for intro in created_introductions:
+#                 crud.profile.remove_introduction(db=db, profile_id=intro.profile_id)
+#         raise HTTPException(status_code=500)
 
-    return created_introductions
+#     return created_introductions
 
 
 @router.put(
-    "/profile/introduction/{introduction_id}", response_model=IntroductionResponse
+    "/profile/introduction/{introduction_id}", response_model=IntroductionResponse,
 )
 def update_introduction(
     introduction_id: int,
     introduction: IntroductionUpdate,
     db: Session = Depends(get_db),
+    token: str = Depends(get_current_active_user)
 ):
     existing_introduction = crud.profile.get_introduction(db=db, id=introduction_id)
     if not existing_introduction:
@@ -209,7 +211,7 @@ def update_introduction(
 @router.get(
     "/profile/introduction/{introduction_id}", response_model=IntroductionResponse
 )
-def get_introduction(introduction_id: int, db: Session = Depends(get_db)):
+def get_introduction(introduction_id: int, db: Session = Depends(get_db),token: str = Depends(get_current_active_user)):
     db_obj = crud.profile.get_introduction(db=db, id=introduction_id)
     if not db_obj:
         raise HTTPException(status_code=404, detail="Introduction not found")
@@ -219,7 +221,7 @@ def get_introduction(introduction_id: int, db: Session = Depends(get_db)):
 @router.delete(
     "/profile/introduction/{introduction_id}", response_model=IntroductionResponse
 )
-def delete_introduction(introduction_id: int, db: Session = Depends(get_db)):
+def delete_introduction(introduction_id: int, db: Session = Depends(get_db),token: str = Depends(get_current_active_user)):
     db_obj = crud.profile.remove_introduction(db=db, id=introduction_id)
     return db_obj
 
@@ -268,7 +270,7 @@ async def create_available_language(
 @router.get(
     "/profile/available-language/{ava_lang_id}", response_model=AvailableLanguageBase
 )
-async def get_available_language(ava_lang_id: int, db: Session = Depends(get_db)):
+async def get_available_language(ava_lang_id: int, db: Session = Depends(get_db),token: str = Depends(get_current_active_user)):
     db_obj = crud.profile.get_ava_lan(db=db, id=ava_lang_id)
     if not db_obj:
         raise HTTPException(status_code=404, detail="AvailableLanguage not found")
@@ -278,7 +280,7 @@ async def get_available_language(ava_lang_id: int, db: Session = Depends(get_db)
 @router.delete(
     "/profile/available-language/{ava_lang_id}", response_model=AvailableLanguageBase
 )
-async def delete_available_language(ava_lang_id: int, db: Session = Depends(get_db)):
+async def delete_available_language(ava_lang_id: int, db: Session = Depends(get_db),token: str = Depends(get_current_active_user)):
     db_obj = crud.profile.remove_ava_lan(db=db, id=ava_lang_id)
     return db_obj
 
@@ -290,6 +292,7 @@ async def update_available_language(
     ava_lang_id: int,
     available_language: AvailableLanguageUpdate,
     db: Session = Depends(get_db),
+    token: str = Depends(get_current_active_user)
 ):
     """
     사용자의 사용 가능 언어 업데이트 API.
@@ -317,6 +320,7 @@ def student_varification(
     student_card: str,
     user_id: int,
     db: Session = Depends(get_db),
+    token: str = Depends(get_current_active_user)
 ):
     """
     학생증 인증 정보를 제출합니다.
@@ -354,6 +358,7 @@ def student_varification(
 def student_varification(
     user_id: int,
     db: Session = Depends(get_db),
+    token: str = Depends(get_current_active_user)
 ):
     """
     특정 사용자의 학생증 인증 정보를 조회합니다.
@@ -395,7 +400,7 @@ def read_student_cards(db: Session = Depends(get_db)):
 
 
 @router.delete("/profile/user/{user_id}", response_model=ProfileBase)
-def delete_profile_by_user(user_id: int, db: Session = Depends(get_db)):
+def delete_profile_by_user(user_id: int, db: Session = Depends(get_db),token: str = Depends(get_current_active_user)):
     """
     사용자 ID를 기반으로 프로필 삭제 API
     """
@@ -408,7 +413,7 @@ def delete_profile_by_user(user_id: int, db: Session = Depends(get_db)):
 
 
 @router.delete("/profile/{user_id}/photo")
-async def delete_profile_photo(user_id: int, db: Session = Depends(get_db)):
+async def delete_profile_photo(user_id: int, db: Session = Depends(get_db),token: str = Depends(get_current_active_user)):
     """
     사용자 프로필 사진 삭제 API.
 
@@ -428,7 +433,7 @@ async def delete_profile_photo(user_id: int, db: Session = Depends(get_db)):
 
 @router.get("/profile/{user_id}", response_model=ProfileResponse)
 def get_profile_by_user_id(
-    user_id: int = Path(..., title="The ID of the user"), db: Session = Depends(get_db)
+    user_id: int = Path(..., title="The ID of the user"), db: Session = Depends(get_db),token: str = Depends(get_current_active_user)
 ):
     """
     user_id를 이용하여 프로필 정보를 가져옵니다.
@@ -447,7 +452,7 @@ def get_profile_by_user_id(
 
 
 @router.delete("/profile/{profile_id}", response_model=ProfileResponse)
-def delete_profile(profile_id: int, db: Session = Depends(get_db)):
+def delete_profile(profile_id: int, db: Session = Depends(get_db),token: str = Depends(get_current_active_user)):
     """
     프로필 삭제 API
 
@@ -472,6 +477,7 @@ def create_profile(
     profile: ProfileRegister,
     user_id: int = Query(...),
     db: Session = Depends(get_db),
+    token: str = Depends(get_current_active_user)
 ):
     """
     Profile 생성 API
@@ -585,6 +591,7 @@ def update_profile(
     profile_id: int,
     profile_in: ProfileUpdate,
     db: Session = Depends(get_db),
+    token: str = Depends(get_current_active_user)
 ):
     """
     사용자 프로필 업데이트 API
