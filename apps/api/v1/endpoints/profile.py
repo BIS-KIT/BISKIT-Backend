@@ -226,45 +226,45 @@ def delete_introduction(introduction_id: int, db: Session = Depends(get_db),toke
     return db_obj
 
 
-@router.post("/profile/available-language", response_model=List[AvailableLanguageBase])
-async def create_available_language(
-    available_language: List[AvailableLanguageCreate],
-    db: Session = Depends(get_db),
-):
-    """
-    사용자의 사용 가능 언어 생성 API.
+# @router.post("/profile/available-language", response_model=List[AvailableLanguageBase])
+# async def create_available_language(
+#     available_language: List[AvailableLanguageCreate],
+#     db: Session = Depends(get_db),
+# ):
+#     """
+#     사용자의 사용 가능 언어 생성 API.
 
-    매개변수:
-    - available_language (List[AvailableLanguageCreate]): 사용자의 사용 가능 언어 목록.
-    - db (Session): 데이터베이스 세션.
+#     매개변수:
+#     - available_language (List[AvailableLanguageCreate]): 사용자의 사용 가능 언어 목록.
+#     - db (Session): 데이터베이스 세션.
 
-    반환값:
-    - List[AvailableLanguageBase]: 생성된 사용 가능 언어 목록.
-    """
-    return_list = []
+#     반환값:
+#     - List[AvailableLanguageBase]: 생성된 사용 가능 언어 목록.
+#     """
+#     return_list = []
 
-    if len(available_language) >= 5:
-        raise HTTPException(status_code=409, detail="Only up to 5 can be created.")
+#     if len(available_language) >= 5:
+#         raise HTTPException(status_code=409, detail="Only up to 5 can be created.")
 
-    profile = crud.profile.get(db=db, id=available_language[0].profile_id)
-    if not profile:
-        raise HTTPException(status_code=404, detail="profile not found")
+#     profile = crud.profile.get(db=db, id=available_language[0].profile_id)
+#     if not profile:
+#         raise HTTPException(status_code=404, detail="profile not found")
 
-    for ava_lang in available_language:
-        lang = crud.utility.get(db=db, language_id=ava_lang.language_id)
+#     for ava_lang in available_language:
+#         lang = crud.utility.get(db=db, language_id=ava_lang.language_id)
 
-        if not lang:
-            raise HTTPException(status_code=404, detail="Languag not found")
+#         if not lang:
+#             raise HTTPException(status_code=404, detail="Languag not found")
 
-        obj = AvailableLanguageCreate(
-            level=ava_lang.level,
-            language_id=ava_lang.language_id,
-            profile_id=ava_lang.profile_id,
-        )
-        new_ava = crud.profile.create_ava_lan(db=db, obj_in=obj)
-        return_list.append(new_ava)
+#         obj = AvailableLanguageCreate(
+#             level=ava_lang.level,
+#             language_id=ava_lang.language_id,
+#             profile_id=ava_lang.profile_id,
+#         )
+#         new_ava = crud.profile.create_ava_lan(db=db, obj_in=obj)
+#         return_list.append(new_ava)
 
-    return return_list
+#     return return_list
 
 
 @router.get(
@@ -385,7 +385,7 @@ def student_varification(
 
 
 @router.get("/student-cards", response_model=List[StudentVerificationBase])
-def read_student_cards(db: Session = Depends(get_db)):
+def read_student_cards(db: Session = Depends(get_db),token: str = Depends(get_current_active_user)):
     """
     학생증 인증을 대기 중인 목록을 반환합니다.
 
