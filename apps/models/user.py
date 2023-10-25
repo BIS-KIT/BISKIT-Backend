@@ -24,6 +24,8 @@ class User(ModelBase):
     user_university = relationship("UserUniversity", back_populates="user")
     user_nationality = relationship("UserNationality", back_populates="user")
 
+    meeting_users = relationship("UserMeeting", back_populates="user")
+
 
 class UserNationality(ModelBase):
     nationality_id = Column(Integer, ForeignKey("nationality.id", ondelete="CASCADE"))

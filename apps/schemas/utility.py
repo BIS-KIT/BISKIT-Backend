@@ -30,3 +30,27 @@ class NationalityBase(CoreSchema):
             en_name=nationality.en_name,
             code=nationality.code.lower(),  # 이 부분에서 소문자로 변환합니다.
         )
+
+class TopicBase(BaseModel):
+    
+    name = Optional[str]
+    
+class TagBase(BaseModel):
+    
+    name = Optional[str]
+
+class TopicCreate(TopicBase):
+    pass
+
+class TagCreate(TopicBase):
+    pass
+
+class TopicResponse(TopicBase,CoreSchema):
+    
+    class Config:
+        orm_mode=True
+
+class TagResponse(TopicBase,CoreSchema):
+    
+    class Config:
+        orm_mode=True

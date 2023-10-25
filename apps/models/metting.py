@@ -17,7 +17,15 @@ class Metting(ModelBase):
 
     metting_tags = relationship("MeetingTag", back_populates="meeting")
     metting_languages = relationship("MeetingLanguage", back_populates="meeting")
+    meeting_users = relationship("UserMeeting", back_populates="meeting")
 
+
+class MettingUser(ModelBase):
+    user_id = Column(Integer, ForeignKey('user.id'), primary_key=True)
+    meeting_id = Column(Integer, ForeignKey('metting.id'), primary_key=True)
+    
+    user = relationship("User", back_populates="meeting_users")
+    meeting = relationship("Metting", back_populates="meeting_users")
 
 class MeetingLanguage(ModelBase):
     
