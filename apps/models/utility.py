@@ -15,16 +15,27 @@ class Nationality(ModelBase):
     en_name = Column(String)
     code = Column(String)
 
-    @validates("code")
-    def convert_lowercase(self, key, value):
-        return value.lower()
-
 
 class Language(ModelBase):
     kr_name = Column(String)
     en_name = Column(String)
 
+    meeting_languages = relationship("MeetingLanguage", back_populates="language")
+
 
 class University(ModelBase):
     kr_name = Column(String)
     en_name = Column(String)
+
+
+class Tag(ModelBase):  
+
+    name = Column(String) 
+
+    metting_tags = relationship("MeetingTag", back_populates="tag")
+
+class Topic(ModelBase):
+
+    name = Column(String)
+
+    metting_topics = relationship("MeetingTopic", back_populates="topic")
