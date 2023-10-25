@@ -12,3 +12,95 @@
 2023-09-27 09:11:10,644 - biskit - ERROR - An error occurred: local variable 'e' referenced before assignment
 2023-09-27 09:12:07,487 - biskit - ERROR - [2023-09-27 09:12:07] Error occured in create_profile. Exception: 'StudentVerificationCreate' object has no attribute 'user_id'
 2023-09-27 09:15:01,129 - biskit - ERROR - [2023-09-27 09:15:01] Error occured in create_profile. Exception: 'CRUDProfile' object has no attribute 'id'
+2023-10-02 17:34:41,033 - biskit - ERROR - An error occurred: (psycopg2.ProgrammingError) can't adapt type 'UserUpdate'
+[SQL: SELECT "user".email AS user_email, "user".password AS user_password, "user".name AS user_name, "user".birth AS user_birth, "user".gender AS user_gender, "user".is_active AS user_is_active, "user".is_admin AS user_is_admin, "user".id AS user_id, "user".created_time AS user_created_time, "user".modified_time AS user_modified_time 
+FROM "user" 
+WHERE "user".id = %(id_1)s 
+ LIMIT %(param_1)s]
+[parameters: {'id_1': UserUpdate(name='xxxx', birth=datetime.date(2023, 3, 2), gender=None, nationality_ids=[6, 20], university_id=2, department='ㅋㅌㅊ', education_status='ㅋㅌㅊ'), 'param_1': 1}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2023-10-02 17:41:11,608 - biskit - ERROR - [2023-10-02 17:41:11] Error occured in update_user. Exception: 'password'
+2023-10-02 17:42:31,752 - biskit - ERROR - [2023-10-02 17:42:31] Error occured in update_user. Exception: 'password'
+2023-10-02 17:43:43,910 - biskit - ERROR - [2023-10-02 17:43:43] Error occured in update_user. Exception: 'password'
+2023-10-02 17:46:43,200 - biskit - ERROR - [2023-10-02 17:46:43] Error occured in update_user. Exception: 1 validation error for UserUniversityCreate
+user_id
+  Field required [type=missing, input_value={'university_id': 2, 'dep...on_status': 'ㄴㅇㄹ'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.1/v/missing
+2023-10-02 17:51:14,173 - biskit - ERROR - [2023-10-02 17:51:14] Error occured in update_user. Exception: CRUDUser.remove_nationality() got an unexpected keyword argument 'user_id'
+2023-10-03 09:55:47,518 - biskit - ERROR - An error occurred: 1 validation errors:
+  {'type': 'int_type', 'loc': ('response', 'profile', 'user_id'), 'msg': 'Input should be a valid integer', 'input': None, 'url': 'https://errors.pydantic.dev/2.1/v/int_type'}
+
+2023-10-03 10:02:30,710 - biskit - ERROR - An error occurred: 1 validation errors:
+  {'type': 'int_type', 'loc': ('response', 'profile', 'user_id'), 'msg': 'Input should be a valid integer', 'input': None, 'url': 'https://errors.pydantic.dev/2.1/v/int_type'}
+
+2023-10-03 15:28:56,908 - biskit - ERROR - An error occurred: 'str' object has no attribute 'file'
+2023-10-03 16:36:28,091 - biskit - ERROR - An error occurred: can only concatenate list (not "str") to list
+2023-10-04 00:12:04,557 - biskit - ERROR - An error occurred: 'NoneType' object has no attribute 'profile'
+2023-10-04 00:12:52,866 - biskit - ERROR - [2023-10-04 00:12:52] Error occured in create_profile. Exception: 
+2023-10-04 00:22:55,582 - biskit - ERROR - An error occurred: local variable 'new_photo' referenced before assignment
+2023-10-04 00:23:28,755 - biskit - ERROR - An error occurred: local variable 'new_photo' referenced before assignment
+2023-10-04 00:24:20,528 - biskit - ERROR - An error occurred: local variable 'new_photo' referenced before assignment
+2023-10-04 00:28:16,339 - biskit - ERROR - unsupported operand type(s) for /: 'NoneType' and 'int' 
+ Traceback (most recent call last):
+  File "/apps/api/v1/endpoints/profile.py", line 231, in update_profile
+    new_photo = profile_in.profile_photo / 33
+TypeError: unsupported operand type(s) for /: 'NoneType' and 'int'
+
+2023-10-04 00:28:16,347 - biskit - ERROR - An error occurred: local variable 'new_photo' referenced before assignment
+2023-10-11 10:57:46,097 - biskit - ERROR - An error occurred: unhandled errors in a TaskGroup (1 sub-exception)
+2023-10-11 12:03:18,999 - biskit - ERROR - An error occurred: unhandled errors in a TaskGroup (1 sub-exception)
+2023-10-11 12:03:56,977 - biskit - ERROR - An error occurred: unhandled errors in a TaskGroup (1 sub-exception)
+2023-10-11 14:10:09,780 - biskit - ERROR - An error occurred: (psycopg2.errors.UndefinedColumn) column user.fcm_token does not exist
+LINE 1: ...h, "user".gender, "user".sns_type, "user".sns_id, "user".fcm...
+                                                             ^
+
+[SQL: SELECT "user".email, "user".password, "user".name, "user".birth, "user".gender, "user".sns_type, "user".sns_id, "user".fcm_token, "user".is_active, "user".is_admin, "user".id, "user".created_time, "user".modified_time 
+FROM "user" ORDER BY "user".id ASC 
+ LIMIT %(param_1)s OFFSET %(param_2)s]
+[parameters: {'param_1': 10, 'param_2': 0}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2023-10-14 10:55:13,340 - biskit - ERROR - An error occurred: photo_list.html
+2023-10-14 10:55:14,466 - biskit - ERROR - An error occurred: photo_list.html
+2023-10-14 10:55:44,845 - biskit - ERROR - An error occurred: templates/photo_list.html
+2023-10-14 10:57:27,011 - biskit - ERROR - An error occurred: admin/templates/photo_list.html
+2023-10-14 10:58:10,250 - biskit - ERROR - An error occurred: templates/photo_list.html
+2023-10-14 11:02:13,501 - biskit - ERROR - An error occurred: templates/photo_list.html
+2023-10-14 11:03:04,835 - biskit - ERROR - An error occurred: templates/photo_list.html
+2023-10-14 11:03:44,623 - biskit - ERROR - An error occurred: photo_list.html
+2023-10-14 11:31:31,271 - biskit - ERROR - An error occurred: No inspection system is available for object of type <class 'str'>
+2023-10-14 11:41:37,387 - biskit - ERROR - An error occurred: Encountered unknown tag 'endfor'. You probably made a nesting mistake. Jinja is expecting this tag, but currently looking for 'endif'. The innermost block that needs to be closed is 'if'.
+2023-10-14 11:41:38,132 - biskit - ERROR - An error occurred: Encountered unknown tag 'endfor'. You probably made a nesting mistake. Jinja is expecting this tag, but currently looking for 'endif'. The innermost block that needs to be closed is 'if'.
+2023-10-14 13:45:00,935 - biskit - ERROR - An error occurred: 'row' is undefined
+2023-10-14 13:45:01,798 - biskit - ERROR - An error occurred: 'row' is undefined
+2023-10-14 13:45:28,464 - biskit - ERROR - An error occurred: 'name' is undefined
+2023-10-14 13:45:29,042 - biskit - ERROR - An error occurred: 'name' is undefined
+2023-10-14 13:45:56,858 - biskit - ERROR - An error occurred: 'name' is undefined
+2023-10-14 13:45:57,319 - biskit - ERROR - An error occurred: 'name' is undefined
+2023-10-14 14:15:47,691 - biskit - ERROR - An error occurred: not enough values to unpack (expected 4, got 3)
+2023-10-14 14:15:51,344 - biskit - ERROR - An error occurred: not enough values to unpack (expected 4, got 3)
+2023-10-14 14:18:27,860 - biskit - ERROR - An error occurred: not enough values to unpack (expected 4, got 3)
+2023-10-14 14:20:50,417 - biskit - ERROR - An error occurred: not enough values to unpack (expected 4, got 3)
+2023-10-14 14:22:08,850 - biskit - ERROR - An error occurred: not enough values to unpack (expected 4, got 3)
+2023-10-14 14:34:12,464 - biskit - ERROR - An error occurred: not enough values to unpack (expected 4, got 3)
+2023-10-14 14:34:35,571 - biskit - ERROR - An error occurred: not enough values to unpack (expected 4, got 3)
+2023-10-14 14:35:14,209 - biskit - ERROR - An error occurred: not enough values to unpack (expected 4, got 3)
+2023-10-14 14:39:12,948 - biskit - ERROR - An error occurred: not enough values to unpack (expected 4, got 3)
+2023-10-14 14:41:58,893 - biskit - ERROR - An error occurred: not enough values to unpack (expected 4, got 3)
+2023-10-14 14:42:10,707 - biskit - ERROR - An error occurred: not enough values to unpack (expected 4, got 3)
+2023-10-14 14:43:13,723 - biskit - ERROR - An error occurred: not enough values to unpack (expected 4, got 3)
+2023-10-14 14:43:58,905 - biskit - ERROR - An error occurred: not enough values to unpack (expected 4, got 3)
+2023-10-14 14:48:42,644 - biskit - ERROR - An error occurred: not enough values to unpack (expected 4, got 3)
+2023-10-14 14:49:46,065 - biskit - ERROR - An error occurred: not enough values to unpack (expected 4, got 3)
+2023-10-14 14:50:31,108 - biskit - ERROR - An error occurred: not enough values to unpack (expected 4, got 3)
+2023-10-14 15:12:02,263 - biskit - ERROR - An error occurred: CRUDProfile.get_verification() missing 1 required positional argument: 'profile_id'
+2023-10-14 15:17:34,679 - biskit - ERROR - An error occurred: name 'request' is not defined
+2023-10-14 15:18:44,587 - biskit - ERROR - An error occurred: 'property' object has no attribute 'get'
+2023-10-14 15:52:12,622 - biskit - ERROR - An error occurred: Jinja2Templates.TemplateResponse() missing 1 required positional argument: 'context'
+2023-10-14 15:52:56,323 - biskit - ERROR - An error occurred: argument of type 'NoneType' is not iterable
+2023-10-14 15:55:05,633 - biskit - ERROR - An error occurred: argument of type 'NoneType' is not iterable
+2023-10-14 16:01:19,396 - biskit - ERROR - An error occurred: argument of type 'NoneType' is not iterable
+2023-10-14 16:01:58,524 - biskit - ERROR - An error occurred: argument of type 'NoneType' is not iterable
+2023-10-15 05:26:54,175 - biskit - ERROR - An error occurred: Jinja2Templates.TemplateResponse() missing 1 required positional argument: 'context'
+2023-10-15 16:26:18,857 - biskit - ERROR - An error occurred: not enough values to unpack (expected 4, got 3)
+2023-10-22 12:38:43,570 - biskit - ERROR - An error occurred: 'User' object has no attribute 'rsplit'
+2023-10-22 12:40:59,437 - biskit - ERROR - An error occurred: 'User' object has no attribute 'rsplit'
