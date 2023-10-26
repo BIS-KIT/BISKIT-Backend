@@ -20,7 +20,6 @@ class Language(ModelBase):
     kr_name = Column(String)
     en_name = Column(String)
 
-    meeting_languages = relationship("MeetingLanguage", back_populates="language")
 
 
 class University(ModelBase):
@@ -32,10 +31,6 @@ class Tag(ModelBase):
 
     name = Column(String) 
 
-    metting_tags = relationship("MeetingTag", back_populates="tag")
-
 class Topic(ModelBase):
 
     name = Column(String)
-
-    metting_topics = relationship("MeetingTopic", back_populates="topic")

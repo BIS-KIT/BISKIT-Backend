@@ -6,11 +6,11 @@ from typing import Optional, List, Union
 from schemas.base import CoreSchema
 from schemas.utility import TagResponse, TopicResponse, LanguageBase
 
-class MettingBase(BaseModel):
+class meetingBase(BaseModel):
     name : Optional[str]
     location : Optional[str]
     description : Optional[str]
-    metting_time : Optional[date]
+    meeting_time : Optional[date]
     max_participants : Optional[str]
     current_participants : Optional[str]
     participants_status : Optional[str]
@@ -18,44 +18,44 @@ class MettingBase(BaseModel):
     image_url : Optional[str]
     is_active : bool = True
 
-class MettingUserBase(BaseModel):
+class meetingUserBase(BaseModel):
     user_id : int
-    metting_id : int
+    meeting_id : int
 
-class MettingTagBase(BaseModel):
+class meetingTagBase(BaseModel):
     pass
 
-class MettingTopicBase(BaseModel):
+class meetingTopicBase(BaseModel):
     pass
 
-class MettingLanguageBase(BaseModel):
+class meetingLanguageBase(BaseModel):
     pass
 
-class MettingCreateUpdate(MettingBase):
+class meetingCreateUpdate(meetingBase):
     tag_ids : Optional[List[int]]
     topic_ids : Optional[List[int]]
     language_ids : Optional[List[int]]
 
-class MettingUserCreate(BaseModel):
-    metting_id : int
+class meetingUserCreate(BaseModel):
+    meeting_id : int
     user_id : int
 
-class MettingItemCreate(BaseModel):
+class meetingItemCreate(BaseModel):
 
-    metting_id : int
+    meeting_id : int
     tag_ids : Optional[List[int]]
     topic_ids : Optional[List[int]]
     language_ids : Optional[List[int]]
 
-class MettingResponse(CoreSchema,MettingBase):
+class meetingResponse(CoreSchema,meetingBase):
 
-    metting_tags : Optional[List[TagResponse]]
-    metting_topics : Optional[List[TopicResponse]]
-    metting_languages : Optional[List[LanguageBase]]
+    meeting_tags : Optional[List[TagResponse]]
+    meeting_topics : Optional[List[TopicResponse]]
+    meeting_languages : Optional[List[LanguageBase]]
 
     class Config:
         orm_mode=True
 
-class MettingUserResponse(CoreSchema, MettingUserBase):
+class meetingUserResponse(CoreSchema, meetingUserBase):
     class Config:
         orm_mode = True

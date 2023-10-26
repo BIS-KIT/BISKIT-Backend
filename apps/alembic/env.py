@@ -11,7 +11,6 @@ from alembic import context
 
 from database.session import DATABASE_URL
 from models.base import ModelBase
-from models.utility import Nationality, Language, University
 from models.user import (
     User,
     Consent,
@@ -20,6 +19,8 @@ from models.user import (
     UserNationality,
     UserUniversity,
 )
+from models.meeting import Meeting, MeetingLanguage, MeetingTag, MeetingTopic, MeetingUser
+from models.utility import Nationality, Language, University, Tag, Topic
 from models.profile import Profile, AvailableLanguage, StudentVerification
 from models.chat import ChatImage
 

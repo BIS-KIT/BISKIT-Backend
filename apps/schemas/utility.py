@@ -33,11 +33,11 @@ class NationalityBase(CoreSchema):
 
 class TopicBase(BaseModel):
     
-    name = Optional[str]
+    name : Optional[str]
     
 class TagBase(BaseModel):
     
-    name = Optional[str]
+    name : Optional[str]
 
 class TopicCreate(TopicBase):
     pass
