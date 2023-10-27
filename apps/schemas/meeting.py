@@ -5,57 +5,69 @@ from typing import Optional, List, Union
 
 from schemas.base import CoreSchema
 from schemas.utility import TagResponse, TopicResponse, LanguageBase
+from schemas.user import UserSimpleResponse
 
-class meetingBase(BaseModel):
+class MeetingBase(BaseModel):
     name : Optional[str]
     location : Optional[str]
     description : Optional[str]
     meeting_time : Optional[date]
-    max_participants : Optional[str]
-    current_participants : Optional[str]
-    participants_status : Optional[str]
+    max_participants : Optional[int]
 
     image_url : Optional[str]
-    is_active : bool = True
+    is_active : Optional[bool] = True
 
-class meetingUserBase(BaseModel):
+class MeetingUserBase(BaseModel):
     user_id : int
     meeting_id : int
 
-class meetingTagBase(BaseModel):
+class MeetingTagBase(BaseModel):
     pass
 
-class meetingTopicBase(BaseModel):
+class MeetingTopicBase(BaseModel):
     pass
 
-class meetingLanguageBase(BaseModel):
+class MeetingLanguageBase(BaseModel):
     pass
 
-class meetingCreateUpdate(meetingBase):
+class MeetingCountBase(BaseModel):
+    current_participants : Optional[int] = 1
+    korean_count : Optional[int] = 0
+    foreign_count : Optional[int]= 0
+
+class MeetingCountCreateUpdate(MeetingCountBase):
+    pass
+
+class MeetingCreateUpdate(MeetingBase, MeetingCountBase):
+    creator_id : Optional[int]
     tag_ids : Optional[List[int]]
     topic_ids : Optional[List[int]]
     language_ids : Optional[List[int]]
 
-class meetingUserCreate(BaseModel):
-    meeting_id : int
+class MeetingUserCreate(BaseModel):
+    Meeting_id : int
     user_id : int
 
-class meetingItemCreate(BaseModel):
+class MeetingItemCreate(BaseModel):
 
     meeting_id : int
-    tag_ids : Optional[List[int]]
-    topic_ids : Optional[List[int]]
-    language_ids : Optional[List[int]]
+    tag_id : Optional[int]
+    topic_id : Optional[int]
+    language_id : Optional[int]
 
-class meetingResponse(CoreSchema,meetingBase):
+class MeetingResponse(CoreSchema,MeetingBase, MeetingCountBase):
+
+    creator: UserSimpleResponse
 
     meeting_tags : Optional[List[TagResponse]]
     meeting_topics : Optional[List[TopicResponse]]
     meeting_languages : Optional[List[LanguageBase]]
 
+    participants_status : Optional[str]
+
     class Config:
         orm_mode=True
 
-class meetingUserResponse(CoreSchema, meetingUserBase):
+class MeetingUserResponse(CoreSchema, MeetingUserBase):
     class Config:
         orm_mode = True

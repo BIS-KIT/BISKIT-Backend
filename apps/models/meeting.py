@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String,ForeignKey, DateTime, Boolean
 from sqlalchemy.orm import relationship
+from sqlalchemy.ext.hybrid import hybrid_property
 
 from models.base import ModelBase
 
@@ -10,15 +11,28 @@ class Meeting(ModelBase):
     meeting_time = Column(DateTime, nullable=True)
     max_participants = Column(String)
     current_participants = Column(String,nullable=True)
-    participants_status = Column(String,nullable=True)
+    korean_count = Column(Integer, default=0) 
+    foreign_count = Column(Integer, default=0)
 
     image_url = Column(String)
     is_active = Column(Boolean)
+
+    creator_id = Column(Integer, ForeignKey("user.id"))
+    creator = relationship("User", backref="created_meetings")
 
     meeting_tags = relationship("MeetingTag", back_populates="meeting")
     meeting_languages = relationship("MeetingLanguage", back_populates="meeting")
     meeting_topics = relationship("MeetingTopic", back_populates="meeting")
     meeting_users = relationship("MeetingUser", back_populates="meeting")
+
+    @hybrid_property
+    def participants_status(self):
+        if self.korean_count > 0 and self.foreign_count == 0:
+            return "외국민 모집"
+        elif self.korean_count == 0 and self.foreign_count > 0:
+            return "한국인 모집"
+        else:
+            return None
 
 
 class MeetingUser(ModelBase):
