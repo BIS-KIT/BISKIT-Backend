@@ -12,9 +12,10 @@ router = APIRouter()
 @router.post("/meeting/create", response_model=MeetingResponse)
 def create_meeting(obj_in:MeetingCreateUpdate ,db: Session = Depends(get_db)):
     """
-    새로운 모임 생성하기.
+    # 새로운 모임 생성
 
-    creator_id는 차후 토큰 적용하게 되면 토큰에서 추출할 것.
+    ## 아래에 설명된 어트리뷰트들만 신경쓰면됨
+    ## creator_id는 차후 토큰 적용하게 되면 토큰에서 추출할 것.
 
     - **name**: 모임 이름 또는 제목.
     - **location**: 모임 장소.
@@ -42,8 +43,12 @@ def get_meeting(meeting_id,db: Session = Depends(get_db)):
     return meeting
 
 
-@router.get("/meetings", response_model=MeetingResponse)
-def get_meeting(meeting_id,db: Session = Depends(get_db)):
-    meeting = crud.meeting.get_multi(db=db, id=meeting_id)
+@router.get("/meetings", response_model=List[MeetingResponse])
+def get_meeting(db: Session = Depends(get_db)):
+    meeting = crud.meeting.get_multi(db=db)
     return meeting
 
+@router.get("/fix-item")
+def create_fix_item(db: Session = Depends(get_db)):
+    crud.utility.create_fix_items(db=db)
+    return

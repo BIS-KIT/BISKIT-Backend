@@ -6,7 +6,7 @@ from sqlalchemy import or_, asc, desc
 
 import crud
 from database.session import get_db
-from schemas.utility import LanguageBase, UniversityBase, NationalityBase
+from schemas.utility import LanguageBase, UniversityBase, NationalityBase, TagResponse, TopicResponse
 from models.utility import Language, University, Nationality, OsLanguage
 
 
@@ -123,3 +123,25 @@ def get_countries(
     countries = query.all()
 
     return [NationalityBase.from_orm(country) for country in countries]
+
+@router.get("/tags", response_model=List[TagResponse])
+def read_tags(is_custom:bool = None, db: Session = Depends(get_db)):
+    """
+    is_costem == None : 모든 tag
+    is_costem == True : 사용자가 생성한 tag
+    is_costem == False : 고정 tag
+    """
+    
+    return crud.utility.read_tags(db=db, is_custom=is_custom)
+
+
+@router.get("/topics", response_model=List[TopicResponse])
+def read_topics(is_custom:bool = None, db: Session = Depends(get_db)):
+    """
+    is_costem == None : 모든 tag
+    is_costem == True : 사용자가 생성한 tag
+    is_costem == False : 고정 tag
+    """
+
+    return crud.utility.read_topics(db=db,is_custom=is_custom)
+
