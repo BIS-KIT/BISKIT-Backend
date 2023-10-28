@@ -28,7 +28,7 @@ class Meeting(ModelBase):
     @hybrid_property
     def participants_status(self):
         if self.korean_count > 0 and self.foreign_count == 0:
-            return "외국민 모집"
+            return "외국인 모집"
         elif self.korean_count == 0 and self.foreign_count > 0:
             return "한국인 모집"
         else:
