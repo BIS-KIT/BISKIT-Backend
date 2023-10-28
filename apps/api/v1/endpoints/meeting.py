@@ -1,11 +1,12 @@
 from typing import Any, List, Optional, Dict
 
-from fastapi import APIRouter, Body, Depends
+from fastapi import APIRouter, Body, Depends,HTTPException
 from sqlalchemy.orm import Session
 
 import crud
 from database.session import get_db
 from schemas.meeting import MeetingResponse, MeetingCreateUpdate,MeetingDetailResponse
+from log import log_error
 
 router = APIRouter()
 
@@ -34,7 +35,12 @@ def create_meeting(obj_in:MeetingCreateUpdate ,db: Session = Depends(get_db)):
     반환값:
         모임 객체
     """
-    meeting = crud.meeting.create(db=db, obj_in=obj_in)
+    try:
+        meeting = crud.meeting.create(db=db, obj_in=obj_in)
+    except Exception as e:
+        print(e)
+        log_error(e)
+        raise HTTPException(status_code=500)
     return meeting
 
 
@@ -73,7 +79,12 @@ def get_meeting_detail(meeting_id,db: Session = Depends(get_db)):
     반환값:
         위의 세부 정보를 포함한 특정 모임의 상세 정보
     """
-    meeting = crud.meeting.get(db=db, id=meeting_id)
+    try:
+        meeting = crud.meeting.get(db=db, id=meeting_id)
+    except Exception as e:
+        print(e)
+        log_error(e)
+        raise HTTPException(status_code=500)
     return meeting
 
 
@@ -111,5 +122,8 @@ def get_meeting(db: Session = Depends(get_db)):
 
 @router.get("/fix-item")
 def create_fix_item(db: Session = Depends(get_db)):
+    """
+    고정 값 생성
+    """
     crud.utility.create_fix_items(db=db)
     return
