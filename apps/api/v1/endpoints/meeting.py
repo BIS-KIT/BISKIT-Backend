@@ -17,12 +17,13 @@ def create_meeting(obj_in:MeetingCreateUpdate ,db: Session = Depends(get_db)):
     ## 아래에 설명된 어트리뷰트들만 신경쓰면됨
     ## creator_id는 차후 토큰 적용하게 되면 토큰에서 추출할 것.
 
-    - **name**: 모임 이름 또는 제목.
-    - **location**: 모임 장소.
-    - **description**: 모임  설명.
-    - **meeting_time**: 모임 예정 날짜.
-    - **max_participants**: 모임에 허용된 최대 참가자 수.
-    - **image_url**: 모임 icon url.
+    - **name**: 모임의 이름
+    - **location**: 모임 장소
+    - **description**: 모임에 대한 설명 (Not Required)
+    - **meeting_time**: 모임 예정 시간
+    - **max_participants**: 모임에 참가 가능한 최대 인원
+    - **image_url**: 모임 이미지의 URL (Not Required)
+    - **is_active**: 모임이 활성 상태인지 여부 (Default = True)
     - **custom_tags**: 사용자가 추가하고자하는 태그 목록.
     - **custom_topics**: 사용자가 추가하고자하는 토픽 목록.
     - **creator_id**: 모임을 생성하는 사용자의 ID.
@@ -38,13 +39,73 @@ def create_meeting(obj_in:MeetingCreateUpdate ,db: Session = Depends(get_db)):
 
 
 @router.get("/meeting/{meeting_id}", response_model=MeetingDetailResponse)
-def get_meeting(meeting_id,db: Session = Depends(get_db)):
+def get_meeting_detail(meeting_id,db: Session = Depends(get_db)):
+    """
+    특정 모임의 상세 정보를 조회합니다.
+    
+    - **meeting_id**: 조회할 모임의 ID
+
+    - **name**: 모임의 이름
+    - **location**: 모임 장소
+    - **description**: 모임에 대한 설명 (Not Required)
+    - **meeting_time**: 모임 예정 시간
+    - **max_participants**: 모임에 참가 가능한 최대 인원
+    - **image_url**: 모임 이미지의 URL (Not Required)
+    - **is_active**: 모임이 활성 상태인지 여부 (Default = True)
+    
+    - **current_participants**: 현재 참가 중인 인원 (Default = 1)
+    - **korean_count**: 한국 참가자 수 (Default = 0)
+    - **foreign_count**: 외국 참가자 수 (Default = 0)
+    
+    - **creator**: 모임을 생성한 사용자 정보
+    
+    - **participants_status**: 한국인 모집 or 외국인 모집
+    
+    - **tags**: 모임과 연결된 태그 목록. 각 태그에는 다음 정보가 포함됩니다:
+        - **kr_name**: 태그의 한국어 이름 (Not Required)
+        - **en_name**: 태그의 영어 이름 (Not Required)
+        - **is_custom**: 고정값인지, 사용자가 생성한 값인지 (Default = False)
+
+    - **topics**: 모임과 연결된 주제 목록.
+
+    - **languages**: 모임과 연결된 언어 목록.
+    
+    반환값:
+        위의 세부 정보를 포함한 특정 모임의 상세 정보
+    """
     meeting = crud.meeting.get(db=db, id=meeting_id)
     return meeting
 
 
 @router.get("/meetings", response_model=List[MeetingResponse])
 def get_meeting(db: Session = Depends(get_db)):
+    """
+    모임 목록을 조회합니다.
+    
+    - **name**: 모임의 이름
+    - **location**: 모임 장소
+    - **description**: 모임에 대한 설명 (Not Required)
+    - **meeting_time**: 모임 예정 시간
+    - **max_participants**: 모임에 참가 가능한 최대 인원
+    - **image_url**: 모임 이미지의 URL (Not Required)
+    - **is_active**: 모임이 활성 상태인지 여부 (Default = True)
+    
+    - **current_participants**: 현재 참가 중인 인원 (Default = 1)
+    - **korean_count**: 한국 참가자 수 (Default = 0)
+    - **foreign_count**: 외국 참가자 수 (Default = 0)
+    
+    - **creator**: 모임을 생성한 사용자 정보
+    
+    - **participants_status**: 한국인 모집 or 외국인 모집
+    
+    - **tags**: 모임과 연결된 태그 목록. 각 태그에는 다음 정보가 포함됩니다:
+        - **kr_name**: 태그의 한국어 이름 (Not Required)
+        - **en_name**: 태그의 영어 이름 (Not Required)
+        - **is_custom**: 고정값인지, 사용자가 생성한 값인지 (Default = False)
+    
+    반환값:
+        위의 세부 정보를 포함한 모임 목록
+    """
     meeting = crud.meeting.get_multi(db=db)
     return meeting
 
