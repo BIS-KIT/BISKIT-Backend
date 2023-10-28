@@ -19,32 +19,32 @@ class CRUDUtility:
         if university_id:
             return db.query(University).filter(University.id == university_id).first()
 
-    def get_topic(db:Session, topic_id:int):
+    def get_topic(self,db:Session, topic_id:int):
         return db.query(Topic).filter(Topic.id == topic_id).first()
 
-    def get_tag(db:Session, tag_id:int):
+    def get_tag(self,db:Session, tag_id:int):
         return db.query(Tag).filter(Tag.id == tag_id).first()
 
-    def create_topic(db:Session, name:str):
+    def create_topic(self,db:Session, name:str):
         db_obj = Topic(name=name)
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)
         return db_obj
 
-    def create_tag(db:Session, name:str):
+    def create_tag(self,db:Session, name:str):
         db_obj = Tag(name=name)
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)
         return db_obj
 
-    def delete_topic(db:Session, topic_id:int):
+    def delete_topic(self,db:Session, topic_id:int):
         db_obj = db.query(Topic).filter(Topic.id == topic_id).delete()
         db.commit()
         return db_obj
 
-    def delete_tag(db:Session, tag_id:int):
+    def delete_tag(self,db:Session, tag_id:int):
         db_obj = db.query(Tag).filter(Tag.id == tag_id).delete()
         db.commit()
         return db_obj
