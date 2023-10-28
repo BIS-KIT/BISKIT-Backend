@@ -1,6 +1,12 @@
+import re
+from typing import Optional
+
 from sqlalchemy.orm import Session
 from models.utility import Language, Nationality, University, Topic, Tag
 
+
+def check_korean(text):
+    return bool(re.search('[\u3131-\u3163\uac00-\ud7a3]', text))
 
 class CRUDUtility:
     def get(
@@ -26,14 +32,20 @@ class CRUDUtility:
         return db.query(Tag).filter(Tag.id == tag_id).first()
 
     def create_topic(self,db:Session, name:str):
-        db_obj = Topic(name=name)
+        if check_korean(name):
+            db_obj = Topic(kr_name=name)
+        else:
+            db_obj = Topic(en_name=name)
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)
         return db_obj
 
     def create_tag(self,db:Session, name:str):
-        db_obj = Tag(name=name)
+        if check_korean(name):
+            db_obj = Tag(kr_name=name)
+        else:
+            db_obj = Tag(en_name=name)
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)
@@ -48,5 +60,54 @@ class CRUDUtility:
         db_obj = db.query(Tag).filter(Tag.id == tag_id).delete()
         db.commit()
         return db_obj
+    
+    def read_topics(self, db:Session, is_custom:Optional[bool]=None):
+        if is_custom is None:
+            return db.query(Topic).all()
+        elif is_custom:
+            return db.query(Topic).filter(Topic.is_custom == True).all()
+        else:
+            return db.query(Topic).filter(Topic.is_custom == False).all()
+        
+    def read_tags(self, db:Session, is_custom:Optional[bool]=None):
+        if is_custom is None:
+            return db.query(Tag).all()
+        elif is_custom:
+            return db.query(Tag).filter(Tag.is_custom == True).all()
+        else:
+            return db.query(Tag).filter(Tag.is_custom == False).all()
+
+    def create_fix_items(self, db:Session):
+        tag_fixs_mapping = {
+            "영어 못해도 괜찮아요": "It's okay if you can't speak English",
+            "혼자와도 괜찮아요": "It's okay to come alone",
+            "늦잠가능": "Sleeping in is okay",
+            "한국어 못해도 괜찮아요": "It's okay if you can't speak Korean",
+            "비건": "Vegan",
+            "여자만": "Only for women",
+            "남자만": "Only for men"
+        }
+
+        topic_fixs_mapping = {
+            "식사": "Meal",
+            "카페": "Cafe",
+            "액티비티": "Activity",
+            "언어교환": "Language Exchange",
+            "스터디": "Study",
+            "문화/예술": "Culture/Art",
+            "취미": "Hobby",
+            "여행": "Travel",
+            "반려동물": "Pets"
+        }
+
+        for kr, en in tag_fixs_mapping.items():
+            tag = Tag(kr_name=kr, en_name=en, is_custom=False)
+            db.add(tag)
+        
+        for kr, en in topic_fixs_mapping.items():
+            topic = Topic(kr_name=kr, en_name=en, is_custom=False)
+            db.add(topic)
+
+        db.commit()
 
 utility = CRUDUtility()

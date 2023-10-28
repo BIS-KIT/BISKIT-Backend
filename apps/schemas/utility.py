@@ -32,14 +32,16 @@ class NationalityBase(CoreSchema):
         )
 
 class TopicBase(BaseModel):
-    
-    name : Optional[str] = None
-    is_costom : Optional[bool] = False
+
+    kr_name : Optional[str] = None
+    en_name : Optional[str] = None
+    is_custom : Optional[bool] = False
     
 class TagBase(BaseModel):
     
-    name : Optional[str] = None
-    is_costom : Optional[bool] = False
+    kr_name : Optional[str] = None
+    en_name : Optional[str] = None
+    is_custom : Optional[bool] = False
 
 class TopicCreate(TopicBase):
     pass

@@ -32,10 +32,11 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreateUpdate, MeetingCreateUpdate]):
         user_nationalities = crud.user.get_nationality_by_user_id(db=db, user_id=data["creator_id"])
         codes = [un.nationality.code for un in user_nationalities]
         if codes:
-            print(codes)
             if "kr" in codes:
+                data.setdefault("korean_count", 0)
                 data["korean_count"] += 1
             else:
+                data.setdefault("foreign_count", 0)
                 data["foreign_count"] += 1
 
         new_meeting = super().create(db=db, obj_in=MeetingIn(**data))

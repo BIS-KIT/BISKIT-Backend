@@ -1,5 +1,5 @@
 from datetime import datetime
-from pydantic import BaseModel
+from pydantic import BaseModel, computed_field, Field
 from enum import Enum
 from typing import Optional, List, Union
 
@@ -22,13 +22,22 @@ class MeetingUserBase(BaseModel):
     meeting_id : int
 
 class MeetingTagBase(BaseModel):
-    pass
+    tag : Optional[TagResponse]
+
+    class Config:
+        orm_mode = True
 
 class MeetingTopicBase(BaseModel):
-    pass
+    topic : Optional[TopicResponse]
+
+    class Config:
+        orm_mode = True
 
 class MeetingLanguageBase(BaseModel):
-    pass
+    language : Optional[LanguageBase]
+
+    class Config:
+        orm_mode = True
 
 class MeetingCountBase(BaseModel):
     current_participants : Optional[int] = 1
@@ -38,7 +47,7 @@ class MeetingCountBase(BaseModel):
 class MeetingCountCreateUpdate(MeetingCountBase):
     pass
 
-class MeetingCreateUpdate(MeetingBase, MeetingCountBase):
+class MeetingCreateUpdate(MeetingBase):
 
     custom_tags : Optional[List[str]]= []
     custom_topics : Optional[List[str]]= []
@@ -67,14 +76,33 @@ class MeetingResponse(CoreSchema,MeetingBase, MeetingCountBase):
 
     creator: Optional[UserSimpleResponse] = None
 
-    meeting_tags : Optional[List[TagResponse]] = None
-    meeting_topics : Optional[List[TopicResponse]] = None
-    meeting_languages : Optional[List[LanguageBase]] = None
+    meeting_tags : Optional[List[MeetingTagBase]] = Field(...,exclude=True)
+    meeting_topics : Optional[List[MeetingTopicBase]] = Field(...,exclude=True)
+    meeting_languages : Optional[List[MeetingLanguageBase]] = Field(...,exclude=True)
 
     participants_status : Optional[str] = None
 
+
+    @computed_field
+    @property
+    def tags(self) -> List[TagResponse]:
+        return [meeting_tag.tag for meeting_tag in  self.meeting_tags]
+
     class Config:
         orm_mode=True
+
+class MeetingDetailResponse(MeetingResponse):
+
+    @computed_field
+    @property
+    def topics(self) -> List[TopicResponse]:
+        return [meeting_topic.topic for meeting_topic in  self.meeting_topics]
+
+
+    @computed_field
+    @property
+    def languages(self) -> List[TopicResponse]:
+        return [meeting_language.language for meeting_language in  self.meeting_languages]
 
 class MeetingUserResponse(CoreSchema, MeetingUserBase):
     class Config:

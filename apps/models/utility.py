@@ -20,8 +20,6 @@ class Language(ModelBase):
     kr_name = Column(String)
     en_name = Column(String)
 
-
-
 class University(ModelBase):
     kr_name = Column(String)
     en_name = Column(String)
@@ -29,10 +27,12 @@ class University(ModelBase):
 
 class Tag(ModelBase):  
 
-    name = Column(String) 
-    is_costom = Column(Boolean)
+    kr_name = Column(String, nullable=True)
+    en_name = Column(String, nullable=True)
+    is_custom = Column(Boolean, default=False)
 
 class Topic(ModelBase):
 
-    name = Column(String)
-    is_costom = Column(Boolean)
+    kr_name = Column(String, nullable=True)
+    en_name = Column(String, nullable=True)
+    is_custom = Column(Boolean, default=False)

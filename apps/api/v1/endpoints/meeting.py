@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 import crud
 from database.session import get_db
-from schemas.meeting import MeetingResponse, MeetingCreateUpdate
+from schemas.meeting import MeetingResponse, MeetingCreateUpdate,MeetingDetailResponse
 
 router = APIRouter()
 
@@ -37,7 +37,7 @@ def create_meeting(obj_in:MeetingCreateUpdate ,db: Session = Depends(get_db)):
     return meeting
 
 
-@router.get("/meeting/{meeting_id}", response_model=MeetingResponse)
+@router.get("/meeting/{meeting_id}", response_model=MeetingDetailResponse)
 def get_meeting(meeting_id,db: Session = Depends(get_db)):
     meeting = crud.meeting.get(db=db, id=meeting_id)
     return meeting
