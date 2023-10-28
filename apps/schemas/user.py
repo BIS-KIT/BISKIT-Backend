@@ -230,13 +230,22 @@ class UserResponse(BaseModel):
     is_active: bool = None
     is_admin: bool = None
     sns_type: Optional[str] = None
-    sns_id: Optional[str] = None
+    # sns_id: Optional[str] = None
     fcm_token: Optional[str] = None
 
     profile: Optional[ProfileResponse] = None
     consents: Optional[List[ConsentResponse]] = None
     user_university: Optional[List[UserUniversityBase]] = None
     user_nationality: Optional[List[UserNationalityBase]] = None
+
+    class Config:
+        orm_mode = True
+
+class UserSimpleResponse(CoreSchema):
+    email: Optional[EmailStr]
+    name: Optional[str]
+    birth: Optional[date]
+    gender: Optional[str]
 
     class Config:
         orm_mode = True

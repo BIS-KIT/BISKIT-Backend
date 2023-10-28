@@ -5,7 +5,7 @@ from jinja2 import Environment, FileSystemLoader
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from passlib.context import CryptContext
 
 from log import log_error
@@ -370,6 +370,17 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
 
     def is_superuser(self, user: User) -> bool:
         return user.is_superuser
+
+    def get_nationality_by_user_id(self,db: Session, user_id: int) -> List[UserNationality]:
+        
+        user_nationalities = (
+            db.query(UserNationality)
+            .options(joinedload(UserNationality.nationality)) # Nationality를 join하여 로드
+            .filter(UserNationality.user_id == user_id)
+            .all()
+        )
+        
+        return user_nationalities
 
 
 user = CRUDUser(User)

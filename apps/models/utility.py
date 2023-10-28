@@ -15,16 +15,24 @@ class Nationality(ModelBase):
     en_name = Column(String)
     code = Column(String)
 
-    @validates("code")
-    def convert_lowercase(self, key, value):
-        return value.lower()
-
 
 class Language(ModelBase):
     kr_name = Column(String)
     en_name = Column(String)
 
-
 class University(ModelBase):
     kr_name = Column(String)
     en_name = Column(String)
+
+
+class Tag(ModelBase):  
+
+    kr_name = Column(String, nullable=True)
+    en_name = Column(String, nullable=True)
+    is_custom = Column(Boolean, default=False)
+
+class Topic(ModelBase):
+
+    kr_name = Column(String, nullable=True)
+    en_name = Column(String, nullable=True)
+    is_custom = Column(Boolean, default=False)
