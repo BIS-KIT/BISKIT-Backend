@@ -30,7 +30,9 @@ class University(ModelBase):
 class Tag(ModelBase):  
 
     name = Column(String) 
+    is_costom = Column(Boolean)
 
 class Topic(ModelBase):
 
     name = Column(String)
+    is_costom = Column(Boolean)

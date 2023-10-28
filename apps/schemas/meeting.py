@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import datetime
 from pydantic import BaseModel
 from enum import Enum
 from typing import Optional, List, Union
@@ -10,11 +10,11 @@ from schemas.user import UserSimpleResponse
 class MeetingBase(BaseModel):
     name : Optional[str]
     location : Optional[str]
-    description : Optional[str]
-    meeting_time : Optional[date]
+    description : Optional[str] = None
+    meeting_time : Optional[datetime]
     max_participants : Optional[int]
 
-    image_url : Optional[str]
+    image_url : Optional[str] = None
     is_active : Optional[bool] = True
 
 class MeetingUserBase(BaseModel):
@@ -39,13 +39,21 @@ class MeetingCountCreateUpdate(MeetingCountBase):
     pass
 
 class MeetingCreateUpdate(MeetingBase, MeetingCountBase):
+
+    custom_tags : Optional[List[str]]= []
+    custom_topics : Optional[List[str]]= []
+
     creator_id : Optional[int]
-    tag_ids : Optional[List[int]]
-    topic_ids : Optional[List[int]]
-    language_ids : Optional[List[int]]
+    tag_ids : Optional[List[int]]= []
+    topic_ids : Optional[List[int]]= []
+    language_ids : Optional[List[int]]= []
+
+class MeetingIn(MeetingBase, MeetingCountBase):
+    creator_id : Optional[int]
+    pass
 
 class MeetingUserCreate(BaseModel):
-    Meeting_id : int
+    meeting_id : int
     user_id : int
 
 class MeetingItemCreate(BaseModel):
@@ -57,13 +65,13 @@ class MeetingItemCreate(BaseModel):
 
 class MeetingResponse(CoreSchema,MeetingBase, MeetingCountBase):
 
-    creator: UserSimpleResponse
+    creator: Optional[UserSimpleResponse] = None
 
-    meeting_tags : Optional[List[TagResponse]]
-    meeting_topics : Optional[List[TopicResponse]]
-    meeting_languages : Optional[List[LanguageBase]]
+    meeting_tags : Optional[List[TagResponse]] = None
+    meeting_topics : Optional[List[TopicResponse]] = None
+    meeting_languages : Optional[List[LanguageBase]] = None
 
-    participants_status : Optional[str]
+    participants_status : Optional[str] = None
 
     class Config:
         orm_mode=True

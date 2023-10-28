@@ -9,8 +9,8 @@ class Meeting(ModelBase):
     location = Column(String,nullable=True)
     description = Column(String,nullable=True)
     meeting_time = Column(DateTime, nullable=True)
-    max_participants = Column(String)
-    current_participants = Column(String,nullable=True)
+    max_participants = Column(Integer)
+    current_participants = Column(Integer,nullable=True)
     korean_count = Column(Integer, default=0) 
     foreign_count = Column(Integer, default=0)
 
@@ -36,8 +36,8 @@ class Meeting(ModelBase):
 
 
 class MeetingUser(ModelBase):
-    user_id = Column(Integer, ForeignKey('user.id'), primary_key=True)
-    meeting_id = Column(Integer, ForeignKey('meeting.id'), primary_key=True)
+    user_id = Column(Integer, ForeignKey('user.id'))
+    meeting_id = Column(Integer, ForeignKey('meeting.id'))
     
     user = relationship("User", backref="meeting_users")
     meeting = relationship("Meeting", back_populates="meeting_users")
@@ -52,8 +52,8 @@ class MeetingLanguage(ModelBase):
 
 class MeetingTag(ModelBase):
     
-    meeting_id = Column(Integer, ForeignKey("meeting.id"), primary_key=True)
-    tag_id = Column(Integer, ForeignKey("tag.id"), primary_key=True)
+    meeting_id = Column(Integer, ForeignKey("meeting.id"))
+    tag_id = Column(Integer, ForeignKey("tag.id"))
     
     meeting = relationship("Meeting", back_populates="meeting_tags")
     tag = relationship("Tag", backref="meeting_tags")
@@ -61,8 +61,8 @@ class MeetingTag(ModelBase):
 
 class MeetingTopic(ModelBase):
     
-    meeting_id = Column(Integer, ForeignKey("meeting.id"), primary_key=True)
-    topic_id = Column(Integer, ForeignKey("topic.id"), primary_key=True)
+    meeting_id = Column(Integer, ForeignKey("meeting.id"))
+    topic_id = Column(Integer, ForeignKey("topic.id"))
     
     meeting = relationship("Meeting", back_populates="meeting_topics")
     topic = relationship("Topic", backref="meeting_topics")

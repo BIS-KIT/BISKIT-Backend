@@ -7,20 +7,20 @@ from models.utility import Nationality
 
 
 class LanguageBase(CoreSchema):
-    kr_name: Optional[str]
-    en_name: Optional[str]
+    kr_name: Optional[str] = None
+    en_name: Optional[str] = None
 
 
 class UniversityBase(CoreSchema):
-    kr_name: Optional[str]
-    en_name: Optional[str]
+    kr_name: Optional[str] = None
+    en_name: Optional[str] = None
 
 
 class NationalityBase(CoreSchema):
-    kr_name: Optional[str]
-    en_name: Optional[str]
+    kr_name: Optional[str] = None
+    en_name: Optional[str] = None
 
-    code: Optional[str]
+    code: Optional[str] = None
 
     @classmethod
     def from_orm(cls, nationality: Nationality):
@@ -33,11 +33,13 @@ class NationalityBase(CoreSchema):
 
 class TopicBase(BaseModel):
     
-    name : Optional[str]
+    name : Optional[str] = None
+    is_costom : Optional[bool] = False
     
 class TagBase(BaseModel):
     
-    name : Optional[str]
+    name : Optional[str] = None
+    is_costom : Optional[bool] = False
 
 class TopicCreate(TopicBase):
     pass
