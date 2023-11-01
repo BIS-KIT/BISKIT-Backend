@@ -89,9 +89,9 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreateUpdate, MeetingCreateUpdate]):
         self,
         db: Session,
         order_by: str,
+        skip: int,
+        limit: int,
         is_active: bool = True,
-        skip: int = 0,
-        limit: int = 100,
     ) -> List[Meeting]:
         query = db.query(Meeting).filter(Meeting.is_active == is_active)
 
@@ -113,7 +113,9 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreateUpdate, MeetingCreateUpdate]):
             # 기본 정렬은 CREATED_TIME 기준으로
             query = query.order_by(desc(Meeting.created_time))
 
-        return query.offset(skip).limit(limit).all()
+        total_count = query.count()
+
+        return query.offset(skip).limit(limit).all(), total_count
 
     def join_meeting(db: Session, obj_in: MeetingUserCreate):
         # 이미 참가했는지 확인
