@@ -10,6 +10,7 @@ from schemas.meeting import (
     MeetingCreateUpdate,
     MeetingDetailResponse,
     MeetingOrderingEnum,
+    MeetingListResponse,
 )
 from log import log_error
 
@@ -94,10 +95,12 @@ def get_meeting_detail(meeting_id, db: Session = Depends(get_db)):
     return meeting
 
 
-@router.get("/meetings", response_model=List[MeetingResponse])
+@router.get("/meetings", response_model=MeetingListResponse)
 def get_meeting(
     db: Session = Depends(get_db),
     order_by: MeetingOrderingEnum = MeetingOrderingEnum.CREATED_TIME,
+    skip: int = 0,
+    limit: int = 10,
 ):
     """
     모임 목록을 조회합니다.
@@ -131,8 +134,10 @@ def get_meeting(
     반환값:
         위의 세부 정보를 포함한 모임 목록
     """
-    meeting = crud.meeting.get_multi(db=db, order_by=order_by)
-    return meeting
+    meetings, total_count = crud.meeting.get_multi(
+        db=db, order_by=order_by, skip=skip, limit=limit
+    )
+    return {"meetings": meetings, "total_count": total_count}
 
 
 @router.get("/fix-item")
