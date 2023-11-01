@@ -22,6 +22,7 @@ class MeetingBase(BaseModel):
     max_participants: Optional[int]
 
     chat_id: Optional[str] = None
+    place_url: Optional[str] = None
     x_coord: Optional[str] = None
     y_coord: Optional[str] = None
 

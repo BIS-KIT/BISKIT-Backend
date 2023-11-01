@@ -16,6 +16,7 @@ class Meeting(ModelBase):
     foreign_count = Column(Integer, default=0)
 
     chat_id = Column(String, nullable=True)
+    place_url = Column(String, nullable=True)
     x_coord = Column(String, nullable=True)
     y_coord = Column(String, nullable=True)
 
