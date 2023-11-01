@@ -21,6 +21,10 @@ class MeetingBase(BaseModel):
     meeting_time: Optional[datetime]
     max_participants: Optional[int]
 
+    chat_id: Optional[str] = None
+    x_coord: Optional[str] = None
+    y_coord: Optional[str] = None
+
     image_url: Optional[str] = None
     is_active: Optional[bool] = True
 
@@ -105,6 +109,11 @@ class MeetingResponse(CoreSchema, MeetingBase, MeetingCountBase):
 
     class Config:
         orm_mode = True
+
+
+class MeetingListResponse(BaseModel):
+    total_count: int
+    meetings: List[MeetingResponse]
 
 
 class MeetingDetailResponse(MeetingResponse):
