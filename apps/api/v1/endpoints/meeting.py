@@ -1,6 +1,6 @@
 from typing import Any, List, Optional, Dict
 
-from fastapi import APIRouter, Body, Depends, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 import crud
@@ -11,6 +11,7 @@ from schemas.meeting import (
     MeetingDetailResponse,
     MeetingOrderingEnum,
     MeetingListResponse,
+    TimeFilterEnum,
 )
 from log import log_error
 
@@ -101,6 +102,9 @@ def get_meeting(
     order_by: MeetingOrderingEnum = MeetingOrderingEnum.CREATED_TIME,
     skip: int = 0,
     limit: int = 10,
+    tags_ids: List[int] = Query(None),
+    topics_ids: List[int] = Query(None),
+    time_filters: List[str] = Query(None),
 ):
     """
     모임 목록을 조회합니다.
@@ -131,11 +135,34 @@ def get_meeting(
         - **MEETING_TIME**: 모임 일시 날짜 순 정렬
         - **DEADLINE_SOON**: 마감임박순 정렬
 
+    - **filtering**: 아래 string으로 요청 해주세요
+    - ex) /meetings?order_by=created_time&skip=0&limit=10&time_filters=NEXT_WEEK&time_filters=AFTERNOON
+        - **TODAY**
+        - **TOMORROW**
+        - **THIS_WEEK**
+        - **NEXT_WEEK**
+        - **MORNING**
+        - **AFTERNOON**
+        - **EVENING**
+        - **MONDAY**
+        - **TUESDAY**
+        - **WEDNESDAY**
+        - **THURSDAY**
+        - **FRIDAY**
+        - **SATURDAY**
+        - **SUNDAY**
+
     반환값:
         위의 세부 정보를 포함한 모임 목록
     """
     meetings, total_count = crud.meeting.get_multi(
-        db=db, order_by=order_by, skip=skip, limit=limit
+        db=db,
+        order_by=order_by,
+        skip=skip,
+        limit=limit,
+        tags_ids=tags_ids,
+        topics_ids=topics_ids,
+        time_filters=time_filters,
     )
     return {"meetings": meetings, "total_count": total_count}
 

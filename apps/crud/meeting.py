@@ -1,6 +1,7 @@
 from typing import Any, Dict, Optional, Union, List
+from datetime import datetime, timedelta
 
-from sqlalchemy import desc, asc, func, extract
+from sqlalchemy import desc, asc, func, extract, and_, or_
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 
@@ -13,13 +14,84 @@ from models.meeting import (
     MeetingTopic,
     MeetingUser,
 )
+from models.utility import Tag, Topic
 from schemas.meeting import (
     MeetingCreateUpdate,
     MeetingItemCreate,
     MeetingUserCreate,
     MeetingIn,
     MeetingOrderingEnum,
+    TimeFilterEnum,
 )
+
+
+def check_time_conditions(time_filters: TimeFilterEnum):
+    time_conditions = []
+
+    today = datetime.today()
+
+    if TimeFilterEnum.TODAY in time_filters:
+        time_conditions.append(
+            Meeting.meeting_time.between(today, today + timedelta(days=1))
+        )
+
+    if TimeFilterEnum.TOMORROW in time_filters:
+        tomorrow = today + timedelta(days=1)
+        time_conditions.append(
+            Meeting.meeting_time.between(tomorrow, tomorrow + timedelta(days=1))
+        )
+
+    if TimeFilterEnum.THIS_WEEK in time_filters:
+        # Assuming the week starts on Monday
+        start_of_week = today - timedelta(days=today.weekday())
+        end_of_week = start_of_week + timedelta(days=7)
+        time_conditions.append(Meeting.meeting_time.between(start_of_week, end_of_week))
+
+    if TimeFilterEnum.NEXT_WEEK in time_filters:
+        # Assuming the week starts on Monday
+        start_of_next_week = today + timedelta(days=7 - today.weekday())
+        end_of_next_week = start_of_next_week + timedelta(days=7)
+        time_conditions.append(
+            Meeting.meeting_time.between(start_of_next_week, end_of_next_week)
+        )
+
+    # 요일별 필터링
+    if TimeFilterEnum.MONDAY in time_filters:
+        time_conditions.append(extract("dow", Meeting.meeting_time) == 1)  # 1은 월요일
+
+    if TimeFilterEnum.TUESDAY in time_filters:
+        time_conditions.append(extract("dow", Meeting.meeting_time) == 2)  # 2는 화요일
+
+    if TimeFilterEnum.WEDNESDAY in time_filters:
+        time_conditions.append(extract("dow", Meeting.meeting_time) == 3)  # 3은 수요일
+
+    if TimeFilterEnum.THURSDAY in time_filters:
+        time_conditions.append(extract("dow", Meeting.meeting_time) == 4)  # 4는 목요일
+
+    if TimeFilterEnum.FRIDAY in time_filters:
+        time_conditions.append(extract("dow", Meeting.meeting_time) == 5)  # 5는 금요일
+
+    if TimeFilterEnum.SATURDAY in time_filters:
+        time_conditions.append(extract("dow", Meeting.meeting_time) == 6)  # 6은 토요일
+
+    if TimeFilterEnum.SUNDAY in time_filters:
+        time_conditions.append(extract("dow", Meeting.meeting_time) == 0)  # 0은 일요일
+
+    # Morning, Afternoon, Evening 조건 추가
+    if TimeFilterEnum.MORNING in time_filters:
+        time_conditions.append(extract("hour", Meeting.meeting_time) < 12)
+
+    if TimeFilterEnum.AFTERNOON in time_filters:
+        time_conditions.append(
+            and_(
+                extract("hour", Meeting.meeting_time) >= 12,
+                extract("hour", Meeting.meeting_time) < 18,
+            )
+        )
+
+    if TimeFilterEnum.EVENING in time_filters:
+        time_conditions.append(extract("hour", Meeting.meeting_time) >= 18)
+    return time_conditions
 
 
 class CURDMeeting(CRUDBase[Meeting, MeetingCreateUpdate, MeetingCreateUpdate]):
@@ -85,6 +157,16 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreateUpdate, MeetingCreateUpdate]):
 
         db.commit()
 
+    def filter_by_tags(self, query, tags_ids: Optional[List[int]]):
+        return query.join(MeetingTag).join(Tag).filter(Tag.id.in_(tags_ids))
+
+    def filter_by_topics(self, query, topics_ids: Optional[List[int]]):
+        return query.join(MeetingTopic).join(Topic).filter(Topic.id.in_(topics_ids))
+
+    def filter_by_time(self, query, time_filters: Optional[List[TimeFilterEnum]]):
+        time_conditions = check_time_conditions(time_filters)
+        return query.filter(and_(*time_conditions))
+
     def get_multi(
         self,
         db: Session,
@@ -92,8 +174,20 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreateUpdate, MeetingCreateUpdate]):
         skip: int,
         limit: int,
         is_active: bool = True,
+        tags_ids: Optional[List[int]] = None,
+        topics_ids: Optional[List[int]] = None,
+        time_filters: Optional[List[str]] = None,
     ) -> List[Meeting]:
         query = db.query(Meeting).filter(Meeting.is_active == is_active)
+
+        if tags_ids:
+            query = self.filter_by_tags(query, tags_ids)
+
+        if topics_ids:
+            query = self.filter_by_topics(query, topics_ids)
+
+        if time_filters:
+            query = self.filter_by_time(query, time_filters)
 
         if order_by == MeetingOrderingEnum.CREATED_TIME:
             query = query.order_by(desc(Meeting.created_time))
@@ -110,7 +204,6 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreateUpdate, MeetingCreateUpdate]):
             )
             query = query.order_by(time_difference_seconds)
         else:
-            # 기본 정렬은 CREATED_TIME 기준으로
             query = query.order_by(desc(Meeting.created_time))
 
         total_count = query.count()

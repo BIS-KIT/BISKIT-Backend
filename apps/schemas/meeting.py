@@ -14,6 +14,23 @@ class MeetingOrderingEnum(str, Enum):
     DEADLINE_SOON = "deadline_soon"
 
 
+class TimeFilterEnum(str, Enum):
+    TODAY = "TODAY"
+    TOMORROW = "TOMORROW"
+    THIS_WEEK = "THIS_WEEK"
+    NEXT_WEEK = "NEXT_WEEK"
+    MORNING = "MORNING"
+    AFTERNOON = "AFTERNOON"
+    EVENING = "EVENING"
+    MONDAY = "MONDAY"
+    TUESDAY = "TUESDAY"
+    WEDNESDAY = "WEDNESDAY"
+    THURSDAY = "THURSDAY"
+    FRIDAY = "FRIDAY"
+    SATURDAY = "SATURDAY"
+    SUNDAY = "SUNDAY"
+
+
 class MeetingBase(BaseModel):
     name: Optional[str]
     location: Optional[str]
