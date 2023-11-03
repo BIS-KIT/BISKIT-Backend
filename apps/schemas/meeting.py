@@ -5,7 +5,8 @@ from typing import Optional, List, Union
 
 from schemas.base import CoreSchema
 from schemas.utility import TagResponse, TopicResponse, LanguageBase
-from schemas.user import UserSimpleResponse
+from schemas.user import UserSimpleResponse, UserResponse
+from schemas.profile import AvailableLanguageResponse, ProfileBase
 
 
 class MeetingOrderingEnum(str, Enum):
@@ -48,7 +49,7 @@ class MeetingBase(BaseModel):
 
 
 class MeetingUserBase(BaseModel):
-    user_id: int
+    user: Optional[UserResponse]
     meeting_id: int
 
 
@@ -117,6 +118,7 @@ class MeetingResponse(CoreSchema, MeetingBase, MeetingCountBase):
     meeting_tags: Optional[List[MeetingTagBase]] = Field(..., exclude=True)
     meeting_topics: Optional[List[MeetingTopicBase]] = Field(..., exclude=True)
     meeting_languages: Optional[List[MeetingLanguageBase]] = Field(..., exclude=True)
+    meeting_users: Optional[List[MeetingUserBase]] = Field(..., exclude=True)
 
     participants_status: Optional[str] = None
 
@@ -134,6 +136,17 @@ class MeetingListResponse(BaseModel):
     meetings: List[MeetingResponse]
 
 
+class MeetingUserLanguage(CoreSchema):
+    level: Optional[str] = None
+    language: Optional[LanguageBase] = None
+    # profile: Optional[ProfileBase] = None
+
+    # @computed_field
+    # @property
+    # def user_id(self) -> Optional[int]:
+    #     return self.profile.user_id
+
+
 class MeetingDetailResponse(MeetingResponse):
     @computed_field
     @property
@@ -142,9 +155,16 @@ class MeetingDetailResponse(MeetingResponse):
 
     @computed_field
     @property
-    def languages(self) -> List[TopicResponse]:
+    def languages(self) -> List[LanguageBase]:
         return [
             meeting_language.language for meeting_language in self.meeting_languages
+        ]
+
+    @computed_field
+    @property
+    def users_languages(self) -> List[MeetingUserLanguage]:
+        return [
+            instance.user.profile.available_languages for instance in self.meeting_users
         ]
 
 
