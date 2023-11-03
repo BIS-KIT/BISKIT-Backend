@@ -1,6 +1,6 @@
 from typing import Any, List, Optional, Dict
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 import crud
@@ -12,6 +12,7 @@ from schemas.meeting import (
     MeetingOrderingEnum,
     MeetingListResponse,
     TimeFilterEnum,
+    MeetingUserCreate,
 )
 from log import log_error
 
@@ -21,7 +22,7 @@ router = APIRouter()
 @router.post("/meeting/create", response_model=MeetingResponse)
 def create_meeting(obj_in: MeetingCreateUpdate, db: Session = Depends(get_db)):
     """
-    # 새로운 모임 생성
+    새로운 모임 생성
 
     ## 아래에 설명된 어트리뷰트들만 신경쓰면됨
     ## creator_id는 차후 토큰 적용하게 되면 토큰에서 추출할 것.
@@ -45,11 +46,30 @@ def create_meeting(obj_in: MeetingCreateUpdate, db: Session = Depends(get_db)):
     """
     try:
         meeting = crud.meeting.create(db=db, obj_in=obj_in)
+    except HTTPException as e:
+        raise e
     except Exception as e:
         print(e)
         log_error(e)
         raise HTTPException(status_code=500)
     return meeting
+
+
+@router.post("/meeting/join", status_code=status.HTTP_201_CREATED)
+def join_meeting(obj_in: MeetingUserCreate, db: Session = Depends(get_db)):
+    """
+    모임 참가
+    (user_id는 차후 token에서 추출할것)
+    """
+    try:
+        meeting = crud.meeting.join_meeting(db=db, obj_in=obj_in)
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        print(e)
+        log_error(e)
+        raise HTTPException(status_code=500)
+    return status.HTTP_201_CREATED
 
 
 @router.get("/meeting/{meeting_id}", response_model=MeetingDetailResponse)
@@ -89,6 +109,8 @@ def get_meeting_detail(meeting_id, db: Session = Depends(get_db)):
     """
     try:
         meeting = crud.meeting.get(db=db, id=meeting_id)
+    except HTTPException as e:
+        raise e
     except Exception as e:
         print(e)
         log_error(e)
