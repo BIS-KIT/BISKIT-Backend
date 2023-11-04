@@ -1,9 +1,9 @@
-from typing import Any, Dict, Optional, Union
-import os, random, string, boto3
+from typing import Any, Dict, Optional, Union, List
+import os, random, string, boto3, re
 from botocore.exceptions import NoCredentialsError
 
 from sqlalchemy.orm import Session
-from fastapi import UploadFile
+from fastapi import UploadFile, HTTPException
 
 from log import log_error
 from crud.base import CRUDBase
@@ -17,6 +17,7 @@ from schemas.profile import (
     StudentVerificationCreate,
     StudentVerificationUpdate,
     StudentVerificationBase,
+    ProfileRegister,
 )
 
 
@@ -170,7 +171,7 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
     def get_by_user_id(self, db: Session, *, user_id: str) -> Optional[Profile]:
         return db.query(Profile).filter(Profile.user_id == user_id).first()
 
-    def create(self, db: Session, *, obj_in: ProfileCreate) -> Profile:
+    def create(self, db: Session, *, obj_in: ProfileRegister, user_id: int) -> Profile:
         """
         Create a new user.
 
@@ -181,14 +182,54 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
         Returns:
             Created User instance.
         """
-        if not obj_in.user_id:
-            raise ValueError("There is no user_id")
 
-        db_obj = Profile(**obj_in.dict())
-        db.add(db_obj)
-        db.commit()
-        db.refresh(db_obj)
-        return db_obj
+        available_languages: List[AvailableLanguageCreate] = obj_in.available_languages
+        Introductions: List[IntroductionCreate] = obj_in.introductions
+        student_card = obj_in.student_card
+        print(available_languages, Introductions, student_card)
+        try:
+            profile_obj = Profile(
+                nick_name=obj_in.nick_name,
+                profile_photo=obj_in.profile_photo,
+                user_id=user_id,
+            )
+            db.add(profile_obj)
+            db.flush()
+
+            if available_languages:
+                for ava_lang in available_languages:
+                    ava_lan_obj = AvailableLanguage(
+                        level=ava_lang.level,
+                        language_id=ava_lang.language_id,
+                        profile_id=profile_obj.id,
+                    )
+                    db.add(ava_lan_obj)
+
+            if Introductions:
+                for intro in Introductions:
+                    intro_obj = Introduction(
+                        keyword=intro.keyword,
+                        context=intro.context,
+                        profile_id=profile_obj.id,
+                    )
+                    db.add(intro_obj)
+
+            if student_card:
+                student_card_obj = StudentVerification(
+                    student_card=student_card.student_card,
+                    verification_status=student_card.verification_status,
+                    profile_id=profile_obj.id,
+                )
+                db.add(student_card_obj)
+
+            db.commit()
+
+        except Exception as e:
+            db.rollback()
+            log_error(e)
+            raise e
+        db.refresh(profile_obj)
+        return profile_obj
 
     def update(
         self,
