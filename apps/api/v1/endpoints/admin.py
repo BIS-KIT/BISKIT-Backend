@@ -4,7 +4,7 @@ from fastapi.responses import RedirectResponse
 
 import crud
 from database.session import get_db
-from schemas.profile import StudentVerificationUpdate, VerificationStatus
+from schemas.profile import StudentVerificationUpdate, ReultStatusEnum
 
 router = APIRouter()
 
@@ -32,11 +32,11 @@ def approve_varification(
 
     if action == "approve":
         obj_in = StudentVerificationUpdate(
-            verification_status=VerificationStatus.VERIFIED.value
+            verification_status=ReultStatusEnum.APPROVE.value
         )
     elif action == "rejected":
         obj_in = StudentVerificationUpdate(
-            verification_status=VerificationStatus.REJECTED.value
+            verification_status=ReultStatusEnum.REJECTED.value
         )
     else:
         raise HTTPException(status_code=400, detail="Invalid action")
