@@ -80,7 +80,7 @@ class ProfilePhoto(BaseModel):
 class AvailableLanguageBase(CoreSchema):
     level: Optional[str] = None
     language: Optional[LanguageBase] = None
-    profile_id: Optional[int] = None
+    # profile_id: Optional[int] = None
 
 
 class AvailableLanguageCreate(BaseModel):

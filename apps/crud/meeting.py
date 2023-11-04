@@ -210,7 +210,7 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreateUpdate, MeetingCreateUpdate]):
 
         return query.offset(skip).limit(limit).all(), total_count
 
-    def join_meeting(db: Session, obj_in: MeetingUserCreate):
+    def join_meeting(self, db: Session, obj_in: MeetingUserCreate):
         # 이미 참가했는지 확인
         user_id = obj_in.user_id
         meeting_id = obj_in.meeting_id
