@@ -1,37 +1,18 @@
 from datetime import date
 from pydantic import EmailStr, BaseModel
-from enum import Enum
+
 from typing import Optional, List, Union
 from fastapi import UploadFile
 
 from schemas.base import CoreSchema
 from schemas.utility import LanguageBase
-
-
-class genderEum(str, Enum):
-    MALE = "male"
-    FEMALE = "female"
-
-
-class LanguageLevel(Enum):
-    BEGINNER = "초보"
-    BASIC = "기초"
-    INTERMEDIATE = "중급"
-    ADVANCED = "고급"
-    PROFICIENT = "능숙"
-
-
-class VerificationStatus(str, Enum):
-    PENDING = "pending"
-    VERIFIED = "verified"
-    REJECTED = "rejected"
-    UNVERIFIED = "unverified"
+from schemas.enum import ReultStatusEnum
 
 
 class StudentVerificationBase(CoreSchema):
     profile_id: Optional[int] = None
     student_card: Optional[Union[str, UploadFile]] = None
-    verification_status: Optional[str] = VerificationStatus.UNVERIFIED.value
+    verification_status: Optional[str] = ReultStatusEnum.UNVERIFIED.value
 
     class Config:
         orm_mode = True
@@ -40,7 +21,7 @@ class StudentVerificationBase(CoreSchema):
 class StudentVerificationReponse(BaseModel):
     id: Optional[int] = None
     student_card: Optional[Union[str, UploadFile]] = None
-    verification_status: str = VerificationStatus.UNVERIFIED.value
+    verification_status: str = ReultStatusEnum.UNVERIFIED.value
 
     class Config:
         orm_mode = True
@@ -49,16 +30,16 @@ class StudentVerificationReponse(BaseModel):
 class StudentVerificationCreate(BaseModel):
     profile_id: Optional[int] = None
     student_card: Optional[Union[str, UploadFile]] = None
-    verification_status: str = VerificationStatus.UNVERIFIED.value
+    verification_status: str = ReultStatusEnum.UNVERIFIED.value
 
 
 class StudentVerificationIn(BaseModel):
     student_card: Optional[Union[str, UploadFile]] = None
-    verification_status: str = VerificationStatus.UNVERIFIED.value
+    verification_status: str = ReultStatusEnum.UNVERIFIED.value
 
 
 class StudentVerificationUpdate(BaseModel):
-    verification_status: Optional[str] = VerificationStatus.UNVERIFIED.value
+    verification_status: Optional[str] = ReultStatusEnum.UNVERIFIED.value
 
 
 class ProfileBase(CoreSchema):
@@ -164,7 +145,7 @@ class ProfileRegister(BaseModel):
     nick_name: Optional[str] = None
     profile_photo: Optional[str] = None
     available_languages: Optional[List[AvailableLanguageIn]]
-    introductions: Optional[List[IntroductionIn]]
+    introductions: Optional[List[IntroductionIn]] = None
     student_card: Optional[StudentVerificationIn] = None
 
 

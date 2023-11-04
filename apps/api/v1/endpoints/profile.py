@@ -486,15 +486,11 @@ def create_profile(
             - context : 자기소개
         - student_verification
             - student_card : file_path
-            - verification_status : 인증 상태 ["PENDING","VERIFIED","REJECTED","UNVERIFIED"]
+            - verification_status : 인증 상태 ["PENDING","APPROVE","REJECTED","UNVERIFIED"]
     """
     new_profile = None
     ava_list = []
     intro_list = []
-
-    available_language: List[AvailableLanguageCreate] = profile.available_languages
-    Introductions: List[IntroductionCreate] = profile.introductions
-    student_card = profile.student_card
 
     user = crud.user.get(db=db, id=user_id)
     if not user:
@@ -514,69 +510,17 @@ def create_profile(
     if not re.match("^[a-zA-Z0-9ㄱ-ㅎㅏ-ㅣ가-힣]{2,12}$", profile.nick_name):
         raise HTTPException(status_code=400, detail="Invalid nickname.")
 
-    if len(available_language) >= 5:
-        raise HTTPException(status_code=409, detail="Only up to 5 can be created.")
-
-    for ava_lang in available_language:
-        lang = crud.utility.get(db=db, language_id=ava_lang.language_id)
-
-        if not lang:
-            raise HTTPException(status_code=404, detail="Languag not found")
-
-    try:
-        obj_in = ProfileCreate(
-            nick_name=profile.nick_name,
-            profile_photo=profile.profile_photo,
-            user_id=user_id,
-        )
-        new_profile = crud.profile.create(db=db, obj_in=obj_in)
-    except Exception as e:
-        if new_profile:
-            crud.profile.remove(db=db, id=new_profile.id)
-        log_error(e)
-        raise HTTPException(status_code=500)
-
-    try:
+    available_language: List[AvailableLanguageCreate] = profile.available_languages
+    if available_language:
+        if len(available_language) >= 5:
+            raise HTTPException(status_code=409, detail="Only up to 5 can be created.")
         for ava_lang in available_language:
-            obj_in = AvailableLanguageCreate(
-                level=ava_lang.level,
-                language_id=ava_lang.language_id,
-                profile_id=new_profile.id,
-            )
-            new_ava = crud.profile.create_ava_lan(db=db, obj_in=obj_in)
-            ava_list.append(new_ava)
-    except Exception as e:
-        if available_language:
-            for ava in ava_list:
-                crud.profile.remove_ava_lan(db=db, id=ava.id)
-        log_error(e)
-        raise HTTPException(status_code=500)
+            lang = crud.utility.get(db=db, language_id=ava_lang.language_id)
 
-    try:
-        for intro in Introductions:
-            obj_in = IntroductionCreate(
-                keyword=intro.keyword, context=intro.context, profile_id=new_profile.id
-            )
-            new_introduction = crud.profile.create_introduction(db=db, obj_in=obj_in)
-            intro_list.append(new_introduction)
-    except Exception as e:
-        if available_language:
-            for ava in ava_list:
-                crud.profile.remove_ava_lan(db=db, id=ava.id)
-        log_error(e)
-        raise HTTPException(status_code=500)
-    if student_card:
-        try:
-            obj_in = StudentVerificationCreate(
-                student_card=student_card.student_card,
-                verification_status=student_card.verification_status,
-                profile_id=new_profile.id,
-            )
+            if not lang:
+                raise HTTPException(status_code=404, detail="Languag not found")
 
-            crud.profile.create_verification(db=db, obj_in=obj_in)
-        except Exception as e:
-            log_error(e)
-
+    new_profile = crud.profile.create(db=db, obj_in=profile, user_id=user_id)
     return new_profile
 
 

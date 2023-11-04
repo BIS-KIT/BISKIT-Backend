@@ -7,29 +7,7 @@ from schemas.base import CoreSchema
 from schemas.utility import TagResponse, TopicResponse, LanguageBase
 from schemas.user import UserSimpleResponse, UserResponse
 from schemas.profile import AvailableLanguageResponse, ProfileBase
-
-
-class MeetingOrderingEnum(str, Enum):
-    CREATED_TIME = "created_time"
-    MEETING_TIME = "meeting_time"
-    DEADLINE_SOON = "deadline_soon"
-
-
-class TimeFilterEnum(str, Enum):
-    TODAY = "TODAY"
-    TOMORROW = "TOMORROW"
-    THIS_WEEK = "THIS_WEEK"
-    NEXT_WEEK = "NEXT_WEEK"
-    MORNING = "MORNING"
-    AFTERNOON = "AFTERNOON"
-    EVENING = "EVENING"
-    MONDAY = "MONDAY"
-    TUESDAY = "TUESDAY"
-    WEDNESDAY = "WEDNESDAY"
-    THURSDAY = "THURSDAY"
-    FRIDAY = "FRIDAY"
-    SATURDAY = "SATURDAY"
-    SUNDAY = "SUNDAY"
+from schemas.enum import ReultStatusEnum, MeetingOrderingEnum, TimeFilterEnum
 
 
 class MeetingBase(BaseModel):
@@ -51,6 +29,7 @@ class MeetingBase(BaseModel):
 class MeetingUserBase(BaseModel):
     user: Optional[UserResponse]
     meeting_id: int
+    status: Optional[str]
 
 
 class MeetingTagBase(BaseModel):
@@ -147,6 +126,19 @@ class MeetingUserLanguage(CoreSchema):
     #     return self.profile.user_id
 
 
+class CommentBase(BaseModel):
+    content: Optional[str]
+
+    meeting_id: Optional[int]
+    creator_id: Optional[int]
+    parent_id: Optional[int] = None
+
+
+class CommentCreate(CommentBase):
+    class Config:
+        orm_mode = True
+
+
 class MeetingDetailResponse(MeetingResponse):
     @computed_field
     @property
@@ -164,7 +156,9 @@ class MeetingDetailResponse(MeetingResponse):
     @property
     def users_languages(self) -> List[MeetingUserLanguage]:
         return [
-            instance.user.profile.available_languages for instance in self.meeting_users
+            instance.user.profile.available_languages
+            for instance in self.meeting_users
+            if instance.status == ReultStatusEnum.APPROVE.value
         ]
 
 

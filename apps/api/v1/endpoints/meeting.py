@@ -13,6 +13,7 @@ from schemas.meeting import (
     MeetingListResponse,
     TimeFilterEnum,
     MeetingUserCreate,
+    MeetingUserResponse,
 )
 from log import log_error
 
@@ -55,14 +56,55 @@ def create_meeting(obj_in: MeetingCreateUpdate, db: Session = Depends(get_db)):
     return meeting
 
 
-@router.post("/meeting/join", status_code=status.HTTP_201_CREATED)
-def join_meeting(obj_in: MeetingUserCreate, db: Session = Depends(get_db)):
+@router.get("/meetings/{meeting_id}/requests", response_model=List[MeetingUserResponse])
+def get_meeting_requests(meeting_id: int, db: Session = Depends(get_db)):
     """
-    모임 참가
+    모임 참가 신청 리스트
+    """
+
+    return crud.meeting.get_requests(db=db, meeting_id=meeting_id)
+
+
+@router.post("/meeting/join/request")
+def join_meeting_request(obj_in: MeetingUserCreate, db: Session = Depends(get_db)):
+    """
+    모임 참가 요청
     (user_id는 차후 token에서 추출할것)
     """
     try:
-        meeting = crud.meeting.join_meeting(db=db, obj_in=obj_in)
+        meeting = crud.meeting.join_request(db=db, obj_in=obj_in)
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        print(e)
+        log_error(e)
+        raise HTTPException(status_code=500)
+    return status.HTTP_201_CREATED
+
+
+@router.post("/meeting/join/approve")
+def join_meeting_approve(obj_id: int, db: Session = Depends(get_db)):
+    """
+    모임 참가 요청 승인
+    """
+    try:
+        meeting = crud.meeting.join_request_approve(db=db, obj_id=obj_id)
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        print(e)
+        log_error(e)
+        raise HTTPException(status_code=500)
+    return status.HTTP_201_CREATED
+
+
+@router.post("/meeting/join/reject")
+def join_meeting_approve(obj_id: int, db: Session = Depends(get_db)):
+    """
+    모임 참가 요청 거절
+    """
+    try:
+        meeting = crud.meeting.join_request_reject(db=db, obj_id=obj_id)
     except HTTPException as e:
         raise e
     except Exception as e:
