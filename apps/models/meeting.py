@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Boolean
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.hybrid import hybrid_property
 
 from models.base import ModelBase
@@ -42,6 +42,8 @@ class Meeting(ModelBase):
 
 
 class MeetingUser(ModelBase):
+    status = Column(String, nullable=True)
+
     user_id = Column(Integer, ForeignKey("user.id"))
     meeting_id = Column(Integer, ForeignKey("meeting.id"))
 

@@ -20,9 +20,8 @@ from schemas.meeting import (
     MeetingItemCreate,
     MeetingUserCreate,
     MeetingIn,
-    MeetingOrderingEnum,
-    TimeFilterEnum,
 )
+from schemas.enum import MeetingOrderingEnum, TimeFilterEnum, ReultStatusEnum
 
 
 def check_time_conditions(time_filters: TimeFilterEnum):
@@ -210,39 +209,29 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreateUpdate, MeetingCreateUpdate]):
 
         return query.offset(skip).limit(limit).all(), total_count
 
-    def join_meeting(self, db: Session, obj_in: MeetingUserCreate):
-        # 이미 참가했는지 확인
-        user_id = obj_in.user_id
-        meeting_id = obj_in.meeting_id
-        exists = (
-            db.query(MeetingUser)
-            .filter(
-                MeetingUser.user_id == user_id, MeetingUser.meeting_id == meeting_id
-            )
-            .first()
-        )
-
-        if exists:
-            raise HTTPException(
-                status_code=400, detail="User already joined this meeting!"
-            )
-
+    def get_requests(self, db: Session, meeting_id: int) -> List[MeetingUser]:
         meeting = db.query(Meeting).filter(Meeting.id == meeting_id).first()
 
         if not meeting:
             raise HTTPException(status_code=400, detail="Meeting is not exists")
+        return db.query(MeetingUser).filter(MeetingUser.meeting_id == meeting_id).all()
 
-        # 참여 가능한 인원 수 확인
-        if meeting.current_participants >= meeting.max_participants:
-            raise HTTPException(status_code=400, detail="The meeting is already full!")
+    def join_request_approve(self, db: Session, obj_id: int):
+        join_request = db.query(MeetingUser).filter(MeetingUser.id == obj_id).first()
 
-        # Meeting에 User를 참가시킴
-        meeting_user = MeetingUser(user_id=user_id, meeting_id=meeting_id)
-        db.add(meeting_user)
+        if not join_request:
+            raise HTTPException(status_code=400, detail="Join Request not found")
+
+        join_request.status = ReultStatusEnum.APPROVE.value
 
         user_nationalities = crud.user.get_nationality_by_user_id(
-            db=db, user_id=user_id
+            db=db, user_id=join_request.user_id
         )
+
+        meeting = (
+            db.query(Meeting).filter(Meeting.id == join_request.meeting_id).first()
+        )
+
         codes = [un.nationality.code for un in user_nationalities]
         meeting.current_participants = meeting.current_participants + 1
         if codes:
@@ -250,8 +239,71 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreateUpdate, MeetingCreateUpdate]):
                 meeting.korean_count = meeting.korean_count + 1
             else:
                 meeting.foreign_count = meeting.foreign_count + 1
-
         db.commit()
+        return
+
+    def join_request_reject(self, db: Session, obj_id: int):
+        join_request = db.query(MeetingUser).filter(MeetingUser.id == obj_id).first()
+
+        if not join_request:
+            raise HTTPException(status_code=400, detail="Join Request not found")
+
+        join_request.status = ReultStatusEnum.REJECTED.value
+        db.commit()
+        return
+
+    def join_request(self, db: Session, obj_in: MeetingUserCreate):
+        # 이미 참가했는지 확인
+        user_id = obj_in.user_id
+        meeting_id = obj_in.meeting_id
+
+        try:
+            # atomic 유지하기 위해 transtaction 시작
+            db.begin()
+
+            meeting = db.query(Meeting).filter(Meeting.id == meeting_id).first()
+
+            if not meeting:
+                raise HTTPException(status_code=400, detail="Meeting is not exists")
+
+            # 참여 가능한 인원 수 확인
+            if meeting.current_participants >= meeting.max_participants:
+                raise HTTPException(
+                    status_code=400, detail="The meeting is already full!"
+                )
+
+            existing_request = (
+                db.query(MeetingUser)
+                .filter(
+                    MeetingUser.user_id == user_id,
+                    MeetingUser.meeting_id == meeting_id,
+                    MeetingUser.status.in_(
+                        [ReultStatusEnum.PENDING.value, ReultStatusEnum.APPROVE.value]
+                    ),
+                )
+                .first()
+            )
+
+            if existing_request:
+                raise HTTPException(
+                    status_code=400, detail="User already joined this meeting!"
+                )
+
+            meeting_user = MeetingUser(
+                user_id=user_id,
+                meeting_id=meeting_id,
+                status=ReultStatusEnum.PENDING.value,
+            )
+
+            db.add(meeting_user)
+            db.commit()
+        except HTTPException:
+            db.rollback()
+            raise
+        except Exception as e:
+            db.rollback()
+            raise HTTPException(status_code=500, detail=str(e))
+        return meeting_user
 
 
 meeting = CURDMeeting(Meeting)
