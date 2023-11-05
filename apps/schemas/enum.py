@@ -42,3 +42,9 @@ class TimeFilterEnum(str, Enum):
     FRIDAY = "FRIDAY"
     SATURDAY = "SATURDAY"
     SUNDAY = "SUNDAY"
+
+
+class CreatorNationalityEnum(str, Enum):
+    KOREAN = "KOREAN"
+    FOREIGNER = "FOREIGNER"
+    ALL = "ALL"

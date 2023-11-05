@@ -15,6 +15,7 @@ from schemas.meeting import (
     MeetingUserCreate,
     MeetingUserResponse,
 )
+from schemas.enum import CreatorNationalityEnum
 from log import log_error
 
 router = APIRouter()
@@ -146,6 +147,8 @@ def get_meeting_detail(meeting_id, db: Session = Depends(get_db)):
 
     - **languages**: 모임과 연결된 언어 목록.
 
+    - **users_languages** : 모임에 참가한 유저들의 언어 목록(level 포함)
+
     반환값:
         위의 세부 정보를 포함한 특정 모임의 상세 정보
     """
@@ -169,7 +172,8 @@ def get_meeting(
     tags_ids: List[int] = Query(None),
     topics_ids: List[int] = Query(None),
     time_filters: List[str] = Query(None),
-    is_count_only : bool = False
+    is_count_only: bool = False,
+    creator_nationality: CreatorNationalityEnum = CreatorNationalityEnum.ALL.value,
 ):
     """
     모임 목록을 조회합니다.
@@ -200,22 +204,29 @@ def get_meeting(
         - **MEETING_TIME**: 모임 일시 날짜 순 정렬
         - **DEADLINE_SOON**: 마감임박순 정렬
 
-    - **filtering**: 아래 string으로 요청 해주세요
-    - ex) /meetings?order_by=created_time&skip=0&limit=10&time_filters=NEXT_WEEK&time_filters=AFTERNOON
-        - **TODAY**
-        - **TOMORROW**
-        - **THIS_WEEK**
-        - **NEXT_WEEK**
-        - **MORNING**
-        - **AFTERNOON**
-        - **EVENING**
-        - **MONDAY**
-        - **TUESDAY**
-        - **WEDNESDAY**
-        - **THURSDAY**
-        - **FRIDAY**
-        - **SATURDAY**
-        - **SUNDAY**
+    - **time_filters**: 아래 string으로 요청 해주세요
+        - ex) /meetings?order_by=created_time&skip=0&limit=10&time_filters=NEXT_WEEK&time_filters=AFTERNOON
+            - **TODAY**
+            - **TOMORROW**
+            - **THIS_WEEK**
+            - **NEXT_WEEK**
+            - **MORNING**
+            - **AFTERNOON**
+            - **EVENING**
+            - **MONDAY**
+            - **TUESDAY**
+            - **WEDNESDAY**
+            - **THURSDAY**
+            - **FRIDAY**
+            - **SATURDAY**
+            - **SUNDAY**
+
+    - **is_count_only**
+        - True : count만 리턴
+        - False : Default
+
+    - **creator_nationality** : 주최자 국적
+        - "KOREAN", "FOREIGNER", "ALL"
 
     반환값:
         위의 세부 정보를 포함한 모임 목록
@@ -228,11 +239,11 @@ def get_meeting(
         tags_ids=tags_ids,
         topics_ids=topics_ids,
         time_filters=time_filters,
-        is_count_only=is_count_only
+        is_count_only=is_count_only,
+        creator_nationality=creator_nationality,
     )
 
     return {"meetings": meetings, "total_count": total_count}
-
 
 
 @router.get("/fix-item")
