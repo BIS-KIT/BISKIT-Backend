@@ -15,6 +15,7 @@ from schemas.meeting import (
     MeetingUserCreate,
     MeetingUserResponse,
 )
+from schemas.enum import CreatorNationalityEnum
 from log import log_error
 
 router = APIRouter()
@@ -169,7 +170,8 @@ def get_meeting(
     tags_ids: List[int] = Query(None),
     topics_ids: List[int] = Query(None),
     time_filters: List[str] = Query(None),
-    is_count_only : bool = False
+    is_count_only: bool = False,
+    creator_nationality: CreatorNationalityEnum = CreatorNationalityEnum.ALL.value,
 ):
     """
     모임 목록을 조회합니다.
@@ -228,11 +230,11 @@ def get_meeting(
         tags_ids=tags_ids,
         topics_ids=topics_ids,
         time_filters=time_filters,
-        is_count_only=is_count_only
+        is_count_only=is_count_only,
+        creator_nationality=creator_nationality,
     )
 
     return {"meetings": meetings, "total_count": total_count}
-
 
 
 @router.get("/fix-item")
