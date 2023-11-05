@@ -112,7 +112,7 @@ class MeetingResponse(CoreSchema, MeetingBase, MeetingCountBase):
 
 class MeetingListResponse(BaseModel):
     total_count: int
-    meetings: List[MeetingResponse]
+    meetings: Optional[List[MeetingResponse]] = []
 
 
 class MeetingUserLanguage(CoreSchema):

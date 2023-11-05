@@ -176,6 +176,7 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreateUpdate, MeetingCreateUpdate]):
         tags_ids: Optional[List[int]] = None,
         topics_ids: Optional[List[int]] = None,
         time_filters: Optional[List[str]] = None,
+        is_count_only : Optional[bool] = False
     ) -> List[Meeting]:
         query = db.query(Meeting).filter(Meeting.is_active == is_active)
 
@@ -206,6 +207,8 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreateUpdate, MeetingCreateUpdate]):
             query = query.order_by(desc(Meeting.created_time))
 
         total_count = query.count()
+        if is_count_only:
+            return [], total_count
 
         return query.offset(skip).limit(limit).all(), total_count
 
