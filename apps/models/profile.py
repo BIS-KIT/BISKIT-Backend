@@ -7,6 +7,7 @@ from models.base import ModelBase
 class Profile(ModelBase):
     profile_photo = Column(String, nullable=True)  # 이미지 URL 저장
     nick_name = Column(String)
+    context = Column(String, nullable=True)
 
     user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))
     user = relationship("User", back_populates="profile")
