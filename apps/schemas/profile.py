@@ -128,6 +128,25 @@ class IntroductCreateLanguage(BaseModel):
         orm_mode = True
 
 
+class ProfileUniversityBase(BaseModel):
+    department: Optional[str] = None
+    education_status: Optional[str] = None
+
+    class Meta:
+        orm_mode = True
+
+
+class ProfileUniversityUpdate(ProfileUniversityBase):
+    pass
+
+
+class ProfileUniversityResponse(ProfileUniversityBase):
+    university: Optional[UniversityBase] = None
+
+    class Meta:
+        orm_mode = True
+
+
 class ProfileResponse(BaseModel):
     id: int = None
     user_id: int
@@ -137,7 +156,7 @@ class ProfileResponse(BaseModel):
     available_languages: Optional[List[AvailableLanguageResponse]]
     introductions: Optional[List[IntroductionResponse]]
     student_verification: Optional[StudentVerificationReponse] = None
-    # user_university: Optional[ProfileUniversityResponse] = None
+    user_university: Optional[ProfileUniversityResponse] = None
 
     class Config:
         orm_mode = True
@@ -157,4 +176,4 @@ class ProfileUpdate(BaseModel):
     profile_photo: Optional[str] = None
     available_languages: Optional[List[AvailableLanguageIn]] = None
     introductions: Optional[List[IntroductionIn]] = None
-    # university_info: Optional[UniversityUpdate] = None
+    university_info: Optional[ProfileUniversityUpdate] = None
