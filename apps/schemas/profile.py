@@ -5,7 +5,7 @@ from typing import Optional, List, Union
 from fastapi import UploadFile
 
 from schemas.base import CoreSchema
-from schemas.utility import LanguageBase
+from schemas.utility import LanguageBase, UniversityBase
 from schemas.enum import ReultStatusEnum
 
 
@@ -132,10 +132,12 @@ class ProfileResponse(BaseModel):
     id: int = None
     user_id: int
     nick_name: Optional[str] = None
+    context: Optional[str] = None
     profile_photo: Optional[str] = None
     available_languages: Optional[List[AvailableLanguageResponse]]
     introductions: Optional[List[IntroductionResponse]]
     student_verification: Optional[StudentVerificationReponse] = None
+    # user_university: Optional[ProfileUniversityResponse] = None
 
     class Config:
         orm_mode = True
@@ -151,7 +153,8 @@ class ProfileRegister(BaseModel):
 
 class ProfileUpdate(BaseModel):
     nick_name: Optional[str] = None
+    context: Optional[str] = None
     profile_photo: Optional[str] = None
-    # available_languages: Optional[List[AvailableLanguageIn]] = None
-    # introductions: Optional[List[IntroductionIn]] = None
-    # student_card: Optional[StudentVerificationIn] = None
+    available_languages: Optional[List[AvailableLanguageIn]] = None
+    introductions: Optional[List[IntroductionIn]] = None
+    # university_info: Optional[UniversityUpdate] = None
