@@ -17,8 +17,8 @@ from models.user import (
     EmailCertification,
     Consent,
     UserNationality,
-    UserUniversity,
 )
+from models.profile import UserUniversity
 from schemas.user import (
     UserCreate,
     UserUpdate,
@@ -274,22 +274,19 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             .first()
         )
 
-    def get_by_birth(self, db: Session, name: str, birth:str):
+    def get_by_birth(self, db: Session, name: str, birth: str):
         return (
-            db.query(User)
-            .filter(User.name == name)
-            .filter(User.birth == birth)
-            .first()
+            db.query(User).filter(User.name == name).filter(User.birth == birth).first()
         )
 
     def update_fcm_token(self, db: Session, user_id: int, fcm_token: str):
         user = db.query(User).filter(User.id == user_id).first()
-        
+
         if not user:
             raise ValueError("User with given ID not found")
-        
+
         user.fcm_token = fcm_token
-        
+
         try:
             db.add(user)
             db.commit()
@@ -299,7 +296,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             raise
         finally:
             db.close()
-        
+
         return user
 
     def create(self, db: Session, *, obj_in: UserCreate) -> User:
@@ -371,15 +368,16 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
     def is_superuser(self, user: User) -> bool:
         return user.is_superuser
 
-    def get_nationality_by_user_id(self,db: Session, user_id: int) -> List[UserNationality]:
-        
+    def get_nationality_by_user_id(
+        self, db: Session, user_id: int
+    ) -> List[UserNationality]:
         user_nationalities = (
             db.query(UserNationality)
-            .options(joinedload(UserNationality.nationality)) # Nationality를 join하여 로드
+            .options(joinedload(UserNationality.nationality))  # Nationality를 join하여 로드
             .filter(UserNationality.user_id == user_id)
             .all()
         )
-        
+
         return user_nationalities
 
 

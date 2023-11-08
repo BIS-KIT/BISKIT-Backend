@@ -8,8 +8,13 @@ from fastapi import UploadFile, HTTPException
 from log import log_error
 from crud.base import CRUDBase
 from core.config import settings
-from models.profile import Profile, AvailableLanguage, Introduction, StudentVerification
-from models.user import User, UserUniversity
+from models.profile import (
+    Profile,
+    AvailableLanguage,
+    Introduction,
+    StudentVerification,
+    UserUniversity,
+)
 from schemas.profile import (
     ProfileCreate,
     ProfileUpdate,
@@ -17,10 +22,10 @@ from schemas.profile import (
     IntroductionCreate,
     StudentVerificationCreate,
     StudentVerificationUpdate,
-    StudentVerificationBase,
     ProfileRegister,
-    ProfileResponse,
-    ProfileUniversityResponse,
+    ProfileUniversityUpdate,
+    AvailableLanguageIn,
+    IntroductionIn,
 )
 from schemas.enum import ReultStatusEnum
 import crud
@@ -265,6 +270,11 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
                 )
                 db.add(student_card_obj)
 
+            user_universty = self.matching_useruniversity(db=db, user_id=user_id)
+            if user_universty:
+                user_universty.profile_id = profile_obj.id
+            else:
+                raise HTTPException(status_code=404, detail="UserUniversity not found")
             db.commit()
 
         except Exception as e:
@@ -293,21 +303,21 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
             Updated User instance.
         """
 
-        available_languages = obj_in.available_languages
-        introductions = obj_in.introductions
-        university_info = obj_in.university_info
+        available_languages: List[AvailableLanguageIn] = obj_in.available_languages
+        introductions: List[IntroductionIn] = obj_in.introductions
+        university_info: ProfileUniversityUpdate = obj_in.university_info
 
         # Update basic profile fields if provided
         if obj_in.nick_name is not None:
-            profile.nick_name = obj_in.nick_name
+            db_obj.nick_name = obj_in.nick_name
         if obj_in.profile_photo is not None:
-            profile.profile_photo = obj_in.profile_photo
+            db_obj.profile_photo = obj_in.profile_photo
         if obj_in.context is not None:
-            profile.context = obj_in.context
+            db_obj.context = obj_in.context
 
         if available_languages:
             existing_language_ids = {
-                lang.language_id for lang in profile.available_languages
+                lang.language_id for lang in db_obj.available_languages
             }
             new_languages = {
                 lang.language_id for lang in obj_in.available_languages or []
@@ -326,24 +336,24 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
                 else:
                     # Add the new language
                     self.create_ava_lan(
-                        db=db, obj_in=language_data, profile_id=profile.id
+                        db=db, obj_in=language_data, profile_id=db_obj.id
                     )
 
         if introductions:
-            existing_intros = {intro.keyword: intro for intro in profile.introductions}
+            existing_intros = {intro.keyword: intro for intro in db_obj.introductions}
             new_intros = {
                 intro_data.keyword: intro_data
                 for intro_data in obj_in.introductions or []
             }
 
             for keyword in existing_intros.keys() - new_intros.keys():
-                self.remove_introduction(db=db, keyword=keyword, profile_id=profile.id)
+                self.remove_introduction(db=db, keyword=keyword, profile_id=db_obj.id)
 
             for keyword, intro_data in new_intros.items():
                 if keyword in existing_intros:
                     # Update the existing introduction if context has changed
                     existing_intro = self.get_introduction(
-                        db=db, keyword=keyword, profile_id=profile.id
+                        db=db, keyword=keyword, profile_id=db_obj.id
                     )
                     if intro_data.context != existing_intro.context:
                         self.update_introduction(
@@ -352,16 +362,14 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
                 else:
                     # Add the new introduction
                     self.create_introduction(
-                        db=db, obj_in=intro_data, profile_id=profile.id
+                        db=db, obj_in=intro_data, profile_id=db_obj.id
                     )
 
-        # if university_info:
-        #     existing_unviersity = crud.user.get_university(
-        #         db=db, user_id=profile.user_id
-        #     )
-        #     crud.user.update_university(
-        #         db=db, db_obj=existing_unviersity, obj_in=university_info
-        #     )
+        if university_info:
+            existing_unviersity = self.get_user_university(db=db, profile_id=db_obj.id)
+            self.update_user_university(
+                db=db, db_obj=existing_unviersity, obj_in=university_info
+            )
 
         db.commit()
         db.refresh(profile)
@@ -412,6 +420,26 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
         db.commit()
         db.refresh(profile)
         return profile
+
+    def matching_useruniversity(self, db: Session, user_id: int) -> UserUniversity:
+        obj = db.query(UserUniversity).filter(UserUniversity.user_id == user_id).first()
+        return obj
+
+    def get_user_university(self, db: Session, profile_id: int):
+        return (
+            db.query(UserUniversity)
+            .filter(UserUniversity.profile_id == profile_id)
+            .first()
+        )
+
+    def update_user_university(
+        self, db: Session, db_obj: UserUniversity, obj_in: ProfileUniversityUpdate
+    ):
+        if isinstance(obj_in, dict):
+            update_data = obj_in
+        else:
+            update_data = obj_in.dict(exclude_unset=True)
+        return super().update(db, db_obj=db_obj, obj_in=update_data)
 
 
 profile = CRUDProfile(Profile)
