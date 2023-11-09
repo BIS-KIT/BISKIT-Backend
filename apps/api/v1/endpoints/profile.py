@@ -13,6 +13,7 @@ from fastapi import (
     Path,
     Query,
     Request,
+    status,
 )
 from pydantic.networks import EmailStr
 from sqlalchemy.orm import Session
@@ -356,7 +357,7 @@ def create_profile(
     return new_profile
 
 
-@router.put("/profile/{profile_id}", response_model=ProfileResponse)
+@router.put("/profile/{profile_id}", status_code=status.HTTP_200_OK)
 def update_profile(
     profile_id: int,
     profile_in: ProfileUpdate,
@@ -394,8 +395,10 @@ def update_profile(
             raise HTTPException(status_code=409, detail="nick_name already used")
 
     try:
-        crud.profile.update(db=db, db_obj=existing_profile, obj_in=profile_in)
+        new_profile = crud.profile.update(
+            db=db, db_obj=existing_profile, obj_in=profile_in
+        )
+        return {"status": "Profile updated successfully"}
     except Exception as e:
         log_error(e)
         raise HTTPException(status_code=500, detail="Error updating profile")
-    return new_profile

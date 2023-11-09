@@ -69,6 +69,9 @@ class AvailableLanguageCreate(BaseModel):
     language_id: int
     profile_id: Optional[int] = None
 
+    class Meta:
+        orm_mode = True
+
 
 class AvailableLanguageIn(BaseModel):
     level: Optional[str] = None
@@ -149,12 +152,12 @@ class ProfileUniversityResponse(ProfileUniversityBase):
 
 class ProfileResponse(BaseModel):
     id: int = None
-    user_id: int
+    user_id: int = None
     nick_name: Optional[str] = None
     context: Optional[str] = None
     profile_photo: Optional[str] = None
-    available_languages: Optional[List[AvailableLanguageResponse]]
-    introductions: Optional[List[IntroductionResponse]]
+    available_languages: Optional[List[AvailableLanguageResponse]] = None
+    introductions: Optional[List[IntroductionResponse]] = None
     student_verification: Optional[StudentVerificationReponse] = None
     user_university: Optional[ProfileUniversityResponse] = None
 

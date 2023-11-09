@@ -119,11 +119,7 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
         db_obj: StudentVerification,
         obj_in: StudentVerificationUpdate,
     ):
-        if isinstance(obj_in, dict):
-            update_data = obj_in
-        else:
-            update_data = obj_in.dict(exclude_unset=True)
-        return super().update(db, db_obj=db_obj, obj_in=update_data)
+        return super().update(db, db_obj=db_obj, obj_in=obj_in)
 
     def create_verification(self, db: Session, obj_in: StudentVerificationCreate):
         if not obj_in.profile_id:
@@ -138,20 +134,25 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
         db.refresh(db_obj)
         return db_obj
 
-    def remove_ava_lan(self, db: Session, profile_id: int = None, id: int = None):
-        if profile_id:
-            obj = (
-                db.query(AvailableLanguage)
-                .filter(AvailableLanguage.profile_id == profile_id)
-                .delete()
-            )
-            db.commit()
-        else:
-            obj = (
-                db.query(AvailableLanguage).filter(AvailableLanguage.id == id).delete()
-            )
-            db.commit()
-        return obj
+    def remove_ava_lan(
+        self,
+        db: Session,
+        profile_id: int = None,
+        id: int = None,
+        language_id: int = None,
+    ):
+        query = db.query(AvailableLanguage)
+        if id is not None:
+            query = query.filter(AvailableLanguage.id == id)
+        if language_id is not None:
+            query = query.filter(AvailableLanguage.language_id == language_id)
+        if profile_id is not None:
+            query = query.filter(AvailableLanguage.profile_id == profile_id)
+
+        # Now perform the delete operation
+        count = query.delete()
+        db.commit()
+        return count
 
     def get_introduction(
         self, db: Session, keyword: str = None, profile_id: int = None, id: int = None
@@ -160,7 +161,8 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
             obj = (
                 db.query(Introduction)
                 .filter(
-                    Introduction.keyword == keyword, Introduction.profile_ == profile_id
+                    Introduction.keyword == keyword,
+                    Introduction.profile_id == profile_id,
                 )
                 .first()
             )
@@ -170,18 +172,15 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
     def update_introduction(
         self, db: Session, db_obj: Introduction, obj_in: IntroductionCreate
     ):
-        if isinstance(obj_in, dict):
-            update_data = obj_in
-        else:
-            update_data = obj_in.dict(exclude_unset=True)
-        return super().update(db, db_obj=db_obj, obj_in=update_data)
+        return super().update(db, db_obj=db_obj, obj_in=obj_in)
 
     def create_introduction(
         self, db: Session, obj_in: IntroductionCreate, profile_id: int = None
     ):
+        create_obj = IntroductionCreate(**obj_in.dict()).dict()
         if profile_id is not None:
-            obj_in["profile_id"] = profile_id
-        db_obj = Introduction(**obj_in.dict())
+            create_obj["profile_id"] = profile_id
+        db_obj = Introduction(**create_obj)
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)
@@ -195,22 +194,37 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
             obj = (
                 db.query(Introduction)
                 .filter(
-                    Introduction.keyword == keyword, Introduction.profile_ == profile_id
+                    Introduction.keyword == keyword,
+                    Introduction.profile_id == profile_id,
                 )
                 .delete()
             )
         db.commit()
         return obj
 
-    def get_ava_lan(self, db: Session, id: int):
-        return db.query(AvailableLanguage).filter(AvailableLanguage.id == id).first()
+    def get_ava_lan(
+        self,
+        db: Session,
+        id: int = None,
+        language_id: int = None,
+        profile_id: int = None,
+    ):
+        query = db.query(AvailableLanguage)
+        if id is not None:
+            query = query.filter(AvailableLanguage.id == id)
+        if language_id is not None:
+            query = query.filter(AvailableLanguage.language_id == language_id)
+        if profile_id is not None:
+            query = query.filter(AvailableLanguage.profile_id == profile_id)
+        return query.first()
 
     def create_ava_lan(
         self, db: Session, obj_in: AvailableLanguageCreate, profile_id: int = None
     ):
+        create_obj = AvailableLanguageCreate(**obj_in.dict()).dict()
         if profile_id is not None:
-            obj_in["profile_id"] = profile_id
-        db_obj = AvailableLanguage(**obj_in.dict())
+            create_obj["profile_id"] = profile_id
+        db_obj = AvailableLanguage(**create_obj)
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)
@@ -222,12 +236,22 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
         db_obj: AvailableLanguage,
         obj_in: AvailableLanguageCreate,
     ):
-        if isinstance(obj_in, dict):
-            update_data = obj_in
-        else:
-            update_data = obj_in.dict(exclude_unset=True)
+        if obj_in is None:
+            return None
 
-        return super().update(db, db_obj=db_obj, obj_in=update_data)
+        obj_data = db_obj.to_dict()
+        update_data = obj_in.dict(exclude_unset=True)
+        if "profile_id" in update_data:
+            raise ValueError("Cannot change the profile association via this method.")
+
+        for field in obj_data:
+            if field in update_data:
+                setattr(db_obj, field, update_data[field])
+
+        db.add(db_obj)
+        db.commit()
+        db.refresh(db_obj)
+        return db_obj
 
     def get_by_nick_name(self, db: Session, nick_name: str):
         return db.query(Profile).filter(Profile.nick_name == nick_name).first()
@@ -323,9 +347,12 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
         Returns:
             Updated User instance.
         """
+        origin_available_languages = db_obj.available_languages
+        update_available_languages = obj_in.available_languages
 
-        available_languages: List[AvailableLanguageIn] = obj_in.available_languages
-        introductions: List[IntroductionIn] = obj_in.introductions
+        origin_introductions = db_obj.introductions
+        update_introductions = obj_in.introductions
+
         university_info: ProfileUniversityUpdate = obj_in.university_info
 
         # Update basic profile fields if provided
@@ -336,20 +363,24 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
         if obj_in.context is not None:
             db_obj.context = obj_in.context
 
-        if available_languages:
+        if update_available_languages:
             existing_language_ids = {
-                lang.language_id for lang in db_obj.available_languages
+                lang.language_id for lang in origin_available_languages
             }
-            new_languages = {
-                lang.language_id for lang in obj_in.available_languages or []
+            new_language_ids = {
+                lang.language_id for lang in update_available_languages or []
             }
-            for language_id in existing_language_ids - new_languages:
-                self.remove_ava_lan(db=db, id=language_id)
+            for language_id in existing_language_ids - new_language_ids:
+                self.remove_ava_lan(
+                    db=db, language_id=language_id, profile_id=db_obj.id
+                )
 
-            for language_data in new_languages or []:
+            for language_data in update_available_languages or []:
                 if language_data.language_id in existing_language_ids:
                     existing_ava_lang = self.get_ava_lan(
-                        db=db, id=language_data.language_id
+                        db=db,
+                        language_id=language_data.language_id,
+                        profile_id=db_obj.id,
                     )
                     self.update_ava_lan(
                         db=db, db_obj=existing_ava_lang, obj_in=language_data
@@ -360,11 +391,11 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
                         db=db, obj_in=language_data, profile_id=db_obj.id
                     )
 
-        if introductions:
-            existing_intros = {intro.keyword: intro for intro in db_obj.introductions}
+        if update_introductions:
+            existing_intros = {intro.keyword: intro for intro in origin_introductions}
             new_intros = {
                 intro_data.keyword: intro_data
-                for intro_data in obj_in.introductions or []
+                for intro_data in update_introductions or []
             }
 
             for keyword in existing_intros.keys() - new_intros.keys():
@@ -393,8 +424,7 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
             )
 
         db.commit()
-        db.refresh(profile)
-
+        # db.refresh(profile)
         return profile
 
     def delete_file_from_s3(self, file_url: str) -> None:
@@ -430,7 +460,6 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
 
     def remove_profile_photo(self, db: Session, user_id: int):
         profile = self.get_by_user_id(db, user_id=user_id)
-        print(profile, profile.profile_photo)
         if not profile or not profile.profile_photo:
             return None
 
@@ -456,11 +485,7 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
     def update_user_university(
         self, db: Session, db_obj: UserUniversity, obj_in: ProfileUniversityUpdate
     ):
-        if isinstance(obj_in, dict):
-            update_data = obj_in
-        else:
-            update_data = obj_in.dict(exclude_unset=True)
-        return super().update(db, db_obj=db_obj, obj_in=update_data)
+        return super().update(db, db_obj=db_obj, obj_in=obj_in)
 
 
 profile = CRUDProfile(Profile)
