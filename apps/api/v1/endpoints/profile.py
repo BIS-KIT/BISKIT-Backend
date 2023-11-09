@@ -550,7 +550,6 @@ def update_profile(
         raise HTTPException(status_code=404, detail="Profile not found")
 
     new_nickname = profile_in.nick_name
-    new_photo = profile_in.profile_photo
     if new_nickname:
         if re.search(r"[~!@#$%^&*()_+{}[\]:;<>,.?~]", new_nickname):
             raise HTTPException(
@@ -562,13 +561,8 @@ def update_profile(
         if check_exists_nickname:
             raise HTTPException(status_code=409, detail="nick_name already used")
 
-    if new_photo:
-        if existing_profile.profile_photo:
-            crud.profile.delete_file_from_s3(file_url=existing_profile.profile_photo)
     try:
-        new_profile = crud.profile.update(
-            db=db, db_obj=existing_profile, obj_in=profile_in
-        )
+        crud.profile.update(db=db, db_obj=existing_profile, obj_in=profile_in)
     except Exception as e:
         log_error(e)
         raise HTTPException(status_code=500, detail="Error updating profile")

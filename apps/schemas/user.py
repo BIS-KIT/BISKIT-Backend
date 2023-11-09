@@ -235,7 +235,6 @@ class UserResponse(BaseModel):
 
     profile: Optional[ProfileResponse] = None
     consents: Optional[List[ConsentResponse]] = None
-    user_university: Optional[List[UserUniversityBase]] = None
     user_nationality: Optional[List[UserNationalityBase]] = None
 
     class Config:

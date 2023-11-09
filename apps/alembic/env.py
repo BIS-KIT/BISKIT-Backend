@@ -17,11 +17,21 @@ from models.user import (
     FirebaseAuth,
     EmailCertification,
     UserNationality,
+)
+from models.meeting import (
+    Meeting,
+    MeetingLanguage,
+    MeetingTag,
+    MeetingTopic,
+    MeetingUser,
+)
+from models.utility import Nationality, Language, University, Tag, Topic
+from models.profile import (
+    Profile,
+    AvailableLanguage,
+    StudentVerification,
     UserUniversity,
 )
-from models.meeting import Meeting, MeetingLanguage, MeetingTag, MeetingTopic, MeetingUser
-from models.utility import Nationality, Language, University, Tag, Topic
-from models.profile import Profile, AvailableLanguage, StudentVerification
 from models.chat import ChatImage
 
 # this is the Alembic Config object, which provides

@@ -21,7 +21,6 @@ class User(ModelBase):
     profile = relationship("Profile", back_populates="user", uselist=False)
     consents = relationship("Consent", back_populates="user")
 
-    user_university = relationship("UserUniversity", back_populates="user")
     user_nationality = relationship("UserNationality", back_populates="user")
 
 
@@ -31,17 +30,6 @@ class UserNationality(ModelBase):
 
     user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))
     user = relationship("User", back_populates="user_nationality")
-
-
-class UserUniversity(ModelBase):
-    department = Column(String, nullable=True)
-    education_status = Column(String, nullable=True)
-
-    university_id = Column(Integer, ForeignKey("university.id", ondelete="CASCADE"))
-    university = relationship("University", backref="user_university")
-
-    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))
-    user = relationship("User", back_populates="user_university")
 
 
 class EmailCertification(ModelBase):
