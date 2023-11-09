@@ -31,6 +31,27 @@ from schemas.enum import ReultStatusEnum
 import crud
 
 
+def pre_processing_useruniversity(db: Session):
+    # 모든 UserUniversity 인스턴스를 가져오는 것 대신 필요할 때마다 하나씩 가져옵니다.
+    all_useruniversity_ids = db.query(UserUniversity.id).all()
+
+    for useruniversity_id in all_useruniversity_ids:
+        useruniversity = db.query(UserUniversity).get(useruniversity_id)
+        user_id = useruniversity.user_id
+        # user_id를 기반으로 Profile을 조회합니다.
+        profile = db.query(Profile).filter(Profile.user_id == user_id).first()
+        # Profile이 존재하는 경우에만 profile_id를 업데이트합니다.
+        if profile:
+            useruniversity.profile_id = profile.id
+        else:
+            continue
+        # 변경 사항을 데이터베이스에 적용하기 위해 플러시합니다.
+        db.flush()
+
+    # 모든 변경 사항을 커밋합니다.
+    db.commit()
+
+
 def save_upload_file(upload_file: UploadFile, destination: str) -> None:
     s3_client = get_aws_client()
     bucket_name = settings.BUCKET_NAME
