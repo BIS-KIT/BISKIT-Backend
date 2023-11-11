@@ -15,6 +15,7 @@ from schemas.meeting import (
     MeetingUserCreate,
     MeetingUserResponse,
 )
+from models.meeting import Meeting, MeetingUser
 from schemas.enum import CreatorNationalityEnum
 from log import log_error
 
@@ -62,6 +63,7 @@ def get_meeting_requests(meeting_id: int, db: Session = Depends(get_db)):
     """
     모임 참가 신청 리스트
     """
+    check_obj = crud.get_object_or_404(db=db, model=Meeting, obj_id=meeting_id)
 
     return crud.meeting.get_requests(db=db, meeting_id=meeting_id)
 
@@ -72,6 +74,9 @@ def join_meeting_request(obj_in: MeetingUserCreate, db: Session = Depends(get_db
     모임 참가 요청
     (user_id는 차후 token에서 추출할것)
     """
+
+    check_obj = crud.get_object_or_404(db=db, model=Meeting, obj_id=obj_in.meeting_id)
+
     try:
         meeting = crud.meeting.join_request(db=db, obj_in=obj_in)
     except HTTPException as e:
@@ -88,6 +93,8 @@ def join_meeting_approve(obj_id: int, db: Session = Depends(get_db)):
     """
     모임 참가 요청 승인
     """
+    check_obj = crud.get_object_or_404(db=db, model=MeetingUser, obj_id=obj_id)
+
     try:
         meeting = crud.meeting.join_request_approve(db=db, obj_id=obj_id)
     except HTTPException as e:
@@ -101,6 +108,7 @@ def join_meeting_approve(obj_id: int, db: Session = Depends(get_db)):
 
 @router.post("/meeting/join/reject")
 def join_meeting_approve(obj_id: int, db: Session = Depends(get_db)):
+    check_obj = crud.get_object_or_404(db=db, model=MeetingUser, obj_id=obj_id)
     """
     모임 참가 요청 거절
     """
@@ -152,6 +160,8 @@ def get_meeting_detail(meeting_id, db: Session = Depends(get_db)):
     반환값:
         위의 세부 정보를 포함한 특정 모임의 상세 정보
     """
+    check_obj = crud.get_object_or_404(db=db, model=Meeting, obj_id=meeting_id)
+
     try:
         meeting = crud.meeting.get(db=db, id=meeting_id)
     except HTTPException as e:

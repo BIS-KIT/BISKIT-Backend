@@ -48,3 +48,9 @@ class CreatorNationalityEnum(str, Enum):
     KOREAN = "KOREAN"
     FOREIGNER = "FOREIGNER"
     ALL = "ALL"
+
+
+class MyMeetingEnum(str, Enum):
+    APPROVE = "APPROVE"
+    PENDING = "PENDING"
+    PAST = "PAST"
