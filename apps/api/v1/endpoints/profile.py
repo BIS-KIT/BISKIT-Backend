@@ -21,8 +21,6 @@ from sqlalchemy.orm import Session
 import crud
 from database.session import get_db
 from core.config import settings
-from models.user import User
-from models.profile import Profile, AvailableLanguage, Introduction
 from schemas.profile import (
     ProfileResponse,
     ProfileUpdate,
@@ -32,6 +30,8 @@ from schemas.profile import (
     StudentVerificationBase,
     StudentVerificationCreate,
 )
+from schemas.enum import MyMeetingEnum
+from schemas.meeting import MeetingResponse
 from log import log_error
 
 router = APIRouter()
@@ -402,3 +402,25 @@ def update_profile(
     except Exception as e:
         log_error(e)
         raise HTTPException(status_code=500, detail="Error updating profile")
+
+
+@router.get("/profile/{user_id}/meetings", response_model=List[MeetingResponse])
+def get_user_mettings(
+    user_id: int,
+    status: MyMeetingEnum = MyMeetingEnum.APPROVE.value,
+    db: Session = Depends(get_db),
+):
+    """
+    User 모임
+
+    - **status**
+        - APPROVE : 승인 완료된 모임(현재 참여중인 모임)
+        - Pending : 승인 대기중 모임
+        - PAST : 과거 참여했던 모임
+    """
+    user = crud.user.get(db=db, id=user_id)
+    if user is None:
+        raise HTTPException(status_code=404, detail="user not found")
+
+    mettings = crud.profile.get_user_all_meetings(db=db, user_id=user_id, status=status)
+    return mettings

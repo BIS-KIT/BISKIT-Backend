@@ -15,6 +15,7 @@ from models.profile import (
     StudentVerification,
     UserUniversity,
 )
+from models.meeting import Meeting, MeetingUser
 from schemas.profile import (
     ProfileCreate,
     ProfileUpdate,
@@ -27,7 +28,7 @@ from schemas.profile import (
     AvailableLanguageIn,
     IntroductionIn,
 )
-from schemas.enum import ReultStatusEnum
+from schemas.enum import ReultStatusEnum, MyMeetingEnum
 import crud
 
 
@@ -486,6 +487,33 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
         self, db: Session, db_obj: UserUniversity, obj_in: ProfileUniversityUpdate
     ):
         return super().update(db, db_obj=db_obj, obj_in=obj_in)
+
+    def get_user_all_meetings(
+        self, db: Session, user_id: int, status: str
+    ) -> List[Meeting]:
+        # 사용자가 생성한 모임 검색
+        created_meetings = db.query(Meeting).filter(Meeting.creator_id == user_id)
+
+        # 사용자가 참여한 모임 검색
+        participated_query = (
+            db.query(Meeting).join(MeetingUser).filter(MeetingUser.user_id == user_id)
+        )
+        if status == MyMeetingEnum.APPROVE.value:
+            participated_query = participated_query.filter(
+                MeetingUser.status == MyMeetingEnum.APPROVE.value,
+                Meeting.is_active == True,
+            )
+        elif status == MyMeetingEnum.PENDING.value:
+            return participated_query.filter(
+                MeetingUser.status == MyMeetingEnum.PENDING.value,
+                Meeting.is_active == True,
+            ).all()
+        elif status == MyMeetingEnum.PAST.value:
+            participated_query = participated_query.filter(Meeting.is_active == False)
+
+        all_meetings = created_meetings.union(participated_query).all()
+
+        return list(all_meetings)
 
 
 profile = CRUDProfile(Profile)
