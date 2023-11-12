@@ -14,8 +14,14 @@ from schemas.meeting import (
     TimeFilterEnum,
     MeetingUserCreate,
     MeetingUserResponse,
+    ReviewResponse,
+    ReviewCreate,
+    ReviewUpdate,
+    ReviewIn,
+    ReviewUpdateIn,
 )
-from models.meeting import Meeting, MeetingUser
+from models.meeting import Meeting, MeetingUser, Review
+from models.user import User
 from schemas.enum import CreatorNationalityEnum
 from log import log_error
 
@@ -254,6 +260,67 @@ def get_meeting(
     )
 
     return {"meetings": meetings, "total_count": total_count}
+
+
+@router.get("meeting/reviews/{meeting_id}", response_model=List[ReviewResponse])
+def get_meeting_all_review(
+    meeting_id: int,
+    user_id: Optional[int] = None,
+    db: Session = Depends(get_db),
+    skip: int = 0,
+    limit: int = 10,
+):
+    check_obj = crud.get_object_or_404(db=db, model=Meeting, obj_id=meeting_id)
+
+    return crud.review.get_multi(db=db, skip=skip, limit=limit, user_id=user_id)
+
+
+@router.post("/meeting/{meeting_id}/reviews")
+def create_review(
+    meeting_id: int,
+    obj_in: ReviewIn,
+    db: Session = Depends(get_db),
+):
+    check_obj = crud.get_object_or_404(db=db, model=Meeting, obj_id=meeting_id)
+    check_user_obj = crud.get_object_or_404(db=db, model=User, obj_id=obj_in.creator_id)
+    obj_in_data = ReviewCreate(**obj_in.model_dump(), meeting_id=meeting_id)
+    try:
+        create_obj = crud.review.create(db=db, obj_in=obj_in_data)
+
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise e
+    return create_obj
+
+
+@router.put("/review/{review_id}", response_model=ReviewResponse)
+def update_review(
+    review_id: int,
+    obj_in: ReviewUpdateIn,
+    db: Session = Depends(get_db),
+):
+    check_obj = crud.get_object_or_404(db=db, model=Review, obj_id=review_id)
+    obj_in_data = ReviewUpdate(**obj_in.model_dump())
+    try:
+        update_obj = crud.review.update(db=db, db_obj=check_obj, obj_in=obj_in_data)
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise e
+    return update_obj
+
+
+@router.delete("/review/{review_id}", response_model=ReviewResponse)
+def delete_review(review_id: int, db: Session = Depends(get_db)):
+    check_obj = crud.get_object_or_404(db=db, model=Review, obj_id=review_id)
+    try:
+        delete_obj = crud.review.remove(db=db, id=review_id)
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise e
+    return delete_obj
 
 
 @router.get("/fix-item")
