@@ -140,6 +140,8 @@ class CommentCreate(CommentBase):
 
 
 class MeetingDetailResponse(MeetingResponse):
+    creator: Optional[UserResponse] = None
+
     @computed_field
     @property
     def topics(self) -> List[TopicResponse]:
@@ -159,7 +161,7 @@ class MeetingDetailResponse(MeetingResponse):
             instance.user
             for instance in self.meeting_users
             if instance.status == ReultStatusEnum.APPROVE.value
-        ]
+        ] + [self.creator]
 
 
 class MeetingUserResponse(CoreSchema, MeetingUserBase):
