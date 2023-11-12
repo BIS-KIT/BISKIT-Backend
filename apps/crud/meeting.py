@@ -143,6 +143,11 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreateUpdate, MeetingCreateUpdate]):
                 new_topic = crud.utility.create_topic(db=db, name=name)
                 topic_ids.append(new_topic.id)
 
+        user_university = crud.user.get_university(db=db, user_id=data["creator_id"])
+        data["university_id"] = (
+            user_university.university_id if user_university else None
+        )
+
         user_nationalities = crud.user.get_nationality_by_user_id(
             db=db, user_id=data["creator_id"]
         )

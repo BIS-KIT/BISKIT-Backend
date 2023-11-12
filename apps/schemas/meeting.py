@@ -75,7 +75,7 @@ class MeetingCreateUpdate(MeetingBase):
 
 class MeetingIn(MeetingBase, MeetingCountBase):
     creator_id: Optional[int]
-    pass
+    university_id: Optional[int]
 
 
 class MeetingUserCreate(BaseModel):
@@ -93,6 +93,8 @@ class MeetingItemCreate(BaseModel):
 class MeetingResponse(CoreSchema, MeetingBase, MeetingCountBase):
     created_time: Optional[datetime] = None
     creator: Optional[UserSimpleResponse] = None
+
+    university_id: Optional[int]
 
     meeting_tags: Optional[List[MeetingTagBase]] = Field(..., exclude=True)
     meeting_topics: Optional[List[MeetingTopicBase]] = Field(..., exclude=True)

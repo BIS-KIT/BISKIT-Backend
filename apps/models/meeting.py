@@ -22,6 +22,7 @@ class Meeting(ModelBase):
 
     image_url = Column(String)
     is_active = Column(Boolean)
+    university_id = Column(Integer, ForeignKey("university.id"), nullable=True)
 
     creator_id = Column(Integer, ForeignKey("user.id"))
     creator = relationship("User", backref="created_meetings")
