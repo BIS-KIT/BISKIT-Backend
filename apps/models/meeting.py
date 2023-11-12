@@ -30,6 +30,7 @@ class Meeting(ModelBase):
     meeting_languages = relationship("MeetingLanguage", back_populates="meeting")
     meeting_topics = relationship("MeetingTopic", back_populates="meeting")
     meeting_users = relationship("MeetingUser", back_populates="meeting")
+    reviews = relationship("Review", back_populates="meeting")
 
     @hybrid_property
     def participants_status(self):
@@ -73,3 +74,24 @@ class MeetingTopic(ModelBase):
 
     meeting = relationship("Meeting", back_populates="meeting_topics")
     topic = relationship("Topic", backref="meeting_topics")
+
+
+class Review(ModelBase):
+    context = Column(String, nullable=True)
+    image_url = Column(String, nullable=True)
+
+    meeting_id = Column(Integer, ForeignKey("meeting.id"))
+    meeting = relationship("Meeting", back_populates="reviews")
+
+    creator_id = Column(Integer, ForeignKey("user.id"))
+    creator = relationship("User", backref="reviews", uselist=False)
+
+
+#     review_photos = relationship("ReviewPhoto", back_populates="review")
+
+
+# class ReviewPhoto(ModelBase):
+#     image_url = Column(String, nullable=True)
+
+#     review_id = Column(Integer, ForeignKey("review.id"))
+#     review = relationship("Review", back_populates="review_photos")
