@@ -262,17 +262,22 @@ def get_meeting(
     return {"meetings": meetings, "total_count": total_count}
 
 
-@router.get("meeting/reviews/{meeting_id}", response_model=List[ReviewResponse])
+@router.get("/meeting/reviews/{user_id}", response_model=List[ReviewResponse])
 def get_meeting_all_review(
-    meeting_id: int,
-    user_id: Optional[int] = None,
+    user_id: int,
     db: Session = Depends(get_db),
     skip: int = 0,
     limit: int = 10,
 ):
-    check_obj = crud.get_object_or_404(db=db, model=Meeting, obj_id=meeting_id)
+    """
+    User의 모든 Review
+    """
+    check_obj = crud.get_object_or_404(db=db, model=User, obj_id=user_id)
 
-    return crud.review.get_multi(db=db, skip=skip, limit=limit, user_id=user_id)
+    reviews = (
+        crud.review.get_multi(db=db, skip=skip, limit=limit, user_id=user_id) or []
+    )
+    return reviews
 
 
 @router.post("/meeting/{meeting_id}/reviews")
@@ -281,6 +286,14 @@ def create_review(
     obj_in: ReviewIn,
     db: Session = Depends(get_db),
 ):
+    """
+    Meeting에 리뷰 작성
+
+    - **obj_in**
+        - context : 리뷰 내용
+        - image_url : 리뷰 사진(mvp단계에선 1장)
+        - creator_id : 리뷰 작성자(후에 token에서 추출)
+    """
     check_obj = crud.get_object_or_404(db=db, model=Meeting, obj_id=meeting_id)
     check_user_obj = crud.get_object_or_404(db=db, model=User, obj_id=obj_in.creator_id)
     obj_in_data = ReviewCreate(**obj_in.model_dump(), meeting_id=meeting_id)
@@ -300,6 +313,13 @@ def update_review(
     obj_in: ReviewUpdateIn,
     db: Session = Depends(get_db),
 ):
+    """
+    Review 수정
+
+    - **obj_in**
+        - context : 리뷰 내용
+        - image_url : 리뷰 사진(mvp단계에선 1장)
+    """
     check_obj = crud.get_object_or_404(db=db, model=Review, obj_id=review_id)
     obj_in_data = ReviewUpdate(**obj_in.model_dump())
     try:

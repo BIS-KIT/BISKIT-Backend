@@ -370,9 +370,13 @@ class CRUDReview(CRUDBase[Review, ReviewCreate, ReviewUpdate]):
         self, db: Session, *, skip: int = 0, limit: int = 100, user_id: int = None
     ) -> List[Review]:
         if user_id:
-            db.query(self.model).filter(self.model.creator_id == user_id).offset(
-                skip
-            ).limit(limit).all()
+            return (
+                db.query(self.model)
+                .filter(self.model.creator_id == user_id)
+                .offset(skip)
+                .limit(limit)
+                .all()
+            )
         else:
             return db.query(self.model).offset(skip).limit(limit).all()
 

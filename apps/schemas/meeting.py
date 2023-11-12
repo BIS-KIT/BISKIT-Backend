@@ -204,6 +204,7 @@ class ReviewPhotoResponse(CoreSchema, ReviewPhotoBase):
 
 
 class ReviewResponse(CoreSchema, ReviewBase):
+    meeting_id: int = None
     creator: Optional[UserSimpleResponse] = None
 
     class Meta:
