@@ -13,6 +13,7 @@ from models.meeting import (
     MeetingTag,
     MeetingTopic,
     MeetingUser,
+    Review,
 )
 from models.utility import Tag, Topic, Nationality
 from models.user import User, UserNationality
@@ -21,6 +22,9 @@ from schemas.meeting import (
     MeetingItemCreate,
     MeetingUserCreate,
     MeetingIn,
+    ReviewCreate,
+    ReviewUpdate,
+    ReviwPhotoCreate,
 )
 from schemas.enum import (
     MeetingOrderingEnum,
@@ -361,4 +365,21 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreateUpdate, MeetingCreateUpdate]):
         return meeting_user
 
 
+class CRUDReview(CRUDBase[Review, ReviewCreate, ReviewUpdate]):
+    def get_multi(
+        self, db: Session, *, skip: int = 0, limit: int = 100, user_id: int = None
+    ) -> List[Review]:
+        if user_id:
+            return (
+                db.query(self.model)
+                .filter(self.model.creator_id == user_id)
+                .offset(skip)
+                .limit(limit)
+                .all()
+            )
+        else:
+            return db.query(self.model).offset(skip).limit(limit).all()
+
+
 meeting = CURDMeeting(Meeting)
+review = CRUDReview(Review)

@@ -24,6 +24,7 @@ from models.meeting import (
     MeetingTag,
     MeetingTopic,
     MeetingUser,
+    Review,
 )
 from models.utility import Nationality, Language, University, Tag, Topic
 from models.profile import (
