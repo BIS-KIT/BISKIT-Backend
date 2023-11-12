@@ -165,3 +165,46 @@ class MeetingDetailResponse(MeetingResponse):
 class MeetingUserResponse(CoreSchema, MeetingUserBase):
     class Config:
         orm_mode = True
+
+
+class ReviewBase(BaseModel):
+    context: Optional[str] = None
+    image_url: Optional[str] = None
+
+
+class ReviewPhotoBase(BaseModel):
+    image_url: Optional[str]
+
+
+class ReviwPhotoCreate(ReviewPhotoBase):
+    review_id: str
+    creator_id: int
+
+
+class ReviewIn(ReviewBase):
+    creator_id: int
+    pass
+
+
+class ReviewUpdateIn(ReviewBase):
+    pass
+
+
+class ReviewCreate(ReviewBase):
+    meeting_id: int
+    creator_id: int
+
+
+class ReviewUpdate(ReviewBase):
+    pass
+
+
+class ReviewPhotoResponse(CoreSchema, ReviewPhotoBase):
+    pass
+
+
+class ReviewResponse(CoreSchema, ReviewBase):
+    creator: Optional[UserSimpleResponse] = None
+
+    class Meta:
+        orm_mode = True
