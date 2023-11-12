@@ -154,9 +154,9 @@ class MeetingDetailResponse(MeetingResponse):
 
     @computed_field
     @property
-    def users_languages(self) -> List[MeetingUserLanguage]:
+    def participants(self) -> List[UserResponse]:
         return [
-            instance.user.profile.available_languages
+            instance.user
             for instance in self.meeting_users
             if instance.status == ReultStatusEnum.APPROVE.value
         ]
