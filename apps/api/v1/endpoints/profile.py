@@ -227,7 +227,7 @@ def read_student_cards(db: Session = Depends(get_db)):
     return obj_list
 
 
-@router.delete("/profile/user/{user_id}", response_model=ProfileBase)
+@router.delete("/profile/user/{user_id}")
 def delete_profile_by_user(user_id: int, db: Session = Depends(get_db)):
     """
     사용자 ID를 기반으로 프로필 삭제 API
@@ -237,7 +237,8 @@ def delete_profile_by_user(user_id: int, db: Session = Depends(get_db)):
         raise HTTPException(
             status_code=404, detail="Profile not found for the given user_id"
         )
-    return crud.profile.remove(db, id=profile.id)
+    delete_obj = crud.profile.remove(db, id=profile.id)
+    return status.HTTP_204_NO_CONTENT
 
 
 @router.delete("/profile/{user_id}/photo")
@@ -256,7 +257,8 @@ async def delete_profile_photo(user_id: int, db: Session = Depends(get_db)):
     if not profile:
         raise HTTPException(status_code=404, detail="User not found")
 
-    return crud.profile.remove_profile_photo(db=db, user_id=user_id)
+    delete_obj = crud.profile.remove_profile_photo(db=db, user_id=user_id)
+    return status.HTTP_204_NO_CONTENT
 
 
 @router.get("/profile/{user_id}", response_model=ProfileResponse)
@@ -279,7 +281,7 @@ def get_profile_by_user_id(
     return db_profile
 
 
-@router.delete("/profile/{profile_id}", response_model=ProfileResponse)
+@router.delete("/profile/{profile_id}")
 def delete_profile(profile_id: int, db: Session = Depends(get_db)):
     """
     프로필 삭제 API
@@ -297,7 +299,8 @@ def delete_profile(profile_id: int, db: Session = Depends(get_db)):
     profile = crud.profile.get(db, id=profile_id)
     if not profile:
         raise HTTPException(status_code=404, detail="Profile not found")
-    return crud.profile.remove(db, id=profile_id)
+    delete_obj = crud.profile.remove(db, id=profile_id)
+    return status.HTTP_204_NO_CONTENT
 
 
 @router.post("/profile", response_model=ProfileResponse)

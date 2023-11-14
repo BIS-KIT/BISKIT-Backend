@@ -1,7 +1,7 @@
 from typing import Any, List, Optional, Dict
 import re, traceback
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from jose import jwt, JWTError, ExpiredSignatureError
 from sqlalchemy.exc import IntegrityError
@@ -98,7 +98,8 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
     user = crud.user.get(db, id=user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    return crud.user.remove(db, id=user_id)
+    delete_obj = crud.user.remove(db, id=user_id)
+    return status.HTTP_204_NO_CONTENT
 
 
 @router.put("/user/{user_id}", response_model=UserResponse)
@@ -189,7 +190,7 @@ def get_user_consent(
     return consent
 
 
-@router.delete("/user/{user_id}/consent", response_model=ConsentResponse)
+@router.delete("/user/{user_id}/consent")
 def delete_user_consent(
     user_id: int,
     db: Session = Depends(get_db),
@@ -213,7 +214,7 @@ def delete_user_consent(
         raise HTTPException(status_code=400, detail="Consent not found")
 
     db_obj = crud.user.remove_consent(db=db, id=consent.id)
-    return db_obj
+    return status.HTTP_204_NO_CONTENT
 
 
 @router.get("/user/{user_id}/university", response_model=UserUniversityBase)
@@ -241,7 +242,7 @@ def get_user_university(
     return user_university
 
 
-@router.delete("/user/{user_id}/university", response_model=UserUniversityBase)
+@router.delete("/user/{user_id}/university")
 def delete_user_university(
     user_id: int,
     db: Session = Depends(get_db),
@@ -265,7 +266,7 @@ def delete_user_university(
         raise HTTPException(status_code=400, detail="user_university not found")
 
     db_obj = crud.user.remove_university(db=db, id=user_university.id)
-    return db_obj
+    return status.HTTP_204_NO_CONTENT
 
 
 @router.put("/user/{user_id}/university", response_model=UserUniversityBase)
@@ -320,7 +321,7 @@ def get_user_nationality(
     return user_nationality
 
 
-@router.delete("/user/{user_id}/nationality", response_model=UserNationalityResponse)
+@router.delete("/user/{user_id}/nationality")
 def delete_user_nationality(
     user_id: int,
     db: Session = Depends(get_db),
@@ -344,4 +345,4 @@ def delete_user_nationality(
         raise HTTPException(status_code=400, detail="user_nationality not found")
 
     db_obj = crud.user.remove_nationality(db=db, id=user_nationality.id)
-    return db_obj
+    return status.HTTP_204_NO_CONTENT

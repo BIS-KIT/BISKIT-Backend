@@ -331,7 +331,7 @@ def update_review(
     return update_obj
 
 
-@router.delete("/review/{review_id}", response_model=ReviewResponse)
+@router.delete("/review/{review_id}")
 def delete_review(review_id: int, db: Session = Depends(get_db)):
     check_obj = crud.get_object_or_404(db=db, model=Review, obj_id=review_id)
     try:
@@ -340,7 +340,7 @@ def delete_review(review_id: int, db: Session = Depends(get_db)):
         raise e
     except Exception as e:
         raise e
-    return delete_obj
+    return status.HTTP_204_NO_CONTENT
 
 
 @router.get("/fix-item")
