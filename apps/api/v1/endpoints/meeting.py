@@ -19,6 +19,8 @@ from schemas.meeting import (
     ReviewUpdate,
     ReviewIn,
     ReviewUpdateIn,
+    ReviewListReponse,
+    MeetingUserListResponse,
 )
 from models.meeting import Meeting, MeetingUser, Review
 from models.user import User
@@ -64,14 +66,15 @@ def create_meeting(obj_in: MeetingCreateUpdate, db: Session = Depends(get_db)):
     return meeting
 
 
-@router.get("/meetings/{meeting_id}/requests", response_model=List[MeetingUserResponse])
+@router.get("/meetings/{meeting_id}/requests", response_model=MeetingUserListResponse)
 def get_meeting_requests(meeting_id: int, db: Session = Depends(get_db)):
     """
     모임 참가 신청 리스트
     """
     check_obj = crud.get_object_or_404(db=db, model=Meeting, obj_id=meeting_id)
 
-    return crud.meeting.get_requests(db=db, meeting_id=meeting_id)
+    requests, total_count = crud.meeting.get_requests(db=db, meeting_id=meeting_id)
+    return {"requests": requests, "total_count": total_count}
 
 
 @router.post("/meeting/join/request")
@@ -262,7 +265,7 @@ def get_meeting(
     return {"meetings": meetings, "total_count": total_count}
 
 
-@router.get("/meeting/reviews/{user_id}", response_model=List[ReviewResponse])
+@router.get("/meeting/reviews/{user_id}", response_model=ReviewListReponse)
 def get_meeting_all_review(
     user_id: int,
     db: Session = Depends(get_db),
@@ -274,10 +277,10 @@ def get_meeting_all_review(
     """
     check_obj = crud.get_object_or_404(db=db, model=User, obj_id=user_id)
 
-    reviews = (
+    reviews, total_count = (
         crud.review.get_multi(db=db, skip=skip, limit=limit, user_id=user_id) or []
     )
-    return reviews
+    return {"reviews": reviews, "total_count": total_count}
 
 
 @router.post("/meeting/{meeting_id}/reviews")

@@ -241,6 +241,11 @@ class UserResponse(BaseModel):
         orm_mode = True
 
 
+class UserListResponse(BaseModel):
+    total_count: int
+    users: Optional[List[UserResponse]] = []
+
+
 class UserSimpleResponse(CoreSchema):
     email: Optional[EmailStr]
     name: Optional[str]

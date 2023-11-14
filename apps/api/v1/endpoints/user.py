@@ -17,6 +17,7 @@ from schemas.user import (
     UserUniversityUpdateIn,
     UserUpdate,
     UserBaseUpdate,
+    UserListResponse,
 )
 from models.user import User
 from core.security import (
@@ -42,7 +43,7 @@ async def read_current_user(current_user=Depends(get_current_user)):
     return current_user
 
 
-@router.get("/users", response_model=List[UserResponse])
+@router.get("/users", response_model=UserListResponse)
 def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     """
     사용자 목록을 반환합니다.
@@ -56,10 +57,10 @@ def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
 
     * 사용자 목록
     """
-    users = crud.user.get_multi(db, skip=skip, limit=limit)
+    users, total_count = crud.user.get_multi(db, skip=skip, limit=limit)
     if users is None:
         raise HTTPException(status_code=404, detail="Users not found")
-    return users
+    return {"users": users, "total_count": total_count}
 
 
 @router.get("/users/{user_id}", response_model=UserResponse)
