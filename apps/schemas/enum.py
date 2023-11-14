@@ -54,3 +54,10 @@ class MyMeetingEnum(str, Enum):
     APPROVE = "APPROVE"
     PENDING = "PENDING"
     PAST = "PAST"
+
+
+class ImageSourceEnum(str, Enum):
+    PROFILE = "PROFILE"
+    STUDENT_CARD = "STUDENT_CARD"
+    REVIEW = "REVIEW"
+    CHATTING = "CHATTING"

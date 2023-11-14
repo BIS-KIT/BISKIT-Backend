@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException
 
 from crud.base import CRUDBase
+from log import log_error
 import crud
 from models.meeting import (
     Meeting,
@@ -278,7 +279,10 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreateUpdate, MeetingCreateUpdate]):
 
         if not meeting:
             raise HTTPException(status_code=400, detail="Meeting is not exists")
-        return db.query(MeetingUser).filter(MeetingUser.meeting_id == meeting_id).all()
+
+        query = db.query(MeetingUser).filter(MeetingUser.meeting_id == meeting_id)
+        total_count = query.count()
+        return query.all(), total_count
 
     def join_request_approve(self, db: Session, obj_id: int):
         join_request = db.query(MeetingUser).filter(MeetingUser.id == obj_id).first()
@@ -322,9 +326,6 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreateUpdate, MeetingCreateUpdate]):
         meeting_id = obj_in.meeting_id
 
         try:
-            # atomic 유지하기 위해 transtaction 시작
-            db.begin()
-
             meeting = db.query(Meeting).filter(Meeting.id == meeting_id).first()
 
             if not meeting:
@@ -366,6 +367,7 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreateUpdate, MeetingCreateUpdate]):
             raise
         except Exception as e:
             db.rollback()
+            log_error(e)
             raise HTTPException(status_code=500, detail=str(e))
         return meeting_user
 
@@ -374,16 +376,14 @@ class CRUDReview(CRUDBase[Review, ReviewCreate, ReviewUpdate]):
     def get_multi(
         self, db: Session, *, skip: int = 0, limit: int = 100, user_id: int = None
     ) -> List[Review]:
+        query = db.query(self.model)
+        total_count = query.count()
         if user_id:
-            return (
-                db.query(self.model)
-                .filter(self.model.creator_id == user_id)
-                .offset(skip)
-                .limit(limit)
-                .all()
-            )
+            query = query.filter(self.model.creator_id == user_id)
+            total_count = query.count()
+            return query.offset(skip).limit(limit).all(), total_count
         else:
-            return db.query(self.model).offset(skip).limit(limit).all()
+            return query.offset(skip).limit(limit).all(), total_count
 
 
 meeting = CURDMeeting(Meeting)

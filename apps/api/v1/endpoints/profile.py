@@ -31,7 +31,7 @@ from schemas.profile import (
     StudentVerificationCreate,
 )
 from schemas.enum import MyMeetingEnum
-from schemas.meeting import MeetingResponse
+from schemas.meeting import MeetingListResponse
 from log import log_error
 
 router = APIRouter()
@@ -227,7 +227,7 @@ def read_student_cards(db: Session = Depends(get_db)):
     return obj_list
 
 
-@router.delete("/profile/user/{user_id}", response_model=ProfileBase)
+@router.delete("/profile/user/{user_id}")
 def delete_profile_by_user(user_id: int, db: Session = Depends(get_db)):
     """
     사용자 ID를 기반으로 프로필 삭제 API
@@ -237,7 +237,8 @@ def delete_profile_by_user(user_id: int, db: Session = Depends(get_db)):
         raise HTTPException(
             status_code=404, detail="Profile not found for the given user_id"
         )
-    return crud.profile.remove(db, id=profile.id)
+    delete_obj = crud.profile.remove(db, id=profile.id)
+    return status.HTTP_204_NO_CONTENT
 
 
 @router.delete("/profile/{user_id}/photo")
@@ -256,7 +257,8 @@ async def delete_profile_photo(user_id: int, db: Session = Depends(get_db)):
     if not profile:
         raise HTTPException(status_code=404, detail="User not found")
 
-    return crud.profile.remove_profile_photo(db=db, user_id=user_id)
+    delete_obj = crud.profile.remove_profile_photo(db=db, user_id=user_id)
+    return status.HTTP_204_NO_CONTENT
 
 
 @router.get("/profile/{user_id}", response_model=ProfileResponse)
@@ -279,7 +281,7 @@ def get_profile_by_user_id(
     return db_profile
 
 
-@router.delete("/profile/{profile_id}", response_model=ProfileResponse)
+@router.delete("/profile/{profile_id}")
 def delete_profile(profile_id: int, db: Session = Depends(get_db)):
     """
     프로필 삭제 API
@@ -297,7 +299,8 @@ def delete_profile(profile_id: int, db: Session = Depends(get_db)):
     profile = crud.profile.get(db, id=profile_id)
     if not profile:
         raise HTTPException(status_code=404, detail="Profile not found")
-    return crud.profile.remove(db, id=profile_id)
+    delete_obj = crud.profile.remove(db, id=profile_id)
+    return status.HTTP_204_NO_CONTENT
 
 
 @router.post("/profile", response_model=ProfileResponse)
@@ -404,14 +407,16 @@ def update_profile(
         raise HTTPException(status_code=500, detail="Error updating profile")
 
 
-@router.get("/profile/{user_id}/meetings", response_model=List[MeetingResponse])
-def get_user_mettings(
+@router.get("/profile/{user_id}/meetings", response_model=MeetingListResponse)
+def get_user_meetings(
     user_id: int,
     status: MyMeetingEnum = MyMeetingEnum.APPROVE.value,
     db: Session = Depends(get_db),
+    skip: int = 0,
+    limit: int = 10,
 ):
     """
-    User 모임
+    User 모임 리스트
 
     - **status**
         - APPROVE : 승인 완료된 모임(현재 참여중인 모임)
@@ -422,5 +427,7 @@ def get_user_mettings(
     if user is None:
         raise HTTPException(status_code=404, detail="user not found")
 
-    mettings = crud.profile.get_user_all_meetings(db=db, user_id=user_id, status=status)
-    return mettings
+    meetings, total_count = crud.profile.get_user_all_meetings(
+        db=db, user_id=user_id, status=status, skip=skip, limit=limit
+    )
+    return {"meetings": meetings, "total_count": total_count}

@@ -159,16 +159,21 @@ class MeetingDetailResponse(MeetingResponse):
     @computed_field
     @property
     def participants(self) -> List[UserResponse]:
-        return [
+        return [self.creator] + [
             instance.user
             for instance in self.meeting_users
             if instance.status == ReultStatusEnum.APPROVE.value
-        ] + [self.creator]
+        ]
 
 
 class MeetingUserResponse(CoreSchema, MeetingUserBase):
     class Config:
         orm_mode = True
+
+
+class MeetingUserListResponse(BaseModel):
+    total_count: int
+    requests: Optional[List[MeetingUserResponse]] = []
 
 
 class ReviewBase(BaseModel):
@@ -213,3 +218,8 @@ class ReviewResponse(CoreSchema, ReviewBase):
 
     class Meta:
         orm_mode = True
+
+
+class ReviewListReponse(BaseModel):
+    total_count: int
+    reviews: Optional[List[ReviewResponse]] = []
