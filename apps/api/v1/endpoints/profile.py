@@ -31,7 +31,7 @@ from schemas.profile import (
     StudentVerificationCreate,
 )
 from schemas.enum import MyMeetingEnum
-from schemas.meeting import MeetingResponse
+from schemas.meeting import MeetingListResponse
 from log import log_error
 
 router = APIRouter()
@@ -407,14 +407,16 @@ def update_profile(
         raise HTTPException(status_code=500, detail="Error updating profile")
 
 
-@router.get("/profile/{user_id}/meetings", response_model=List[MeetingResponse])
-def get_user_mettings(
+@router.get("/profile/{user_id}/meetings", response_model=MeetingListResponse)
+def get_user_meetings(
     user_id: int,
     status: MyMeetingEnum = MyMeetingEnum.APPROVE.value,
     db: Session = Depends(get_db),
+    skip: int = 0,
+    limit: int = 10,
 ):
     """
-    User 모임
+    User 모임 리스트
 
     - **status**
         - APPROVE : 승인 완료된 모임(현재 참여중인 모임)
@@ -425,5 +427,7 @@ def get_user_mettings(
     if user is None:
         raise HTTPException(status_code=404, detail="user not found")
 
-    mettings = crud.profile.get_user_all_meetings(db=db, user_id=user_id, status=status)
-    return mettings
+    meetings, total_count = crud.profile.get_user_all_meetings(
+        db=db, user_id=user_id, status=status, skip=skip, limit=limit
+    )
+    return {"meetings": meetings, "total_count": total_count}

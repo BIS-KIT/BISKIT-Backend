@@ -489,7 +489,7 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
         return super().update(db, db_obj=db_obj, obj_in=obj_in)
 
     def get_user_all_meetings(
-        self, db: Session, user_id: int, status: str
+        self, db: Session, user_id: int, status: str, skip: int, limit: int
     ) -> List[Meeting]:
         # 사용자가 생성한 모임 검색
         created_meetings = db.query(Meeting).filter(Meeting.creator_id == user_id)
@@ -511,9 +511,10 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
         elif status == MyMeetingEnum.PAST.value:
             participated_query = participated_query.filter(Meeting.is_active == False)
 
-        all_meetings = created_meetings.union(participated_query).all()
+        all_meetings = created_meetings.union(participated_query)
+        total_count = all_meetings.count()
 
-        return list(all_meetings)
+        return list(all_meetings.offset(skip).limit(limit).all()), total_count
 
 
 profile = CRUDProfile(Profile)
