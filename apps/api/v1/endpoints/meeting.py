@@ -67,13 +67,17 @@ def create_meeting(obj_in: MeetingCreateUpdate, db: Session = Depends(get_db)):
 
 
 @router.get("/meetings/{meeting_id}/requests", response_model=MeetingUserListResponse)
-def get_meeting_requests(meeting_id: int, db: Session = Depends(get_db)):
+def get_meeting_requests(
+    meeting_id: int, db: Session = Depends(get_db), skip: int = 0, limit: int = 10
+):
     """
     모임 참가 신청 리스트
     """
     check_obj = crud.get_object_or_404(db=db, model=Meeting, obj_id=meeting_id)
 
-    requests, total_count = crud.meeting.get_requests(db=db, meeting_id=meeting_id)
+    requests, total_count = crud.meeting.get_requests(
+        db=db, meeting_id=meeting_id, skip=skip, limit=limit
+    )
     return {"requests": requests, "total_count": total_count}
 
 

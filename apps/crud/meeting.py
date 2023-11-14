@@ -274,7 +274,9 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreateUpdate, MeetingCreateUpdate]):
 
         return query.offset(skip).limit(limit).all(), total_count
 
-    def get_requests(self, db: Session, meeting_id: int) -> List[MeetingUser]:
+    def get_requests(
+        self, db: Session, meeting_id: int, skip: int, limit: int
+    ) -> List[MeetingUser]:
         meeting = db.query(Meeting).filter(Meeting.id == meeting_id).first()
 
         if not meeting:
@@ -282,7 +284,7 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreateUpdate, MeetingCreateUpdate]):
 
         query = db.query(MeetingUser).filter(MeetingUser.meeting_id == meeting_id)
         total_count = query.count()
-        return query.all(), total_count
+        return query.offset(skip).limit(limit).all(), total_count
 
     def join_request_approve(self, db: Session, obj_id: int):
         join_request = db.query(MeetingUser).filter(MeetingUser.id == obj_id).first()
