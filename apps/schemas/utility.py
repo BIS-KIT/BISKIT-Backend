@@ -58,6 +58,6 @@ class TopicResponse(TopicBase, CoreSchema):
         orm_mode = True
 
 
-class TagResponse(TopicBase, CoreSchema):
+class TagResponse(TagBase, CoreSchema):
     class Config:
         orm_mode = True
