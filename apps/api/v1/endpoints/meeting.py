@@ -351,6 +351,18 @@ def delete_review(review_id: int, db: Session = Depends(get_db)):
     return status.HTTP_204_NO_CONTENT
 
 
+@router.get("/review/{review_id}", response_model=ReviewResponse)
+def get_review(review_id: int, db: Session = Depends(get_db)):
+    check_obj = crud.get_object_or_404(db=db, model=Review, obj_id=review_id)
+    try:
+        obj = crud.review.get(db=db, id=review_id)
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise e
+    return obj
+
+
 @router.get("/fix-item")
 def create_fix_item(db: Session = Depends(get_db)):
     """
