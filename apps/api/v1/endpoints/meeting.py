@@ -217,7 +217,8 @@ def get_meeting(
 
     - **participants_status**: 한국인 모집 or 외국인 모집
 
-    - **tags**: 모임과 연결된 태그 목록. 각 태그에는 다음 정보가 포함됩니다:
+    - **tags**: 모임과 연결된 태그 목록. 각 태그에는 다음 정보가 포함됩니다
+        - '기타' 로 검색시 고정값 외 모든 모임
         - **kr_name**: 태그의 한국어 이름 (Not Required)
         - **en_name**: 태그의 영어 이름 (Not Required)
         - **is_custom**: 고정값인지, 사용자가 생성한 값인지 (Default = False)
