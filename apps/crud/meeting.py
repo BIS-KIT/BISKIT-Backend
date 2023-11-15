@@ -193,9 +193,17 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreateUpdate, MeetingCreateUpdate]):
         db.commit()
 
     def filter_by_tags(self, query, tags_ids: Optional[List[int]]):
+        # TODO : 만약 기타 태그의 아이디면 is_custom = True 인것들만 리턴
         return query.join(MeetingTag).join(Tag).filter(Tag.id.in_(tags_ids))
 
-    def filter_by_topics(self, query, topics_ids: Optional[List[int]]):
+    def filter_by_topics(self, query, db: Session, topics_ids: Optional[List[int]]):
+        etc_tag = db.query(Topic).filter(Topic.kr_name == "기타").first()
+        if etc_tag and etc_tag.id in topics_ids:
+            return (
+                query.join(MeetingTopic)
+                .join(Topic)
+                .filter(or_(Topic.is_custom == True, Topic.id.in_(topics_ids)))
+            )
         return query.join(MeetingTopic).join(Topic).filter(Topic.id.in_(topics_ids))
 
     def filter_by_time(self, query, time_filters: Optional[List[TimeFilterEnum]]):
@@ -249,7 +257,7 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreateUpdate, MeetingCreateUpdate]):
             query = self.filter_by_tags(query, tags_ids)
 
         if topics_ids:
-            query = self.filter_by_topics(query, topics_ids)
+            query = self.filter_by_topics(query=query, topics_ids=topics_ids, db=db)
 
         if order_by == MeetingOrderingEnum.CREATED_TIME:
             query = query.order_by(desc(Meeting.created_time))

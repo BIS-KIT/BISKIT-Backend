@@ -31,30 +31,33 @@ class NationalityBase(CoreSchema):
             code=nationality.code.lower(),  # 이 부분에서 소문자로 변환합니다.
         )
 
-class TopicBase(BaseModel):
 
-    kr_name : Optional[str] = None
-    en_name : Optional[str] = None
-    is_custom : Optional[bool] = False
-    
+class TopicBase(BaseModel):
+    kr_name: Optional[str] = None
+    en_name: Optional[str] = None
+    is_custom: Optional[bool] = False
+    icon_url: Optional[str] = None
+
+
 class TagBase(BaseModel):
-    
-    kr_name : Optional[str] = None
-    en_name : Optional[str] = None
-    is_custom : Optional[bool] = False
+    kr_name: Optional[str] = None
+    en_name: Optional[str] = None
+    is_custom: Optional[bool] = False
+
 
 class TopicCreate(TopicBase):
     pass
 
+
 class TagCreate(TopicBase):
     pass
 
-class TopicResponse(TopicBase,CoreSchema):
-    
-    class Config:
-        orm_mode=True
 
-class TagResponse(TopicBase,CoreSchema):
-    
+class TopicResponse(TopicBase, CoreSchema):
     class Config:
-        orm_mode=True
+        orm_mode = True
+
+
+class TagResponse(TopicBase, CoreSchema):
+    class Config:
+        orm_mode = True

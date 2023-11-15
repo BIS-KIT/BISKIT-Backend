@@ -188,3 +188,8 @@ def upload_image_to_s3(
         # 클라이언트에게 에러 메시지와 상태 코드를 반환합니다.
         raise HTTPException(status_code=500)
     return {"image_url": image_url}
+
+
+@router.get("/icon/setting")
+def set_icon(db: Session = Depends(get_db)):
+    crud.utility.set_default_icon(db=db)
