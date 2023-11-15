@@ -499,16 +499,20 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
             db.query(Meeting).join(MeetingUser).filter(MeetingUser.user_id == user_id)
         )
         if status == MyMeetingEnum.APPROVE.value:
+            created_meetings = created_meetings.filter(Meeting.is_active == True)
             participated_query = participated_query.filter(
                 MeetingUser.status == MyMeetingEnum.APPROVE.value,
                 Meeting.is_active == True,
             )
         elif status == MyMeetingEnum.PENDING.value:
-            return participated_query.filter(
+            all_meetings = participated_query.filter(
                 MeetingUser.status == MyMeetingEnum.PENDING.value,
                 Meeting.is_active == True,
-            ).all()
+            )
+            total_count = all_meetings.count()
+            return all_meetings.offset(skip).limit(limit).all(), total_count
         elif status == MyMeetingEnum.PAST.value:
+            created_meetings = created_meetings.filter(Meeting.is_active == False)
             participated_query = participated_query.filter(Meeting.is_active == False)
 
         all_meetings = created_meetings.union(participated_query)
