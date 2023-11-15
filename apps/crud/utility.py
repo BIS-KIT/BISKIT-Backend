@@ -91,7 +91,6 @@ class CRUDUtility:
             "기타": "ic_talk_fill_48.png",
         }
         for kr, url in topic_mapping.items():
-            print(kr)
             obj = db.query(Topic).filter(Topic.kr_name == kr).first()
             obj.icon_url = base_url + url
         db.commit()
@@ -119,12 +118,16 @@ class CRUDUtility:
         }
 
         for kr, en in tag_fixs_mapping.items():
-            tag = Tag(kr_name=kr, en_name=en, is_custom=False)
-            db.add(tag)
+            check_exists = db.query(Tag).filter(Tag.kr_name == kr).first()
+            if not check_exists:
+                tag = Tag(kr_name=kr, en_name=en, is_custom=False)
+                db.add(tag)
 
         for kr, en in topic_fixs_mapping.items():
-            topic = Topic(kr_name=kr, en_name=en, is_custom=False)
-            db.add(topic)
+            check_exists = db.query(Topic).filter(Topic.kr_name == kr).first()
+            if not check_exists:
+                topic = Topic(kr_name=kr, en_name=en, is_custom=False)
+                db.add(topic)
 
         db.commit()
 

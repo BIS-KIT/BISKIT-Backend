@@ -35,14 +35,14 @@ class NationalityBase(CoreSchema):
 class TopicBase(BaseModel):
     kr_name: Optional[str] = None
     en_name: Optional[str] = None
-    is_custom: Optional[bool] = False
+    is_custom: Optional[bool] = True
     icon_url: Optional[str] = None
 
 
 class TagBase(BaseModel):
     kr_name: Optional[str] = None
     en_name: Optional[str] = None
-    is_custom: Optional[bool] = False
+    is_custom: Optional[bool] = True
 
 
 class TopicCreate(TopicBase):
