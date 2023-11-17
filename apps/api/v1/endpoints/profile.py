@@ -30,7 +30,7 @@ from schemas.profile import (
     StudentVerificationBase,
     StudentVerificationCreate,
 )
-from schemas.enum import MyMeetingEnum
+from schemas.enum import MyMeetingEnum, MeetingOrderingEnum
 from schemas.meeting import MeetingListResponse
 from log import log_error
 
@@ -410,6 +410,7 @@ def update_profile(
 @router.get("/profile/{user_id}/meetings", response_model=MeetingListResponse)
 def get_user_meetings(
     user_id: int,
+    order_by: MeetingOrderingEnum = MeetingOrderingEnum.CREATED_TIME,
     status: MyMeetingEnum = MyMeetingEnum.APPROVE.value,
     db: Session = Depends(get_db),
     skip: int = 0,
@@ -428,6 +429,6 @@ def get_user_meetings(
         raise HTTPException(status_code=404, detail="user not found")
 
     meetings, total_count = crud.profile.get_user_all_meetings(
-        db=db, user_id=user_id, status=status, skip=skip, limit=limit
+        db=db, order_by=order_by, user_id=user_id, status=status, skip=skip, limit=limit
     )
     return {"meetings": meetings, "total_count": total_count}
