@@ -30,6 +30,7 @@ class Tag(ModelBase):
     kr_name = Column(String, nullable=True)
     en_name = Column(String, nullable=True)
     is_custom = Column(Boolean, default=False)
+    icon_url = Column(String, nullable=True)
 
 
 class Topic(ModelBase):
