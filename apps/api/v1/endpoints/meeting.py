@@ -197,6 +197,7 @@ def get_meeting(
     time_filters: List[str] = Query(None),
     is_count_only: bool = False,
     creator_nationality: CreatorNationalityEnum = CreatorNationalityEnum.ALL.value,
+    search_word: str = None,
 ):
     """
     모임 목록을 조회합니다.
@@ -252,6 +253,8 @@ def get_meeting(
     - **creator_nationality** : 주최자 국적
         - "KOREAN", "FOREIGNER", "ALL"
 
+    - **search_word** : 검색 단어(주제, 제목, 사용언어, 모임소개, 모임태그, 참가자 국적, 언어레벨에 검색됨)
+
     반환값:
         위의 세부 정보를 포함한 모임 목록
     """
@@ -265,6 +268,7 @@ def get_meeting(
         time_filters=time_filters,
         is_count_only=is_count_only,
         creator_nationality=creator_nationality,
+        search_word=search_word,
     )
 
     return {"meetings": meetings, "total_count": total_count}

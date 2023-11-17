@@ -244,6 +244,7 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreateUpdate, MeetingCreateUpdate]):
         topics_ids: Optional[List[int]] = None,
         time_filters: Optional[List[str]] = None,
         is_count_only: Optional[bool] = False,
+        search_word: str = None,
     ) -> List[Meeting]:
         query = db.query(Meeting).filter(Meeting.is_active == is_active)
 
