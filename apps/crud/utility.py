@@ -90,14 +90,14 @@ class CRUDUtility:
     def set_default_icon(self, db: Session):
         base_url = "https://biskit-bucket.s3.ap-northeast-2.amazonaws.com/default_icon/"
         topic_mapping = {
-            "푸드": "ic_food_fill_48.png",
-            "스포츠": "ic_sports_fill_48.png",
-            "액티비티": "ic_activity_fill_48.png",
-            "언어교환": "ic_language_exchange_fill_48.png",
-            "스터디": "ic_study_fill_48.png",
-            "문화/예술": "ic_culture_fill_48.png",
-            "취미": "ic_hobby_fill_48.png",
-            "기타": "ic_talk_fill_48.png",
+            "푸드": "ic_food_fill_48.svg",
+            "스포츠": "ic_sports_fill_48.svg",
+            "액티비티": "ic_activity_fill_48.svg",
+            "언어교환": "ic_language_exchange_fill_48.svg",
+            "스터디": "ic_study_fill_48.svg",
+            "문화/예술": "ic_culture_fill_48.svg",
+            "취미": "ic_hobby_fill_48.svg",
+            "기타": "ic_talk_fill_48.svg",
         }
         for kr, url in topic_mapping.items():
             obj = db.query(Topic).filter(Topic.kr_name == kr).first()
