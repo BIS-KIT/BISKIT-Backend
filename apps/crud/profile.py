@@ -2,6 +2,7 @@ from typing import Any, Dict, Optional, Union, List
 import os, random, string, boto3, re
 from botocore.exceptions import NoCredentialsError
 
+from sqlalchemy import func, desc, asc, extract
 from sqlalchemy.orm import Session
 from fastapi import UploadFile, HTTPException
 
@@ -28,7 +29,7 @@ from schemas.profile import (
     AvailableLanguageIn,
     IntroductionIn,
 )
-from schemas.enum import ReultStatusEnum, MyMeetingEnum
+from schemas.enum import ReultStatusEnum, MyMeetingEnum, MeetingOrderingEnum
 import crud
 
 
@@ -489,7 +490,13 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
         return super().update(db, db_obj=db_obj, obj_in=obj_in)
 
     def get_user_all_meetings(
-        self, db: Session, user_id: int, status: str, skip: int, limit: int
+        self,
+        db: Session,
+        order_by: str,
+        user_id: int,
+        status: str,
+        skip: int,
+        limit: int,
     ) -> List[Meeting]:
         # 사용자가 생성한 모임 검색
         created_meetings = db.query(Meeting).filter(Meeting.creator_id == user_id)
@@ -516,6 +523,22 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
             participated_query = participated_query.filter(Meeting.is_active == False)
 
         all_meetings = created_meetings.union(participated_query)
+        # order_by 매개변수에 따른 정렬 로직 적용
+        if order_by == MeetingOrderingEnum.CREATED_TIME:
+            all_meetings = all_meetings.order_by(desc(Meeting.created_time))
+        elif order_by == MeetingOrderingEnum.MEETING_TIME:
+            all_meetings = all_meetings.order_by(asc(Meeting.meeting_time))
+        elif order_by == MeetingOrderingEnum.DEADLINE_SOON:
+            # 현재 시간 이후의 모임만 선택
+            all_meetings = all_meetings.filter(Meeting.meeting_time > func.now())
+            # meeting_time과 now() 사이의 시간 차이를 초로 계산하여 정렬
+            time_difference_seconds = extract(
+                "epoch", Meeting.meeting_time - func.now()
+            )
+            all_meetings = all_meetings.order_by(time_difference_seconds)
+        else:
+            all_meetings = all_meetings.order_by(desc(Meeting.created_time))
+
         total_count = all_meetings.count()
 
         return list(all_meetings.offset(skip).limit(limit).all()), total_count

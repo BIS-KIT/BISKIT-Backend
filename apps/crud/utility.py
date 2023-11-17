@@ -3,6 +3,7 @@ from typing import Optional
 
 from sqlalchemy.orm import Session
 from models.utility import Language, Nationality, University, Topic, Tag
+from models.profile import UserUniversity
 
 
 def check_korean(text):
@@ -25,6 +26,14 @@ class CRUDUtility:
             )
         if university_id:
             return db.query(University).filter(University.id == university_id).first()
+
+    def get_university_by_user(self, db: Session, user_id: int):
+        return (
+            db.query(University)
+            .join(UserUniversity)
+            .filter(UserUniversity.user_id == user_id)
+            .first()
+        )
 
     def get_topic(self, db: Session, topic_id: int):
         return db.query(Topic).filter(Topic.id == topic_id).first()
@@ -129,6 +138,17 @@ class CRUDUtility:
                 topic = Topic(kr_name=kr, en_name=en, is_custom=False)
                 db.add(topic)
 
+        db.commit()
+
+    def png_to_svg(self, db: Session):
+        tags = db.query(Tag).all()
+        topics = db.query(Topic).all()
+
+        for obj in tags + topics:
+            if obj.icon_url.endswith(".png"):
+                obj.icon_url = obj.icon_url.rsplit(".", 1)[0] + ".svg"
+
+        # 필요한 경우, 변경 사항을 데이터베이스에 커밋
         db.commit()
 
 

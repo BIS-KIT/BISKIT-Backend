@@ -232,6 +232,16 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreateUpdate, MeetingCreateUpdate]):
         else:
             return query
 
+    def get_meetings_by_university(
+        self, db: Session, user_id: int, skip: int, limit: int
+    ):
+        university = crud.utility.get_university_by_user(db=db, user_id=user_id)
+        if not university:
+            raise HTTPException(status_code=400, detail="University is not exists")
+        query = db.query(Meeting).filter(Meeting.university_id == university.id)
+        total_count = query.count()
+        return query.offset(skip).limit(limit).all(), total_count
+
     def get_multi(
         self,
         db: Session,
@@ -244,6 +254,7 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreateUpdate, MeetingCreateUpdate]):
         topics_ids: Optional[List[int]] = None,
         time_filters: Optional[List[str]] = None,
         is_count_only: Optional[bool] = False,
+        search_word: str = None,
     ) -> List[Meeting]:
         query = db.query(Meeting).filter(Meeting.is_active == is_active)
 

@@ -43,6 +43,7 @@ class TagBase(BaseModel):
     kr_name: Optional[str] = None
     en_name: Optional[str] = None
     is_custom: Optional[bool] = True
+    icon_url: Optional[str] = None
 
 
 class TopicCreate(TopicBase):
