@@ -3,6 +3,7 @@ from typing import Optional
 
 from sqlalchemy.orm import Session
 from models.utility import Language, Nationality, University, Topic, Tag
+from models.profile import UserUniversity
 
 
 def check_korean(text):
@@ -25,6 +26,14 @@ class CRUDUtility:
             )
         if university_id:
             return db.query(University).filter(University.id == university_id).first()
+
+    def get_university_by_user(self, db: Session, user_id: int):
+        return (
+            db.query(University)
+            .join(UserUniversity)
+            .filter(UserUniversity.user_id == user_id)
+            .first()
+        )
 
     def get_topic(self, db: Session, topic_id: int):
         return db.query(Topic).filter(Topic.id == topic_id).first()

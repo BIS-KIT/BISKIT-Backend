@@ -136,8 +136,29 @@ def join_meeting_approve(obj_id: int, db: Session = Depends(get_db)):
     return status.HTTP_201_CREATED
 
 
+@router.get("/meeting/{user_id}/universty", response_model=MeetingListResponse)
+def get_meetings_by_user_university(
+    user_id: int, skip: int = 0, limit: int = 10, db: Session = Depends(get_db)
+):
+    """
+    특정 유저의 학교에서 모집중인 모임 조회
+    """
+    check_obj = crud.get_object_or_404(db=db, model=User, obj_id=user_id)
+    try:
+        meetings, total_count = crud.meeting.get_meetings_by_university(
+            db=db, user_id=user_id, skip=skip, limit=limit
+        )
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        print(e)
+        log_error(e)
+        raise HTTPException(status_code=500)
+    return {"meetings": meetings, "total_count": total_count}
+
+
 @router.get("/meeting/{meeting_id}", response_model=MeetingDetailResponse)
-def get_meeting_detail(meeting_id, db: Session = Depends(get_db)):
+def get_meeting_detail(meeting_id: int, db: Session = Depends(get_db)):
     """
     특정 모임의 상세 정보를 조회합니다.
 
