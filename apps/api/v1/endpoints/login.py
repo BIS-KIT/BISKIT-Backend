@@ -79,6 +79,11 @@ def register_user(
     if user_in.email:
         user = crud.user.get_by_email(db=db, email=user_in.email)
         if user:
+            if not user.is_active:
+                raise HTTPException(
+                    status_code=403,
+                    detail="This account is the account that requested to be deleted.",
+                )
             raise HTTPException(status_code=409, detail="User already registered.")
     elif user_in.sns_type and user_in.sns_id:
         user = crud.user.get_by_sns(

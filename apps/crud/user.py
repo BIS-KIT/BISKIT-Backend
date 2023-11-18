@@ -17,6 +17,7 @@ from models.user import (
     EmailCertification,
     Consent,
     UserNationality,
+    AccountDeletionRequest,
 )
 from models.profile import UserUniversity
 from schemas.user import (
@@ -27,6 +28,7 @@ from schemas.user import (
     ConsentCreate,
     UserUniversityCreate,
     UserNationalityCreate,
+    DeletionRequestCreate,
 )
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -380,5 +382,25 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
 
         return user_nationalities
 
+    def deactive_user(self, db: Session, user_id: int):
+        user = db.query(User).filter(User.id == user_id).first()
+        user.is_active = False
+        db.commit()
+        return user
+
+    def save_deletion_request(self, db: Session, reason: str):
+        db_obj = AccountDeletionRequest(reason)
+        db.add(db_obj)
+        db.commit()
+        db.refresh(db_obj)
+        return db_obj
+
+
+class CRUDDeleteRequests(
+    CRUDBase[AccountDeletionRequest, DeletionRequestCreate, DeletionRequestCreate]
+):
+    pass
+
 
 user = CRUDUser(User)
+deletion_requests = CRUDDeleteRequests(AccountDeletionRequest)
