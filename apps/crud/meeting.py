@@ -19,13 +19,15 @@ from models.meeting import (
 from models.utility import Tag, Topic, Nationality, Language
 from models.user import User, UserNationality
 from schemas.meeting import (
-    MeetingCreateUpdate,
+    MeetingCreate,
+    MeetingUpdate,
     MeetingItemCreate,
     MeetingUserCreate,
     MeetingIn,
     ReviewCreate,
     ReviewUpdate,
     ReviwPhotoCreate,
+    MeetingUpdateIn,
 )
 from schemas.enum import (
     MeetingOrderingEnum,
@@ -124,8 +126,8 @@ def check_time_conditions(time_filters: List[TimeFilterEnum]):
         return True
 
 
-class CURDMeeting(CRUDBase[Meeting, MeetingCreateUpdate, MeetingCreateUpdate]):
-    def create(self, db: Session, *, obj_in: MeetingCreateUpdate) -> Meeting:
+class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
+    def create(self, db: Session, *, obj_in: MeetingCreate) -> Meeting:
         data = obj_in.model_dump()
         tag_ids = data.pop("tag_ids", [])
         topic_ids = data.pop("topic_ids", [])
@@ -184,6 +186,8 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreateUpdate, MeetingCreateUpdate]):
         ]
 
         for ids, model, field_name in items:
+            # 기존 객체들 모두 삭제
+            db.query(model).filter(model.meeting_id == meeting_id).delete()
             if ids:
                 for id in ids:
                     obj_data = {"meeting_id": meeting_id, field_name: id}
@@ -191,6 +195,34 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreateUpdate, MeetingCreateUpdate]):
                     db.add(db_obj)
 
         db.commit()
+
+    def update_meeting(self, db: Session, meeting_id: int, obj_in: MeetingUpdate):
+        meeting = self.get(db=db, id=meeting_id)
+
+        data = obj_in.model_dump()
+        tag_ids = data.pop("tag_ids", [])
+        topic_ids = data.pop("topic_ids", [])
+        language_ids = data.pop("language_ids", [])
+
+        custom_tags = data.pop("custom_tags", [])
+        custom_topics = data.pop("custom_topics", [])
+        if custom_tags:
+            for name in custom_tags:
+                new_tag = crud.utility.create_tag(db=db, name=name)
+                tag_ids.append(new_tag.id)
+
+        if custom_topics:
+            for name in custom_topics:
+                new_topic = crud.utility.create_topic(db=db, name=name)
+                topic_ids.append(new_topic.id)
+
+        update_meeting = super().update(
+            db=db, db_obj=meeting, obj_in=MeetingUpdateIn(**data)
+        )
+        self.create_meeting_items(
+            db, update_meeting.id, tag_ids, topic_ids, language_ids
+        )
+        return update_meeting
 
     def filter_by_tags(self, query, tags_ids: Optional[List[int]]):
         return query.join(MeetingTag).join(Tag).filter(Tag.id.in_(tags_ids))

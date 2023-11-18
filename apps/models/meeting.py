@@ -24,14 +24,24 @@ class Meeting(ModelBase):
     is_active = Column(Boolean)
     university_id = Column(Integer, ForeignKey("university.id"), nullable=True)
 
-    creator_id = Column(Integer, ForeignKey("user.id"))
+    creator_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))
     creator = relationship("User", backref="created_meetings")
 
-    meeting_tags = relationship("MeetingTag", back_populates="meeting")
-    meeting_languages = relationship("MeetingLanguage", back_populates="meeting")
-    meeting_topics = relationship("MeetingTopic", back_populates="meeting")
-    meeting_users = relationship("MeetingUser", back_populates="meeting")
-    reviews = relationship("Review", back_populates="meeting")
+    meeting_tags = relationship(
+        "MeetingTag", back_populates="meeting", cascade="all, delete-orphan"
+    )
+    meeting_languages = relationship(
+        "MeetingLanguage", back_populates="meeting", cascade="all, delete-orphan"
+    )
+    meeting_topics = relationship(
+        "MeetingTopic", back_populates="meeting", cascade="all, delete-orphan"
+    )
+    meeting_users = relationship(
+        "MeetingUser", back_populates="meeting", cascade="all, delete-orphan"
+    )
+    reviews = relationship(
+        "Review", back_populates="meeting", cascade="all, delete-orphan"
+    )
 
     @hybrid_property
     def participants_status(self):

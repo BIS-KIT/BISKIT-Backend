@@ -63,7 +63,7 @@ class MeetingCountCreateUpdate(MeetingCountBase):
     pass
 
 
-class MeetingCreateUpdate(MeetingBase):
+class MeetingCreate(MeetingBase):
     custom_tags: Optional[List[str]] = []
     custom_topics: Optional[List[str]] = []
 
@@ -71,6 +71,35 @@ class MeetingCreateUpdate(MeetingBase):
     tag_ids: Optional[List[int]] = []
     topic_ids: Optional[List[int]] = []
     language_ids: Optional[List[int]] = []
+
+
+class MeetingUpdate(BaseModel):
+    name: Optional[str]
+    location: Optional[str]
+    description: Optional[str] = None
+    meeting_time: Optional[datetime]
+    place_url: Optional[str] = None
+    x_coord: Optional[str] = None
+    y_coord: Optional[str] = None
+    image_url: Optional[str] = None
+
+    custom_tags: Optional[List[str]] = []
+    custom_topics: Optional[List[str]] = []
+
+    tag_ids: Optional[List[int]] = []
+    topic_ids: Optional[List[int]] = []
+    language_ids: Optional[List[int]] = []
+
+
+class MeetingUpdateIn(BaseModel):
+    name: Optional[str] = None
+    location: Optional[str] = None
+    description: Optional[str] = None
+    meeting_time: Optional[datetime]
+    place_url: Optional[str] = None
+    x_coord: Optional[str] = None
+    y_coord: Optional[str] = None
+    image_url: Optional[str] = None
 
 
 class MeetingIn(MeetingBase, MeetingCountBase):

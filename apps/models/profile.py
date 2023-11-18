@@ -12,13 +12,23 @@ class Profile(ModelBase):
     user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))
     user = relationship("User", back_populates="profile")
 
-    available_languages = relationship("AvailableLanguage", back_populates="profile")
-    introductions = relationship("Introduction", back_populates="profile")
+    available_languages = relationship(
+        "AvailableLanguage", back_populates="profile", cascade="all, delete-orphan"
+    )
+    introductions = relationship(
+        "Introduction", back_populates="profile", cascade="all, delete-orphan"
+    )
     student_verification = relationship(
-        "StudentVerification", back_populates="profile", uselist=False
+        "StudentVerification",
+        back_populates="profile",
+        uselist=False,
+        cascade="all, delete-orphan",
     )
     user_university = relationship(
-        "UserUniversity", back_populates="profile", uselist=False
+        "UserUniversity",
+        back_populates="profile",
+        uselist=False,
+        cascade="all, delete-orphan",
     )
 
 

@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from pydantic import EmailStr, BaseModel
 from enum import Enum
 from typing import Optional, List, Union
@@ -232,6 +232,7 @@ class UserResponse(BaseModel):
     sns_type: Optional[str] = None
     # sns_id: Optional[str] = None
     fcm_token: Optional[str] = None
+    created_time: datetime = None
 
     profile: Optional[ProfileResponse] = None
     consents: Optional[List[ConsentResponse]] = None
@@ -254,4 +255,22 @@ class UserSimpleResponse(CoreSchema):
     user_nationality: Optional[List[UserNationalityBase]] = None
 
     class Config:
+        orm_mode = True
+
+
+class ConfirmPassword(BaseModel):
+    user_id: int
+    password: str
+
+
+class DeletionRequestBase(BaseModel):
+    reason: str
+
+
+class DeletionRequestCreate(DeletionRequestBase):
+    pass
+
+
+class DeletionRequestResponse(CoreSchema, DeletionRequestBase):
+    class Meta:
         orm_mode = True

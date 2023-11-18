@@ -7,7 +7,8 @@ import crud
 from database.session import get_db
 from schemas.meeting import (
     MeetingResponse,
-    MeetingCreateUpdate,
+    MeetingCreate,
+    MeetingUpdate,
     MeetingDetailResponse,
     MeetingOrderingEnum,
     MeetingListResponse,
@@ -30,8 +31,8 @@ from log import log_error
 router = APIRouter()
 
 
-@router.post("/meeting/create", response_model=MeetingResponse)
-def create_meeting(obj_in: MeetingCreateUpdate, db: Session = Depends(get_db)):
+@router.post("/meeting", response_model=MeetingResponse)
+def create_meeting(obj_in: MeetingCreate, db: Session = Depends(get_db)):
     """
     새로운 모임 생성
 
@@ -205,6 +206,24 @@ def get_meeting_detail(meeting_id: int, db: Session = Depends(get_db)):
         log_error(e)
         raise HTTPException(status_code=500)
     return meeting
+
+
+@router.delete("/meeting/{meeting_id}")
+def delete_meeting(meeting_id: int, db: Session = Depends(get_db)):
+    check_obj = crud.get_object_or_404(db=db, model=Meeting, obj_id=meeting_id)
+    crud.meeting.remove(db=db, id=meeting_id)
+    return status.HTTP_204_NO_CONTENT
+
+
+@router.put("/meeting/{meeting_id}", response_model=MeetingDetailResponse)
+def update_meeting(
+    meeting_id: int, obj_in: MeetingUpdate, db: Session = Depends(get_db)
+):
+    check_obj = crud.get_object_or_404(db=db, model=Meeting, obj_id=meeting_id)
+    updated_meeting = crud.meeting.update_meeting(
+        db=db, meeting_id=meeting_id, obj_in=obj_in
+    )
+    return updated_meeting
 
 
 @router.get("/meetings", response_model=MeetingListResponse)

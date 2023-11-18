@@ -18,6 +18,8 @@ from schemas.user import (
     UserUpdate,
     UserBaseUpdate,
     UserListResponse,
+    DeletionRequestCreate,
+    DeletionRequestResponse,
 )
 from models.user import User
 from core.security import (
@@ -86,7 +88,7 @@ def read_user(user_id: int, db: Session = Depends(get_db)):
 def delete_user(user_id: int, db: Session = Depends(get_db)):
     """
     특정 사용자를 삭제합니다.
-
+    (7일간 재가입 막기 위해, 7일 후 삭제)
     **파라미터**
 
     * `user_id`: 삭제하려는 사용자의 ID
@@ -96,11 +98,23 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
     * 삭제된 사용자의 정보
     """
 
-    user = crud.user.get(db, id=user_id)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    delete_obj = crud.user.remove(db, id=user_id)
+    check_obj = crud.get_object_or_404(db=db, model=User, obj_id=user_id)
+    delete_obj = crud.user.deactive_user(db=db, user_id=user_id)
     return status.HTTP_204_NO_CONTENT
+
+
+@router.post("/deletion-requests", response_model=DeletionRequestResponse)
+def save_deletion_requests(
+    reason: DeletionRequestCreate, db: Session = Depends(get_db)
+):
+    obj = crud.deletion_requests.create(db=db, obj_in=reason)
+    return obj
+
+
+# @router.get("/deletion-requests", response_model=DeletionRequestResponse)
+# def read_deletion_requests(reason: DeletionRequestCreate, db: Session = Depends(get_db)):
+#     obj = crud.deletion_requests.create(db=db, obj_in=reason)
+#     return status.HTTP_201_CREATED
 
 
 @router.put("/user/{user_id}", response_model=UserResponse)
