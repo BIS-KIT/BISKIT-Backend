@@ -31,7 +31,7 @@ from log import log_error
 router = APIRouter()
 
 
-@router.post("/meeting/create", response_model=MeetingResponse)
+@router.post("/meeting", response_model=MeetingResponse)
 def create_meeting(obj_in: MeetingCreate, db: Session = Depends(get_db)):
     """
     새로운 모임 생성
