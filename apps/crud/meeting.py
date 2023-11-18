@@ -16,7 +16,7 @@ from models.meeting import (
     MeetingUser,
     Review,
 )
-from models.utility import Tag, Topic, Nationality
+from models.utility import Tag, Topic, Nationality, Language
 from models.user import User, UserNationality
 from schemas.meeting import (
     MeetingCreateUpdate,
@@ -193,7 +193,6 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreateUpdate, MeetingCreateUpdate]):
         db.commit()
 
     def filter_by_tags(self, query, tags_ids: Optional[List[int]]):
-        # TODO : 만약 기타 태그의 아이디면 is_custom = True 인것들만 리턴
         return query.join(MeetingTag).join(Tag).filter(Tag.id.in_(tags_ids))
 
     def filter_by_topics(self, query, db: Session, topics_ids: Optional[List[int]]):
@@ -212,6 +211,19 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreateUpdate, MeetingCreateUpdate]):
             return query.filter(conditions)
         else:
             return query
+
+    def filter_by_search_word(self, query, search_word: str):
+        search_filter = or_(
+            Meeting.name.like(f"%{search_word}%"),
+            Meeting.description.like(f"%{search_word}%"),
+            Meeting.meeting_languages.any(
+                or_(
+                    Language.kr_name.like(f"%{search_word}%"),
+                    Language.en_name.like(f"%{search_word}%"),
+                )
+            ),
+        )
+        return query.filter(search_filter)
 
     def filter_by_nationality(self, query, nationality_name: str):
         print(nationality_name)
@@ -269,6 +281,9 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreateUpdate, MeetingCreateUpdate]):
 
         if topics_ids:
             query = self.filter_by_topics(query=query, topics_ids=topics_ids, db=db)
+
+        if search_word:
+            query = self.filter_by_search_word(query=query, search_word=search_word)
 
         if order_by == MeetingOrderingEnum.CREATED_TIME:
             query = query.order_by(desc(Meeting.created_time))
