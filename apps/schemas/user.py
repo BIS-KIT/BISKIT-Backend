@@ -261,3 +261,16 @@ class UserSimpleResponse(CoreSchema):
 class ConfirmPassword(BaseModel):
     user_id: int
     password: str
+
+
+class DeletionRequestBase(BaseModel):
+    reason: str
+
+
+class DeletionRequestCreate(DeletionRequestBase):
+    pass
+
+
+class DeletionRequestResponse(CoreSchema, DeletionRequestBase):
+    class Meta:
+        orm_mode = True

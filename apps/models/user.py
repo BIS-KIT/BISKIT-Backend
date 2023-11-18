@@ -16,6 +16,7 @@ class User(ModelBase):
     fcm_token = Column(String, nullable=True)
 
     is_active = Column(Boolean, default=True)
+    deleted_data = Column(Date, nullable=True)
     is_admin = Column(Boolean, default=False)
 
     profile = relationship("Profile", back_populates="user", uselist=False)
@@ -53,3 +54,7 @@ class FirebaseAuth(ModelBase):
 
     user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))
     user = relationship("User", backref="firebase_auth")
+
+
+class AccountDeletionRequest(ModelBase):
+    reason = Column(String, nullable=False)

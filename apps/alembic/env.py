@@ -17,6 +17,7 @@ from models.user import (
     FirebaseAuth,
     EmailCertification,
     UserNationality,
+    AccountDeletionRequest,
 )
 from models.meeting import (
     Meeting,
