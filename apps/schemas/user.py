@@ -255,3 +255,8 @@ class UserSimpleResponse(CoreSchema):
 
     class Config:
         orm_mode = True
+
+
+class ConfirmPassword(BaseModel):
+    user_id: int
+    password: str

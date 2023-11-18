@@ -3,11 +3,7 @@ from random import randint
 from datetime import timedelta
 import re, traceback
 
-from fastapi import (
-    APIRouter,
-    Depends,
-    HTTPException,
-)
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from jose import jwt, JWTError, ExpiredSignatureError
 from sqlalchemy.exc import IntegrityError
@@ -27,6 +23,7 @@ from schemas.user import (
     UserRegister,
     UserUniversityCreate,
     UserNationalityCreate,
+    ConfirmPassword,
 )
 from models.user import User
 from core.security import (
@@ -379,6 +376,29 @@ def validate_token(
 
     # 토큰이 유효하면 아래 메시지 반환
     return {"detail": "Token is valid"}
+
+
+@router.post("/confirm-password")
+def check_current_password(obj_in: ConfirmPassword, db: Session = Depends(get_db)):
+    """
+    user 의 현재 패스워드 확인
+    (user_id는 후에 token에서 추출)
+
+    Return
+        - 401 : password 틀림
+        - 400 : password 없는 유저(sns 가입 유저)
+        - 200 : Corrent Password
+    """
+    check_obj = crud.get_object_or_404(db=db, model=User, obj_id=obj_in.user_id)
+    print(222, check_obj.password, obj_in.password)
+    if not check_obj.password:
+        raise HTTPException(status_code=400, detail="Password Not Found")
+
+    if not crud.verify_password(obj_in.password, check_obj.password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect credentials"
+        )
+    return status.HTTP_200_OK
 
 
 @router.post("/change-password")
