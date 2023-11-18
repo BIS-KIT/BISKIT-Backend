@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from pydantic import EmailStr, BaseModel
 from enum import Enum
 from typing import Optional, List, Union
@@ -232,6 +232,7 @@ class UserResponse(BaseModel):
     sns_type: Optional[str] = None
     # sns_id: Optional[str] = None
     fcm_token: Optional[str] = None
+    created_time: datetime = None
 
     profile: Optional[ProfileResponse] = None
     consents: Optional[List[ConsentResponse]] = None
