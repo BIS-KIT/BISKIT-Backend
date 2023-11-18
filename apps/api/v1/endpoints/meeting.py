@@ -207,6 +207,12 @@ def get_meeting_detail(meeting_id: int, db: Session = Depends(get_db)):
     return meeting
 
 
+@router.delete("/meeting/{meeting_id}")
+def delete_meeting(meeting_id: int, db: Session = Depends(get_db)):
+    crud.meeting.remove(db=db, id=meeting_id)
+    return status.HTTP_204_NO_CONTENT
+
+
 @router.get("/meetings", response_model=MeetingListResponse)
 def get_meeting(
     db: Session = Depends(get_db),
