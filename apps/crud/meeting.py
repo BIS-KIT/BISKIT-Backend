@@ -199,7 +199,7 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
     def update_meeting(self, db: Session, meeting_id: int, obj_in: MeetingUpdate):
         meeting = self.get(db=db, id=meeting_id)
 
-        data = obj_in.model_dump()
+        data = obj_in.model_dump(exclude_none=True)
         tag_ids = data.pop("tag_ids", [])
         topic_ids = data.pop("topic_ids", [])
         language_ids = data.pop("language_ids", [])

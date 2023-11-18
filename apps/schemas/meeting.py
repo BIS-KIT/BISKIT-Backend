@@ -74,10 +74,10 @@ class MeetingCreate(MeetingBase):
 
 
 class MeetingUpdate(BaseModel):
-    name: Optional[str]
-    location: Optional[str]
+    name: Optional[str] = None
+    location: Optional[str] = None
     description: Optional[str] = None
-    meeting_time: Optional[datetime]
+    meeting_time: Optional[datetime] = None
     place_url: Optional[str] = None
     x_coord: Optional[str] = None
     y_coord: Optional[str] = None
@@ -95,7 +95,7 @@ class MeetingUpdateIn(BaseModel):
     name: Optional[str] = None
     location: Optional[str] = None
     description: Optional[str] = None
-    meeting_time: Optional[datetime]
+    meeting_time: Optional[datetime] = None
     place_url: Optional[str] = None
     x_coord: Optional[str] = None
     y_coord: Optional[str] = None

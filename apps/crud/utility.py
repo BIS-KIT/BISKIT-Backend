@@ -141,11 +141,11 @@ class CRUDUtility:
         db.commit()
 
     def png_to_svg(self, db: Session):
-        tags = db.query(Tag).all()
+        # tags = db.query(Tag).all()
         topics = db.query(Topic).all()
 
-        for obj in tags + topics:
-            if obj.icon_url.endswith(".png"):
+        for obj in topics:
+            if obj.icon_url and obj.icon_url.endswith(".png"):
                 obj.icon_url = obj.icon_url.rsplit(".", 1)[0] + ".svg"
 
         # 필요한 경우, 변경 사항을 데이터베이스에 커밋
