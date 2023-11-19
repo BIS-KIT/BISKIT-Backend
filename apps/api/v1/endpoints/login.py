@@ -71,7 +71,6 @@ def register_user(
     """
 
     exists_check = crud.signup.check_exists(db=db, obj_in=user_in)
-    print(222, user_in, exists_check)
 
     new_user = crud.signup.register_user(db=db, obj_in=user_in)
 

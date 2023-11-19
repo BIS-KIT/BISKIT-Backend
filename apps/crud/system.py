@@ -17,8 +17,12 @@ from schemas.system import (
 
 
 class CRUDSystem(CRUDBase[System, SystemCreate, SystemUpdate]):
-    def get_by_user_id(self, db: Session, user_id: Any) -> System | None:
+    def get_by_user_id(self, db: Session, user_id: int) -> System | None:
         return db.query(System).filter(System.user_id == user_id).first()
+
+    def create_with_default_value(self, db: Session, user_id: int):
+        obj_in = SystemCreate(user_id=user_id)
+        return super().create(db=db, obj_in=obj_in)
 
 
 class CRUDReport(CRUDBase[Report, ReportCreate, ReportUpdate]):

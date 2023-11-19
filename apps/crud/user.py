@@ -500,6 +500,7 @@ class CRUDSignUP:
         user_university_obj = self.crud_user.create_university(
             db=db, obj_in=user_university_in
         )
+        system = crud.system.create_with_default_value(db=db, user_id=new_user.id)
         return new_user
 
 
