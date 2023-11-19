@@ -30,6 +30,7 @@ class MeetingUserBase(BaseModel):
     user: Optional[UserResponse]
     meeting_id: int
     status: Optional[str]
+    created_time: datetime
 
 
 class MeetingTagBase(BaseModel):
