@@ -7,10 +7,12 @@ from email.mime.multipart import MIMEMultipart
 
 from sqlalchemy.orm import Session, joinedload
 from passlib.context import CryptContext
+from fastapi import HTTPException
 
 from log import log_error
 from core.config import settings
 from crud.base import CRUDBase
+import crud
 from crud.profile import save_upload_file, generate_random_string
 from models.user import (
     User,
@@ -20,16 +22,7 @@ from models.user import (
     AccountDeletionRequest,
 )
 from models.profile import UserUniversity
-from schemas.user import (
-    UserCreate,
-    UserUpdate,
-    EmailCertificationIn,
-    EmailCertificationCheck,
-    ConsentCreate,
-    UserUniversityCreate,
-    UserNationalityCreate,
-    DeletionRequestCreate,
-)
+from schemas import user as user_schmea
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -98,7 +91,7 @@ def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
 
 
-class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
+class CRUDUser(CRUDBase[User, user_schmea.UserCreate, user_schmea.UserUpdate]):
     """
     CRUD operations for User model.
     """
@@ -106,7 +99,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
     def get_consent(self, db: Session, user_id: int):
         return db.query(Consent).filter(Consent.user_id == user_id).first()
 
-    def create_consent(self, db: Session, obj_in: ConsentCreate):
+    def create_consent(self, db: Session, obj_in: user_schmea.ConsentCreate):
         db_obj = Consent(**obj_in.dict())
         db.add(db_obj)
         db.commit()
@@ -125,7 +118,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             db.query(UserUniversity).filter(UserUniversity.user_id == user_id).first()
         )
 
-    def create_university(self, db: Session, obj_in: UserUniversityCreate):
+    def create_university(self, db: Session, obj_in: user_schmea.UserUniversityCreate):
         db_obj = UserUniversity(**obj_in.dict())
         db.add(db_obj)
         db.commit()
@@ -140,7 +133,10 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             return obj
 
     def update_university(
-        self, db: Session, db_obj: UserUniversity, obj_in: UserUniversityCreate
+        self,
+        db: Session,
+        db_obj: UserUniversity,
+        obj_in: user_schmea.UserUniversityCreate,
     ):
         if isinstance(obj_in, dict):
             update_data = obj_in
@@ -158,7 +154,9 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             db.query(UserNationality).filter(UserNationality.user_id == user_id).all()
         )
 
-    def create_nationality(self, db: Session, obj_in: UserNationalityCreate):
+    def create_nationality(
+        self, db: Session, obj_in: user_schmea.UserNationalityCreate
+    ):
         db_obj = UserNationality(**obj_in.dict())
         db.add(db_obj)
         db.commit()
@@ -180,7 +178,9 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         to_remove = set(existing_nationality_ids) - set(new_nationality_ids)
         # 새로운 nationality_ids 추가
         for id in to_add:
-            user_nationality = UserNationalityCreate(nationality_id=id, user_id=user_id)
+            user_nationality = user_schmea.UserNationalityCreate(
+                nationality_id=id, user_id=user_id
+            )
             self.create_nationality(db=db, obj_in=user_nationality)
 
         # 삭제된 nationality_ids 제거
@@ -199,7 +199,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             return obj
 
     def remove_email_certification(
-        self, db: Session, *, db_obj: EmailCertificationCheck
+        self, db: Session, *, db_obj: user_schmea.EmailCertificationCheck
     ):
         obj = (
             db.query(EmailCertification)
@@ -214,8 +214,8 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         return obj
 
     def create_email_certification(
-        self, db: Session, *, obj_in: EmailCertificationIn
-    ) -> EmailCertificationCheck:
+        self, db: Session, *, obj_in: user_schmea.EmailCertificationIn
+    ) -> user_schmea.EmailCertificationCheck:
         """
         Create a new email certification entry.
 
@@ -234,7 +234,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
 
     def get_email_certification(
         self, db: Session, *, email: str, certification: str
-    ) -> Optional[EmailCertificationCheck]:
+    ) -> Optional[user_schmea.EmailCertificationCheck]:
         """
         Retrieve an email certification entry by email and certification.
 
@@ -301,7 +301,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
 
         return user
 
-    def create(self, db: Session, *, obj_in: UserCreate) -> User:
+    def create(self, db: Session, *, obj_in: user_schmea.UserCreate) -> User:
         """
         Create a new user.
 
@@ -321,7 +321,11 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         return db_obj
 
     def update(
-        self, db: Session, *, db_obj: User, obj_in: Union[UserUpdate, Dict[str, Any]]
+        self,
+        db: Session,
+        *,
+        db_obj: User,
+        obj_in: Union[user_schmea.UserUpdate, Dict[str, Any]],
     ) -> User:
         """
         Update a user's details.
@@ -397,10 +401,109 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
 
 
 class CRUDDeleteRequests(
-    CRUDBase[AccountDeletionRequest, DeletionRequestCreate, DeletionRequestCreate]
+    CRUDBase[
+        AccountDeletionRequest,
+        user_schmea.DeletionRequestCreate,
+        user_schmea.DeletionRequestCreate,
+    ]
 ):
     pass
 
 
+class CRUDSignUP:
+    def __init__(self, crud_user: CRUDUser):
+        self.crud_user = crud_user
+
+    def check_exists(self, db: Session, obj_in: user_schmea.UserRegister):
+        # 데이터베이스에서 이메일로 사용자 확인
+        if obj_in.email:
+            user = self.crud_user.get_by_email(db=db, email=obj_in.email)
+            if user:
+                if not user.is_active:
+                    raise HTTPException(
+                        status_code=403,
+                        detail="This account is the account that requested to be deleted.",
+                    )
+                raise HTTPException(status_code=409, detail="User already registered.")
+        elif obj_in.sns_type and obj_in.sns_id:
+            user = self.crud_user.get_by_sns(
+                db=db, sns_type=obj_in.sns_type, sns_id=obj_in.sns_id
+            )
+            if user:
+                raise HTTPException(status_code=409, detail="User already registered.")
+
+        check_user = self.crud_user.get_by_birth(
+            db=db, name=obj_in.name, birth=obj_in.birth
+        )
+        if check_user:
+            raise HTTPException(
+                status_code=409,
+                detail="User with same name and birthdate already registered.",
+            )
+
+        user_nationality_obj_list = obj_in.nationality_ids
+
+        university = crud.utility.get(db=db, university_id=obj_in.university_id)
+        if not university:
+            raise HTTPException(status_code=400, detail="University Not Found")
+
+        for id in user_nationality_obj_list:
+            nation = crud.utility.get(db=db, nationality_id=id)
+            if not nation:
+                raise HTTPException(status_code=400, detail="Nationality Not Found")
+
+        return True
+
+    def register_user(self, db: Session, obj_in: user_schmea.UserRegister):
+        password = obj_in.password
+        user_nationality_obj_list = obj_in.nationality_ids
+
+        if password:
+            hashed_password = get_password_hash(password)
+
+        user_in = user_schmea.UserCreate(
+            email=obj_in.email,
+            password=hashed_password,
+            name=obj_in.name,
+            birth=obj_in.birth,
+            gender=obj_in.gender,
+            sns_type=obj_in.sns_type,
+            sns_id=obj_in.sns_id,
+            fcm_token=obj_in.fcm_token,
+        )
+
+        new_user = self.crud_user.create(db=db, obj_in=user_in)
+
+        consent_in = user_schmea.ConsentCreate(
+            terms_mandatory=obj_in.terms_mandatory,
+            terms_optional=obj_in.terms_optional,
+            terms_push=obj_in.terms_push,
+            user_id=new_user.id,
+        )
+
+        user_university_in = user_schmea.UserUniversityCreate(
+            department=obj_in.department,
+            education_status=obj_in.education_status,
+            university_id=obj_in.university_id,
+            user_id=new_user.id,
+        )
+
+        for id in user_nationality_obj_list:
+            user_nationality_in = user_schmea.UserNationalityCreate(
+                nationality_id=id, user_id=new_user.id
+            )
+            user_nationality_obj = self.crud_user.create_nationality(
+                db=db, obj_in=user_nationality_in
+            )
+
+        consent_obj = self.crud_user.create_consent(db=db, obj_in=consent_in)
+        user_university_obj = self.crud_user.create_university(
+            db=db, obj_in=user_university_in
+        )
+        system = crud.system.create_with_default_value(db=db, user_id=new_user.id)
+        return new_user
+
+
 user = CRUDUser(User)
+signup = CRUDSignUP(user)
 deletion_requests = CRUDDeleteRequests(AccountDeletionRequest)

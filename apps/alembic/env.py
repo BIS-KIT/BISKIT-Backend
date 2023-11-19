@@ -35,6 +35,7 @@ from models.profile import (
     UserUniversity,
 )
 from models.chat import ChatImage
+from models.system import System, Report, Notice
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
