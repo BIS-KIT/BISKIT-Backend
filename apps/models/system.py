@@ -9,7 +9,7 @@ class System(ModelBase):
     main_alarm = Column(Boolean, default=True)
     etc_alarm = Column(Boolean, default=True)
 
-    user_id = Column(Integer, ForeignKey("user.id"))
+    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))
     user = relationship("User", backref="systems")
 
 
