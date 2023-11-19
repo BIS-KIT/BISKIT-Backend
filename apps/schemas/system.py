@@ -9,7 +9,7 @@ from schemas.enum import ReultStatusEnum
 class ReportBase(BaseModel):
     reason: str
     report_type: str
-    status: str
+    status: str = ReultStatusEnum.PENDING.value
 
 
 class ReportCreate(ReportBase):
@@ -27,9 +27,9 @@ class ReportResponse(BaseModel):
 
 
 class SystemBase(BaseModel):
-    system_language: str
-    main_alarm: bool
-    etc_alarm: bool
+    system_language: str = "kr"
+    main_alarm: bool = True
+    etc_alarm: bool = True
 
 
 class SystemCreate(SystemBase):

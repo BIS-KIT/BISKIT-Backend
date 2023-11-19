@@ -1,3 +1,4 @@
+from typing import Any, Optional
 from sqlalchemy import func, desc, asc, extract
 from sqlalchemy.orm import Session
 from fastapi import UploadFile, HTTPException
@@ -16,7 +17,8 @@ from schemas.system import (
 
 
 class CRUDSystem(CRUDBase[System, SystemCreate, SystemUpdate]):
-    pass
+    def get_by_user_id(self, db: Session, user_id: Any) -> System | None:
+        return db.query(System).filter(System.user_id == user_id).first()
 
 
 class CRUDReport(CRUDBase[Report, ReportCreate, ReportUpdate]):
