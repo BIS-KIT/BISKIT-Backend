@@ -82,6 +82,26 @@ def get_meeting_requests(
     return {"requests": requests, "total_count": total_count}
 
 
+@router.post("/meeting/{meeting_id}/user/{user_id}/exit")
+def exit_meeting(user_id: int, meeting_id: int, db: Session = Depends(get_db)):
+    """
+    모임 나가기
+    """
+    check_obj = crud.get_object_or_404(db=db, model=Meeting, obj_id=meeting_id)
+    check_obj = crud.get_object_or_404(db=db, model=User, obj_id=user_id)
+    try:
+        meeting_exit = crud.meeting.exit_meeting(
+            db=db, meeting_id=meeting_id, user_id=user_id
+        )
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        print(e)
+        log_error(e)
+        raise HTTPException(status_code=500)
+    return meeting_exit
+
+
 @router.post("/meeting/join/request")
 def join_meeting_request(obj_in: MeetingUserCreate, db: Session = Depends(get_db)):
     """

@@ -439,6 +439,47 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
             raise HTTPException(status_code=500, detail=str(e))
         return meeting_user
 
+    def exit_meeting(self, db: Session, meeting_id: int, user_id: int):
+        # 해당 모임 참가자 확인
+        meeting_user = (
+            db.query(MeetingUser)
+            .filter(
+                MeetingUser.meeting_id == meeting_id, MeetingUser.user_id == user_id
+            )
+            .first()
+        )
+
+        if not meeting_user:
+            raise HTTPException(
+                status_code=400, detail="User not joined in this meeting"
+            )
+
+        # 모임 참가자 목록에서 제거
+        db.delete(meeting_user)
+
+        # 모임 정보 업데이트
+        meeting = db.query(Meeting).filter(Meeting.id == meeting_id).first()
+        if meeting:
+            meeting.current_participants = meeting.current_participants - 1
+
+            # 국적에 따른 참가자 수 조정
+            user_nationalities = crud.user.get_nationality_by_user_id(
+                db=db, user_id=user_id
+            )
+            codes = [un.nationality.code for un in user_nationalities]
+            if codes:
+                if "kr" in codes:
+                    meeting.korean_count = meeting.korean_count - 1
+                else:
+                    meeting.foreign_count = meeting.foreign_count - 1
+
+            db.commit()
+        else:
+            db.rollback()
+            raise HTTPException(status_code=400, detail="Meeting not found")
+
+        return {"detail": "Successfully left the meeting"}
+
 
 class CRUDReview(CRUDBase[Review, ReviewCreate, ReviewUpdate]):
     def get_multi(
