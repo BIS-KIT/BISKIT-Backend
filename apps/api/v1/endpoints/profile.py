@@ -348,8 +348,6 @@ def create_profile(
 
     available_language: List[AvailableLanguageCreate] = profile.available_languages
     if available_language:
-        if len(available_language) >= 5:
-            raise HTTPException(status_code=409, detail="Only up to 5 can be created.")
         for ava_lang in available_language:
             lang = crud.utility.get(db=db, language_id=ava_lang.language_id)
 
