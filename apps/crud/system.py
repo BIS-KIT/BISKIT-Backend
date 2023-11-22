@@ -2,13 +2,14 @@ from typing import Any, Optional, List
 from sqlalchemy import func, desc, asc, extract
 from sqlalchemy.orm import Session
 from fastapi import UploadFile, HTTPException
-from models.system import Ban
-from schemas.system import BanCreate
+from models.system import Ban, Report
+from schemas.system import BanCreate, ReportCreateIn
 
 from log import log_error
 from crud.base import CRUDBase
 from models import system as system_models
 from schemas import system as system_schemas
+from schemas.enum import ReultStatusEnum
 
 
 class CRUDSystem(
@@ -33,7 +34,27 @@ class CRUDReport(
         system_models.Report, system_schemas.ReportCreate, system_schemas.ReportUpdate
     ]
 ):
-    pass
+    def create(self, db: Session, *, obj_in: system_schemas.ReportCreate) -> Report:
+        obj_data = obj_in.model_dump()
+        obj_data_in = system_schemas.ReportCreateIn(**obj_data)
+        return super().create(db, obj_in=obj_data_in)
+
+    def get_by_user_id(self, db: Session, user_id: int):
+        obj = (
+            db.query(Report)
+            .filter(
+                Report.target_id == user_id,
+                Report.status == ReultStatusEnum.APPROVE.value,
+            )
+            .all()
+        )
+        return obj
+
+    def approve_report(self, db: Session, report_id: int):
+        approve_obj = db.query(Report).filter(Report.id == report_id).first()
+        approve_obj.status = ReultStatusEnum.APPROVE.value
+        db.commit()
+        return approve_obj
 
 
 class CRUDNotice(

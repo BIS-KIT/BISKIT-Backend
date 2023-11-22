@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional, List
+from datetime import datetime
 
 from schemas.base import CoreSchema
 from schemas.user import UserSimpleResponse
@@ -8,8 +9,6 @@ from schemas.enum import ReultStatusEnum
 
 class ReportBase(BaseModel):
     reason: str
-    report_type: str
-    status: str = ReultStatusEnum.PENDING.value
 
 
 class ReportCreate(ReportBase):
@@ -17,13 +16,24 @@ class ReportCreate(ReportBase):
     reporter_id: int
 
 
+class ReportCreateIn(ReportCreate):
+    status: str = ReultStatusEnum.PENDING.value
+
+
 class ReportUpdate(ReportBase):
     target_id: int
 
 
-class ReportResponse(BaseModel):
+class ReportResponse(CoreSchema, BaseModel):
+    created_time: datetime
     target: UserSimpleResponse
     reporter: UserSimpleResponse
+    status: Optional[str]
+
+
+class ReportListResponse(BaseModel):
+    reports: List[ReportResponse]
+    total_count: int
 
 
 class SystemBase(BaseModel):
