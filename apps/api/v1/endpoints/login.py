@@ -112,6 +112,9 @@ def login_for_access_token(login_obj: UserLogin, db: Session = Depends(get_db)):
             raise HTTPException(status_code=400, detail="User Not Found")
     else:
         raise HTTPException(status_code=400, detail="Incorrect credentials")
+    
+    if not user.is_active:
+        raise HTTPException(status_code=400, detail="Account in the process of withdrawal")
 
     # 비밀번호 검증
     ## 일반 로그인
