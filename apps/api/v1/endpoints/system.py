@@ -84,6 +84,9 @@ def create_reports(obj_in: system_schema.ReportCreate, db: Session = Depends(get
 def read_ban_by_user_id(
     user_id: int, skip: int = 0, limit: int = 10, db: Session = Depends(get_db)
 ):
+    """
+    user의 차단 목록
+    """
     check_obj = crud.get_object_or_404(db=db, model=user_model.User, obj_id=user_id)
     ban_list, total_count = crud.ban.read_ban_user(
         db=db, user_id=user_id, skip=skip, limit=limit
@@ -120,8 +123,8 @@ def remove_ban(ban_ids: List[int], db: Session = Depends(get_db)):
 
 @router.get("/notices", response_model=system_schema.NoticeListResponse)
 def read_notices(db: Session = Depends(get_db), skip: int = 0, limit: int = 10):
-    notices = crud.notice.get_multi(db - db, skip=skip, limit=limit)
-    return notices
+    notices, total_count = crud.notice.get_multi(db=db, skip=skip, limit=limit)
+    return {"notices": notices, "total_count": total_count}
 
 
 @router.post("/notice", response_model=system_schema.NoticeResponse)
