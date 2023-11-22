@@ -14,7 +14,6 @@ class System(ModelBase):
 
 
 class Report(ModelBase):
-    report_type = Column(String)
     reason = Column(String, nullable=True)
     status = Column(String)
 

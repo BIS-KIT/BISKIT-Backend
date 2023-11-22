@@ -37,28 +37,47 @@ def update_system(
     return updated_system
 
 
-@router.get("/reports", response_model=system_schema.SystemReponse)
-def read_reports(
-    user_id: int, db: Session = Depends(get_db), skip: int = 0, limit: int = 10
-):
-    pass
+@router.get("/reports", response_model=system_schema.ReportListResponse)
+def read_reports(db: Session = Depends(get_db), skip: int = 0, limit: int = 10):
+    """
+    전체 신고 확인
+    """
+    reports, total_count = crud.report.get_multi(db=db, skip=skip, limit=limit)
+    return {"reports": reports, "total_count": total_count}
 
 
 @router.get("/report/{report_id}")
 def get_report(report_id: int, db: Session = Depends(get_db)):
-    pass
+    check_obj = crud.get_object_or_404(
+        db=db, model=system_model.Report, obj_id=report_id
+    )
+    report = crud.report.get(db=db, id=report_id)
+    return report
 
 
-@router.post("/report")
+@router.get("/report/{report_id}/approve")
+def get_report(report_id: int, db: Session = Depends(get_db)):
+    """
+    신고 내역 승인 테스트용 api(실제 승인은 admin page에서)
+    """
+    check_obj = crud.get_object_or_404(
+        db=db, model=system_model.Report, obj_id=report_id
+    )
+    report = crud.report.approve_report(db=db, report_id=report_id)
+    return report
+
+
+@router.post("/report", response_model=system_schema.ReportResponse)
 def create_reports(obj_in: system_schema.ReportCreate, db: Session = Depends(get_db)):
-    pass
+    check_targeter = crud.get_object_or_404(
+        db=db, model=user_model.User, obj_id=obj_in.target_id
+    )
+    check_reporter = crud.get_object_or_404(
+        db=db, model=user_model.User, obj_id=obj_in.reporter_id
+    )
 
-
-@router.put("/report/{report_id}")
-def update_report(
-    report_id: int, obj_in: system_schema.ReportUpdate, db: Session = Depends(get_db)
-):
-    pass
+    created_obj = crud.report.create(db=db, obj_in=obj_in)
+    return created_obj
 
 
 @router.get("/ban/{user_id}", response_model=system_schema.BanListReponse)
