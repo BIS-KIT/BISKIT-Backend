@@ -280,18 +280,17 @@ def check_current_password(obj_in: ConfirmPassword, db: Session = Depends(get_db
     (user_id는 후에 token에서 추출)
 
     Return
-        - 401 : password 틀림
+        - 400 : password 틀림
         - 400 : password 없는 유저(sns 가입 유저)
         - 200 : Corrent Password
     """
     check_obj = crud.get_object_or_404(db=db, model=User, obj_id=obj_in.user_id)
-    print(222, check_obj.password, obj_in.password)
     if not check_obj.password:
         raise HTTPException(status_code=400, detail="Password Not Found")
 
     if not crud.verify_password(obj_in.password, check_obj.password):
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect credentials"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Incorrect credentials"
         )
     return status.HTTP_200_OK
 
