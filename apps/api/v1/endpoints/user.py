@@ -21,6 +21,7 @@ from schemas.user import (
     DeletionRequestCreate,
     DeletionRequestResponse,
 )
+from schemas import system as system_schemas
 from models.user import User
 from core.security import (
     get_current_user,
@@ -361,3 +362,26 @@ def delete_user_nationality(
 
     db_obj = crud.user.remove_nationality(db=db, id=user_nationality.id)
     return status.HTTP_204_NO_CONTENT
+
+
+@router.get("/user/{user_id}/report")
+def get_report_by_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+):
+    """
+    유저가 받은 신고 중 관리자가 승인한 신고 내역(경고내역)
+    """
+    check_user = crud.get_object_or_404(db=db, model=User, obj_id=user_id)
+    report_list = crud.report.get_by_user_id(db=db, user_id=user_id)
+    return status.HTTP_202_ACCEPTED
+
+
+@router.get("/user/{user_id}/admin")
+def made_admin(
+    user_id: int,
+    db: Session = Depends(get_db),
+):
+    check_user = crud.get_object_or_404(db=db, model=User, obj_id=user_id)
+    update_admin = crud.user.made_admin(db=db, user_id=user_id)
+    return status.HTTP_202_ACCEPTED

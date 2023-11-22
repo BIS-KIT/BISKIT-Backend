@@ -399,6 +399,12 @@ class CRUDUser(CRUDBase[User, user_schmea.UserCreate, user_schmea.UserUpdate]):
         db.refresh(db_obj)
         return db_obj
 
+    def made_admin(self, db: Session, user_id: int):
+        user = db.query(User).filter(User.id == user_id).first()
+        user.is_admin = True
+        db.commit()
+        return user
+
 
 class CRUDDeleteRequests(
     CRUDBase[
