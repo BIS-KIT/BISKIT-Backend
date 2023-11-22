@@ -40,7 +40,7 @@ class SystemUpdate(SystemBase):
     pass
 
 
-class SystemReponse(SystemBase):
+class SystemReponse(CoreSchema, SystemBase):
     user: UserSimpleResponse
 
 
