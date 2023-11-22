@@ -44,9 +44,32 @@ class SystemReponse(CoreSchema, SystemBase):
     user: UserSimpleResponse
 
 
+class BanBase(BaseModel):
+    target_id: int
+    reporter_id: int
+
+
+class BanCreate(BanBase):
+    pass
+
+
+class BanUpdate(BanBase):
+    pass
+
+
+class BanResponse(CoreSchema, BaseModel):
+    target: UserSimpleResponse
+    reporter: UserSimpleResponse
+
+
+class BanListReponse(BaseModel):
+    ban_list: List[BanResponse]
+    total_count: int
+
+
 class NoticeBase(BaseModel):
-    title: str
-    content: str
+    title: str = None
+    content: str = None
 
 
 class NoticeCreate(NoticeBase):
@@ -57,5 +80,10 @@ class NoticeUpdate(NoticeBase):
     pass
 
 
-class NoticeResponse(NoticeBase):
+class NoticeResponse(CoreSchema, NoticeBase):
     user: UserSimpleResponse
+
+
+class NoticeListResponse(BaseModel):
+    notices: List[NoticeResponse]
+    total_count: int

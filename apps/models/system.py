@@ -35,3 +35,15 @@ class Notice(ModelBase):
 
     user_id = Column(Integer, ForeignKey("user.id"))
     user = relationship("User", backref="notice")
+
+
+class Ban(ModelBase):
+    target_id = Column(Integer, ForeignKey("user.id"))
+    reporter_id = Column(Integer, ForeignKey("user.id"))
+
+    target = relationship(
+        "User", foreign_keys=[target_id], backref="banned_received", uselist=False
+    )
+    reporter = relationship(
+        "User", foreign_keys=[reporter_id], backref="ban_made", uselist=False
+    )
