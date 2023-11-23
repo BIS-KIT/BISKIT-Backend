@@ -46,3 +46,10 @@ class Ban(ModelBase):
     reporter = relationship(
         "User", foreign_keys=[reporter_id], backref="ban_made", uselist=False
     )
+
+
+class Contact(ModelBase):
+    content = Column(String)
+
+    user_id = Column(Integer, ForeignKey("user.id"))
+    user = relationship("User", backref="contact")

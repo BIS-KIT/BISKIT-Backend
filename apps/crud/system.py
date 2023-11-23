@@ -80,7 +80,18 @@ class CRUDBan(
         return query.offset(skip).limit(limit).all(), total_count
 
 
+class CRUDContact(
+    CRUDBase[
+        system_models.Contact,
+        system_schemas.ContactCreate,
+        system_schemas.ContactCreate,
+    ]
+):
+    pass
+
+
 system = CRUDSystem(system_models.System)
 report = CRUDReport(system_models.Report)
 ban = CRUDBan(system_models.Ban)
 notice = CRUDNotice(system_models.Notice)
+contact = CRUDContact(system_models.Contact)

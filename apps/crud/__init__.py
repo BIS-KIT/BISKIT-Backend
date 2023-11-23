@@ -13,7 +13,7 @@ from .profile import profile, save_upload_file, generate_random_string
 from .utility import utility
 from .chat import chat
 from .meeting import meeting, review
-from .system import system, report, ban, notice
+from .system import system, report, ban, notice, contact
 
 
 def get_object_or_404(db: Session, model, obj_id: int):

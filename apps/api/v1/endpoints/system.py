@@ -175,3 +175,18 @@ def remove_notice(user_id: int, notice_id: int, db: Session = Depends(get_db)):
     )
     delete_notice = crud.notice.remove(db=db, id=check_notice.id)
     return status.HTTP_204_NO_CONTENT
+
+
+@router.get("/contacts", response_model=system_schema.ContactListResponse)
+def read_contacts(db: Session = Depends(get_db), skip: int = 0, limit: int = 10):
+    contacts, total_count = crud.contact.get_multi(db=db, skip=skip, limit=limit)
+    return {"contacts": contacts, "total_count": total_count}
+
+
+@router.post("/contact", response_model=system_schema.ContactResponse)
+def create_contact(obj_in: system_schema.ContactCreate, db: Session = Depends(get_db)):
+    check_user = crud.get_object_or_404(
+        db=db, model=user_model.User, obj_id=obj_in.user_id
+    )
+    created_contact = crud.contact.create(db=db, obj_in=obj_in)
+    return created_contact
