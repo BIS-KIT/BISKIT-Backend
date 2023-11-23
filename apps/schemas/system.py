@@ -97,3 +97,20 @@ class NoticeResponse(CoreSchema, NoticeBase):
 class NoticeListResponse(BaseModel):
     notices: List[NoticeResponse]
     total_count: int
+
+
+class ContactBase(BaseModel):
+    content: str
+
+
+class ContactCreate(ContactBase):
+    user_id: int
+
+
+class ContactResponse(ContactBase):
+    user: UserSimpleResponse
+
+
+class ContactListResponse(BaseModel):
+    total_count: int
+    contacts: List[ContactResponse]
