@@ -102,16 +102,25 @@ def exit_meeting(user_id: int, meeting_id: int, db: Session = Depends(get_db)):
     return meeting_exit
 
 
-@router.get("/meeting/{meeting_id}/user/{user_id}", response_model=MeetingUserResponse)
+@router.get(
+    "/meeting/{meeting_id}/user/{user_id}", response_model=Optional[MeetingUserResponse]
+)
 def check_meeting_request_status(
     user_id: int, meeting_id: int, db: Session = Depends(get_db)
 ):
+    """
+    meeting에서 user의 참가 상태 확인
+    """
     check_obj = crud.get_object_or_404(db=db, model=Meeting, obj_id=meeting_id)
     check_obj = crud.get_object_or_404(db=db, model=User, obj_id=user_id)
 
     meeting_request = crud.meeting.check_meeting_request_status(
         db=db, meeting_id=meeting_id, user_id=user_id
     )
+    if not meeting_request:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Meeting request not found."
+        )
     return meeting_request
 
 
