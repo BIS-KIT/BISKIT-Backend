@@ -102,6 +102,19 @@ def exit_meeting(user_id: int, meeting_id: int, db: Session = Depends(get_db)):
     return meeting_exit
 
 
+@router.get("/meeting/{meeting_id}/user/{user_id}", response_model=MeetingUserResponse)
+def check_meeting_request_status(
+    user_id: int, meeting_id: int, db: Session = Depends(get_db)
+):
+    check_obj = crud.get_object_or_404(db=db, model=Meeting, obj_id=meeting_id)
+    check_obj = crud.get_object_or_404(db=db, model=User, obj_id=user_id)
+
+    meeting_request = crud.meeting.check_meeting_request_status(
+        db=db, meeting_id=meeting_id, user_id=user_id
+    )
+    return meeting_request
+
+
 @router.post("/meeting/join/request")
 def join_meeting_request(obj_in: MeetingUserCreate, db: Session = Depends(get_db)):
     """

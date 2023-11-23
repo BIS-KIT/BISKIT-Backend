@@ -439,6 +439,16 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
             raise HTTPException(status_code=500, detail=str(e))
         return meeting_user
 
+    def check_meeting_request_status(self, db: Session, meeting_id: int, user_id: int):
+        meeting_user = (
+            db.query(MeetingUser)
+            .filter(
+                MeetingUser.meeting_id == meeting_id, MeetingUser.user_id == user_id
+            )
+            .first()
+        )
+        return meeting_user
+
     def exit_meeting(self, db: Session, meeting_id: int, user_id: int):
         # 해당 모임 참가자 확인
         meeting_user = (
