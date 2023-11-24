@@ -186,9 +186,9 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
         ]
 
         for ids, model, field_name in items:
-            # 기존 객체들 모두 삭제
-            db.query(model).filter(model.meeting_id == meeting_id).delete()
             if ids:
+                # 기존 객체들 모두 삭제
+                db.query(model).filter(model.meeting_id == meeting_id).delete()
                 for id in ids:
                     obj_data = {"meeting_id": meeting_id, field_name: id}
                     db_obj = model(**obj_data)

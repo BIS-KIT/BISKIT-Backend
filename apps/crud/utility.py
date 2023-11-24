@@ -2,8 +2,12 @@ import re
 from typing import Optional
 
 from sqlalchemy.orm import Session
+
 from models.utility import Language, Nationality, University, Topic, Tag
 from models.profile import UserUniversity
+from models import user as user_model
+from models import system as system_model
+import crud
 
 
 def check_korean(text):
@@ -150,6 +154,14 @@ class CRUDUtility:
 
         # 필요한 경우, 변경 사항을 데이터베이스에 커밋
         db.commit()
+
+    def create_default_system(self, db: Session):
+        users_without_system = (
+            db.query(user_model.User).filter(user_model.User.systems == None).all()
+        )
+        user_ids = [user.id for user in users_without_system]
+        for user_id in user_ids:
+            crud.system.create_with_default_value(db=db, user_id=user_id)
 
 
 utility = CRUDUtility()
