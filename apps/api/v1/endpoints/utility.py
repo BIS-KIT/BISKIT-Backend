@@ -198,3 +198,8 @@ def set_icon(db: Session = Depends(get_db)):
 @router.get("/icon/png")
 def set_png(db: Session = Depends(get_db)):
     crud.utility.png_to_svg(db=db)
+
+
+@router.get("/system/olduser")
+def creaate_old_user_system(db: Session = Depends(get_db)):
+    crud.utility.create_default_system(db=db)
