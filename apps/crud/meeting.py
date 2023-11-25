@@ -286,6 +286,7 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
         if not university:
             raise HTTPException(status_code=400, detail="University is not exists")
         query = db.query(Meeting).filter(Meeting.university_id == university.id)
+        query = self.filter_by_ban(db=db, query=query, user_id=user_id)
         total_count = query.count()
         return query.offset(skip).limit(limit).all(), total_count
 
