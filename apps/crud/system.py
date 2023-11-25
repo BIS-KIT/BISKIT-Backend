@@ -79,6 +79,11 @@ class CRUDBan(
         total_count = query.count()
         return query.offset(skip).limit(limit).all(), total_count
 
+    def get_target_ids(self, db: Session, user_id: int) -> List[int]:
+        ban_list = db.query(Ban).filter(Ban.reporter_id == user_id).all()
+        target_id_list = [ban.target_id for ban in ban_list]
+        return target_id_list
+
 
 class CRUDContact(
     CRUDBase[
