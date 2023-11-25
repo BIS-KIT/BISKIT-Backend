@@ -270,6 +270,7 @@ def update_meeting(
 
 @router.get("/meetings", response_model=MeetingListResponse)
 def get_meeting(
+    user_id: int = None,
     db: Session = Depends(get_db),
     order_by: MeetingOrderingEnum = MeetingOrderingEnum.CREATED_TIME,
     skip: int = 0,
@@ -351,6 +352,7 @@ def get_meeting(
         is_count_only=is_count_only,
         creator_nationality=creator_nationality,
         search_word=search_word,
+        user_id=user_id,
     )
 
     return {"meetings": meetings, "total_count": total_count}

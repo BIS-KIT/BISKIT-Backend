@@ -1,7 +1,7 @@
 from typing import Any, Dict, Optional, Union, List
 from datetime import datetime, timedelta
 
-from sqlalchemy import desc, asc, func, extract, and_, or_
+from sqlalchemy import desc, asc, func, extract, and_, or_, not_
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 
@@ -258,7 +258,6 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
         return query.filter(search_filter)
 
     def filter_by_nationality(self, query, nationality_name: str):
-        print(nationality_name)
         if nationality_name == CreatorNationalityEnum.KOREAN.value:
             return (
                 query.join(Meeting.creator)
@@ -275,6 +274,10 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
             )
         else:
             return query
+
+    def filter_by_ban(self, db: Session, query, user_id: int):
+        target_list = crud.ban.get_target_ids(db=db, user_id=user_id)
+        return query.filter(not_(Meeting.creator_id.in_(target_list)))
 
     def get_meetings_by_university(
         self, db: Session, user_id: int, skip: int, limit: int
@@ -293,6 +296,7 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
         skip: int,
         limit: int,
         creator_nationality: Optional[str],
+        user_id: int = None,
         is_active: bool = True,
         tags_ids: Optional[List[int]] = None,
         topics_ids: Optional[List[int]] = None,
@@ -301,6 +305,9 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
         search_word: str = None,
     ) -> List[Meeting]:
         query = db.query(Meeting).filter(Meeting.is_active == is_active)
+
+        if user_id:
+            query = self.filter_by_ban(db, query, user_id)
 
         if creator_nationality:
             query = self.filter_by_nationality(query, creator_nationality)
