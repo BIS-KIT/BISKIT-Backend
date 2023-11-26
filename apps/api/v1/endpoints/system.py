@@ -94,16 +94,18 @@ def read_ban_by_user_id(
     return {"ban_list": ban_list, "total_count": total_count}
 
 
-@router.post("/ban/{user_id}")
-def create_ban(user_id: int, target_id: int, db: Session = Depends(get_db)):
+@router.post("/ban")
+def create_ban(obj_in: system_schema.BanCreate, db: Session = Depends(get_db)):
     """
     target_id 사용자 차단
     """
-    check_obj = crud.get_object_or_404(db=db, model=user_model.User, obj_id=user_id)
-    check_target_obj = crud.get_object_or_404(
-        db=db, model=user_model.User, obj_id=target_id
+    check_obj = crud.get_object_or_404(
+        db=db, model=user_model.User, obj_id=obj_in.reporter_id
     )
-    obj = crud.ban.create(db=db, user_id=user_id, target_id=target_id)
+    check_target_obj = crud.get_object_or_404(
+        db=db, model=user_model.User, obj_id=obj_in.target_id
+    )
+    obj = crud.ban.create(db=db, obj_in=obj_in)
     return obj
 
 

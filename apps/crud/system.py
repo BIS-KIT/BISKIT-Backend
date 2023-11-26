@@ -68,10 +68,6 @@ class CRUDNotice(
 class CRUDBan(
     CRUDBase[system_models.Ban, system_schemas.BanCreate, system_schemas.BanUpdate]
 ):
-    def create(self, db: Session, *, user_id: int, target_id: int) -> Ban:
-        obj_in = BanCreate(reporter_id=user_id, target_id=target_id)
-        return super().create(db=db, obj_in=obj_in)
-
     def read_ban_user(
         self, db: Session, user_id: int, skip: int, limit: int
     ) -> List[Ban]:

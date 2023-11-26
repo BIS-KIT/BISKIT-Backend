@@ -56,11 +56,10 @@ class SystemReponse(CoreSchema, SystemBase):
 
 class BanBase(BaseModel):
     target_id: int
-    reporter_id: int
 
 
 class BanCreate(BanBase):
-    pass
+    reporter_id: int
 
 
 class BanUpdate(BanBase):
@@ -69,7 +68,6 @@ class BanUpdate(BanBase):
 
 class BanResponse(CoreSchema, BaseModel):
     target: UserSimpleResponse
-    reporter: UserSimpleResponse
 
 
 class BanListReponse(BaseModel):
