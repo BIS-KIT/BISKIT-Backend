@@ -26,7 +26,7 @@ class ReportUpdate(ReportBase):
 
 class ReportResponse(CoreSchema, BaseModel):
     created_time: datetime
-    target: UserSimpleResponse
+    # target: UserSimpleResponse
     reporter: UserSimpleResponse
     status: Optional[str]
 
