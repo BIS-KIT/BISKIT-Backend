@@ -364,7 +364,7 @@ def delete_user_nationality(
     return status.HTTP_204_NO_CONTENT
 
 
-@router.get("/user/{user_id}/report")
+@router.get("/user/{user_id}/report", response_model=List[system_schemas.ReportResponse])
 def get_report_by_user(
     user_id: int,
     db: Session = Depends(get_db),
@@ -374,7 +374,7 @@ def get_report_by_user(
     """
     check_user = crud.get_object_or_404(db=db, model=User, obj_id=user_id)
     report_list = crud.report.get_by_user_id(db=db, user_id=user_id)
-    return status.HTTP_202_ACCEPTED
+    return report_list
 
 
 @router.get("/user/{user_id}/admin")
