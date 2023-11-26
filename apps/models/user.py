@@ -24,6 +24,10 @@ class User(ModelBase):
 
     user_nationality = relationship("UserNationality", back_populates="user")
 
+    @property
+    def profile_photo(self):
+        return self.profile.profile_photo if self.profile else None
+
 
 class UserNationality(ModelBase):
     nationality_id = Column(Integer, ForeignKey("nationality.id", ondelete="CASCADE"))

@@ -249,6 +249,7 @@ class UserListResponse(BaseModel):
 
 class UserSimpleResponse(CoreSchema):
     email: Optional[EmailStr]
+    profile_photo: Optional[str] = None
     name: Optional[str]
     birth: Optional[date]
     gender: Optional[str]
