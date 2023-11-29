@@ -96,6 +96,14 @@ class CRUDUser(CRUDBase[User, user_schmea.UserCreate, user_schmea.UserUpdate]):
     CRUD operations for User model.
     """
 
+    def get_user_fcm_token_with_name(self, db: Session, user_id):
+        obj = db.query(User).filter(User.id == user_id).first()
+        return obj.fcm_token, obj.nick_name
+
+    def get_all_fcm_tokens(self, db: Session):
+        return db.query(User.fcm_token).filter(User.fcm_token.isnot(None)).all()
+
+
     def get_consent(self, db: Session, user_id: int):
         return db.query(Consent).filter(Consent.user_id == user_id).first()
 
@@ -508,6 +516,7 @@ class CRUDSignUP:
         )
         system = crud.system.create_with_default_value(db=db, user_id=new_user.id)
         return new_user
+    
 
 
 user = CRUDUser(User)
