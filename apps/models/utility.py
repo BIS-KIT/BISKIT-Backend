@@ -29,12 +29,12 @@ class University(ModelBase):
 class Tag(ModelBase):
     kr_name = Column(String, nullable=True)
     en_name = Column(String, nullable=True)
-    is_custom = Column(Boolean, default=False)
+    is_custom = Column(Boolean, default=True)
     icon_url = Column(String, nullable=True)
 
 
 class Topic(ModelBase):
     kr_name = Column(String, nullable=True)
     en_name = Column(String, nullable=True)
-    is_custom = Column(Boolean, default=False)
+    is_custom = Column(Boolean, default=True)
     icon_url = Column(String, nullable=True)
