@@ -460,7 +460,7 @@ def create_fix_item(db: Session = Depends(get_db)):
     return
 
 
-@router.get("/chat_alarm")
+@router.get("/chat/alarm")
 def read_chat_alarm(chat_id: str = Query(...), db: Session = Depends(get_db)):
     """
     아직 테스트중
