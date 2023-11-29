@@ -29,6 +29,8 @@ class Setting(BaseSettings):
 
     LOGO_URL: str
 
+    FIRESTORE_URL: str
+
     @property
     def cors_origins_list(self) -> List[str]:
         return self.CORS_ORIGINS.split(",")

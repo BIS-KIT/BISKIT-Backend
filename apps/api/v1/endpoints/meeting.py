@@ -458,3 +458,13 @@ def create_fix_item(db: Session = Depends(get_db)):
     """
     crud.utility.create_fix_items(db=db)
     return
+
+
+@router.get("/chat_alarm")
+def read_chat_alarm(chat_id: str = Query(...), db: Session = Depends(get_db)):
+    """
+    아직 테스트중
+    """
+    # chat_alarm 함수를 호출하여 데이터 가져오기
+    # return crud.alarm.chat_alarm(db, chat_id)
+    return []

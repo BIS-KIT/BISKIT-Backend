@@ -28,7 +28,7 @@ firebase_config = json.loads(decoded_data)
 cred = credentials.Certificate(firebase_config)
 
 try:
-    firebase_app = initialize_app(cred)
+    firebase_app = initialize_app(cred, {"databaseURL": settings.FIRESTORE_URL})
     print("Firebase app initialized successfully.")
 except Exception as e:
     print(f"Error initializing Firebase app: {e}")

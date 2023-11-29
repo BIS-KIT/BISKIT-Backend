@@ -14,6 +14,7 @@ from .utility import utility
 from .chat import chat
 from .meeting import meeting, review
 from .system import system, report, ban, notice, contact
+from .alarm import alarm
 
 
 def get_object_or_404(db: Session, model, obj_id: int):
