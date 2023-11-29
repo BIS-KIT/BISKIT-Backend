@@ -414,13 +414,15 @@ class CRUDUser(CRUDBase[User, user_schmea.UserCreate, user_schmea.UserUpdate]):
         return user
 
     def read_all_chat_users(self, db: Session, chat_id: str) -> Dict[int, str]:
-        users = (
-            db.query(User)
-            .join(MeetingUser)
+        meeting_users = (
+            db.query(MeetingUser)
+            .options(joinedload(MeetingUser.user))
             .join(Meeting)
             .filter(Meeting.chat_id == chat_id)
         )
-        user_dict = {user.id: user.fcm_token for user in users if user.fcm_token}
+        user_dict = {
+            mu.user.id: mu.user.fcm_token for mu in meeting_users if mu.user.fcm_token
+        }
         return user_dict
 
 
