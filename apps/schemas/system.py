@@ -9,10 +9,11 @@ from schemas.enum import ReultStatusEnum
 
 class ReportBase(BaseModel):
     reason: str
+    content_type: str
+    content_id: int
 
 
 class ReportCreate(ReportBase):
-    target_id: int
     reporter_id: int
 
 
@@ -21,12 +22,13 @@ class ReportCreateIn(ReportCreate):
 
 
 class ReportUpdate(ReportBase):
-    target_id: int
+    pass
 
 
 class ReportResponse(CoreSchema, BaseModel):
-    created_time: datetime
-    target: UserSimpleResponse
+    created_time: Optional[datetime]
+    content_type: Optional[str]
+    content_id: Optional[int]
     reporter: UserSimpleResponse
     status: Optional[str]
 
