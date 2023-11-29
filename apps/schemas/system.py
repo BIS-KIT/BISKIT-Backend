@@ -89,6 +89,7 @@ class NoticeUpdate(NoticeBase):
 
 
 class NoticeResponse(CoreSchema, NoticeBase):
+    created_time : Optional[datetime]
     user: UserSimpleResponse
 
 
