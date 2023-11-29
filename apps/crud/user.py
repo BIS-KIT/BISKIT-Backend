@@ -21,6 +21,7 @@ from models.user import (
     UserNationality,
     AccountDeletionRequest,
 )
+from models.meeting import Meeting, MeetingUser
 from models.profile import UserUniversity
 from schemas import user as user_schmea
 
@@ -102,7 +103,6 @@ class CRUDUser(CRUDBase[User, user_schmea.UserCreate, user_schmea.UserUpdate]):
 
     def get_all_fcm_tokens(self, db: Session):
         return db.query(User.fcm_token).filter(User.fcm_token.isnot(None)).all()
-
 
     def get_consent(self, db: Session, user_id: int):
         return db.query(Consent).filter(Consent.user_id == user_id).first()
@@ -413,6 +413,16 @@ class CRUDUser(CRUDBase[User, user_schmea.UserCreate, user_schmea.UserUpdate]):
         db.commit()
         return user
 
+    def read_all_chat_users(self, db: Session, chat_id: str) -> Dict[int, str]:
+        users = (
+            db.query(User)
+            .join(MeetingUser)
+            .join(Meeting)
+            .filter(Meeting.chat_id == chat_id)
+        )
+        user_dict = {user.id: user.fcm_token for user in users if user.fcm_token}
+        return user_dict
+
 
 class CRUDDeleteRequests(
     CRUDBase[
@@ -516,7 +526,6 @@ class CRUDSignUP:
         )
         system = crud.system.create_with_default_value(db=db, user_id=new_user.id)
         return new_user
-    
 
 
 user = CRUDUser(User)
