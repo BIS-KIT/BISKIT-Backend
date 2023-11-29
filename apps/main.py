@@ -26,7 +26,12 @@ decoded_data = base64.b64decode(encoded_data).decode("utf-8")
 firebase_config = json.loads(decoded_data)
 # Firebase 초기화
 cred = credentials.Certificate(firebase_config)
-initialize_app(cred)
+
+try:
+    firebase_app = initialize_app(cred)
+    print("Firebase app initialized successfully.")
+except Exception as e:
+    print(f"Error initializing Firebase app: {e}")
 
 load_dotenv()
 

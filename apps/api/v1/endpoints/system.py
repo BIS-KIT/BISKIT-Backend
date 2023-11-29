@@ -69,9 +69,15 @@ def get_report(report_id: int, db: Session = Depends(get_db)):
 
 @router.post("/report", response_model=system_schema.ReportResponse)
 def create_reports(obj_in: system_schema.ReportCreate, db: Session = Depends(get_db)):
-    check_targeter = crud.get_object_or_404(
-        db=db, model=user_model.User, obj_id=obj_in.target_id
-    )
+    """
+    신고하기
+
+    - reason : 신고 이유
+    - content_type : Meeting or Review or User
+    - content_id : 신고하는 content의 id
+    - reporter_id : 신고를 하는 유저의 id(후에 토큰으로)
+    """
+
     check_reporter = crud.get_object_or_404(
         db=db, model=user_model.User, obj_id=obj_in.reporter_id
     )

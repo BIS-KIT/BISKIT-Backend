@@ -17,12 +17,10 @@ class Report(ModelBase):
     reason = Column(String, nullable=True)
     status = Column(String)
 
-    target_id = Column(Integer, ForeignKey("user.id"))
-    reporter_id = Column(Integer, ForeignKey("user.id"))
+    content_type = Column(String, nullable=True)
+    content_id = Column(Integer, nullable=True)
 
-    target = relationship(
-        "User", foreign_keys=[target_id], backref="reports_received", uselist=False
-    )
+    reporter_id = Column(Integer, ForeignKey("user.id"))
     reporter = relationship(
         "User", foreign_keys=[reporter_id], backref="reports_made", uselist=False
     )
