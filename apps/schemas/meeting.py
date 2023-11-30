@@ -125,6 +125,7 @@ class MeetingItemCreate(BaseModel):
 class MeetingResponse(CoreSchema, MeetingBase, MeetingCountBase):
     created_time: Optional[datetime] = None
     creator: Optional[UserSimpleResponse] = None
+    chat_id: Optional[str] = None
 
     university_id: Optional[int]
 
