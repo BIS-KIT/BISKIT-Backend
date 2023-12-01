@@ -93,10 +93,19 @@ class Alarm:
 
     def notice_alarm(self, db: Session, title: str, content: str, notice_id: int):
         fcm_tokens = crud.user.get_all_fcm_tokens(db=db)
-        print(22, fcm_tokens)
         data = {"notice_id": str(notice_id)}
         return send_fcm_notification(
             title=title, body=content, fcm_tokens=fcm_tokens, data=data
+        )
+
+    def report_alarm(self, db: Session, target_id: int):
+        target_fcm_token = crud.user.get_user_fcm_token(db=db, user_id=target_id)
+        get_all_report = crud.report.get_by_user_id(db=db, user_id=target_id)
+
+        title = "경고"
+        body = f"서비스 이용규정 위반으로 경고가 {len(get_all_report)}회 누적되었습니다."
+        return send_fcm_notification(
+            title=title, body=body, fcm_tokens=[target_fcm_token]
         )
 
     def chat_alarm(self, db: Session, chat_id: str):
