@@ -2,6 +2,7 @@ from firebase_admin import messaging
 
 from firebase_admin import firestore
 from sqlalchemy.orm import Session
+from firebase_admin.exceptions import InvalidArgumentError
 from typing import List, Dict
 
 import crud
@@ -28,6 +29,10 @@ def send_fcm_notification(
         ]
         response = messaging.send_all(messages)
         return response
+    except InvalidArgumentError as e:
+        # FCM 토큰 관련 오류 처리
+        log_error(e)
+        pass
     except Exception as e:
         log_error(e)
         raise e
@@ -88,6 +93,7 @@ class Alarm:
 
     def notice_alarm(self, db: Session, title: str, content: str, notice_id: int):
         fcm_tokens = crud.user.get_all_fcm_tokens(db=db)
+        print(22, fcm_tokens)
         data = {"notice_id": str(notice_id)}
         return send_fcm_notification(
             title=title, body=content, fcm_tokens=fcm_tokens, data=data
