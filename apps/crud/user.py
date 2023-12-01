@@ -102,7 +102,8 @@ class CRUDUser(CRUDBase[User, user_schmea.UserCreate, user_schmea.UserUpdate]):
         return obj.fcm_token
 
     def get_all_fcm_tokens(self, db: Session):
-        return db.query(User.fcm_token).filter(User.fcm_token.isnot(None)).all()
+        result = db.query(User.fcm_token).filter(User.fcm_token.isnot(None)).all()
+        return [token[0] for token in result if token[0]]
 
     def get_consent(self, db: Session, user_id: int):
         return db.query(Consent).filter(Consent.user_id == user_id).first()
