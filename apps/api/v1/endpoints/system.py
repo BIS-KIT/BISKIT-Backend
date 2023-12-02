@@ -147,6 +147,9 @@ def create_notice(obj_in: system_schema.NoticeCreate, db: Session = Depends(get_
         )
 
     create_obj = crud.notice.create(db=db, obj_in=obj_in)
+    alarm = crud.alarm.notice_alarm(
+        db=db, title=obj_in.title, content=obj_in.content, notice_id=create_obj.id
+    )
     return create_obj
 
 

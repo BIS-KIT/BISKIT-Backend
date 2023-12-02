@@ -99,6 +99,9 @@ def exit_meeting(user_id: int, meeting_id: int, db: Session = Depends(get_db)):
         print(e)
         log_error(e)
         raise HTTPException(status_code=500)
+
+    alarm = crud.alarm.exit_meeting(db=db, user_id=user_id, meeting_id=meeting_id)
+
     return meeting_exit
 
 
@@ -131,7 +134,10 @@ def join_meeting_request(obj_in: MeetingUserCreate, db: Session = Depends(get_db
     (user_id는 차후 token에서 추출할것)
     """
 
-    check_obj = crud.get_object_or_404(db=db, model=Meeting, obj_id=obj_in.meeting_id)
+    check_meeting = crud.get_object_or_404(
+        db=db, model=Meeting, obj_id=obj_in.meeting_id
+    )
+    check_user = crud.get_object_or_404(db=db, model=User, obj_id=obj_in.user_id)
 
     try:
         meeting = crud.meeting.join_request(db=db, obj_in=obj_in)
@@ -141,6 +147,11 @@ def join_meeting_request(obj_in: MeetingUserCreate, db: Session = Depends(get_db
         print(e)
         log_error(e)
         raise HTTPException(status_code=500)
+
+    alarm = crud.alarm.create_meeting_request(
+        db=db, user_id=obj_in.user_id, meeting_id=obj_in.meeting_id
+    )
+    print(222, alarm)
     return status.HTTP_201_CREATED
 
 
@@ -159,6 +170,11 @@ def join_meeting_approve(obj_id: int, db: Session = Depends(get_db)):
         print(e)
         log_error(e)
         raise HTTPException(status_code=500)
+
+    alarm = crud.alarm.meeting_request_approve(
+        db=db, user_id=check_obj.user_id, meeting_id=check_obj.meeting_id
+    )
+
     return status.HTTP_201_CREATED
 
 
@@ -176,6 +192,11 @@ def join_meeting_approve(obj_id: int, db: Session = Depends(get_db)):
         print(e)
         log_error(e)
         raise HTTPException(status_code=500)
+
+    alarm = crud.alarm.meeting_request_reject(
+        db=db, user_id=check_obj.user_id, meeting_id=check_obj.meeting_id
+    )
+
     return status.HTTP_201_CREATED
 
 
