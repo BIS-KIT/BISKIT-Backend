@@ -76,12 +76,17 @@ class CRUDUtility:
         return db_obj
 
     def read_topics(self, db: Session, is_custom: Optional[bool] = None):
+        ORDERED_TOPICS = {
+            "푸드": 1, "언어교환": 2, "액티비티": 3, "스포츠": 4,
+            "스터디": 5, "문화/예술": 6, "취미": 7, "기타": 8
+        }
         if is_custom is None:
-            return db.query(Topic).all()
+            topics = db.query(Topic).all()
         elif is_custom:
-            return db.query(Topic).filter(Topic.is_custom == True).all()
+            topics = db.query(Topic).filter(Topic.is_custom == True).all()
         else:
-            return db.query(Topic).filter(Topic.is_custom == False).all()
+            topics = db.query(Topic).filter(Topic.is_custom == False).all()
+        return sorted(topics, key=lambda x: ORDERED_TOPICS.get(x.kr_name, 9))
 
     def read_tags(self, db: Session, is_custom: Optional[bool] = None):
         if is_custom is None:
