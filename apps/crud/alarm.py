@@ -6,6 +6,7 @@ from firebase_admin.exceptions import InvalidArgumentError
 from typing import List, Dict
 
 import crud
+from core.config import settings
 from log import log_error
 
 
@@ -48,10 +49,11 @@ class Alarm:
             db=db, user_id=meeting.creator_id
         )
         requester_nick_name = requester.nick_name
-
         title = "모임 신청"
         body = f"{requester_nick_name}님이 {meeting_name} 모임에 신청했어요."
-        data = {"meeting_id": str(meeting_id)}
+
+        icon_url = settings.S3_URL + "/default_icon/Thumbnail_Icon_Notify.svg"
+        data = {"meeting_id": meeting_id, "icon_url":icon_url}
         return send_fcm_notification(title, body, [target_fcm_token], data)
 
     def exit_meeting(self, db: Session, user_id: int, meeting_id: int):
@@ -66,7 +68,9 @@ class Alarm:
 
         title = "모임 취소"
         body = f"{requester_nick_name}님이 {meeting_name} 모임에서 나갔어요."
-        data = {"meeting_id": str(meeting_id)}
+
+        icon_url = settings.S3_URL + "/default_icon/Thumbnail_Icon_Notify.svg"
+        data = {"meeting_id": meeting_id, "icon_url":icon_url}
         return send_fcm_notification(title, body, [target_fcm_token], data)
 
     def meeting_request_approve(self, db: Session, user_id: int, meeting_id: int):
@@ -77,7 +81,9 @@ class Alarm:
 
         title = "모임 승인"
         body = f"{meeting_name} 모임에 승인되었어요."
-        data = {"meeting_id": str(meeting_id)}
+
+        icon_url = settings.S3_URL + "/default_icon/Thumbnail_Icon_Notify.svg"
+        data = {"meeting_id": meeting_id, "icon_url":icon_url}
         return send_fcm_notification(title, body, [target_fcm_token], data)
 
     def meeting_request_reject(self, db: Session, user_id: int, meeting_id: int):
@@ -88,12 +94,15 @@ class Alarm:
 
         title = "모임 거절"
         body = f"{meeting_name} 모임에 거절되었어요."
-        data = {"meeting_id": meeting_id}
+
+        icon_url = settings.S3_URL + "/default_icon/Thumbnail_Icon_Notify.svg"
+        data = {"meeting_id": meeting_id, "icon_url":icon_url}
         return send_fcm_notification(title, body, [target_fcm_token], data)
 
     def notice_alarm(self, db: Session, title: str, content: str, notice_id: int):
         fcm_tokens = crud.user.get_all_fcm_tokens(db=db)
-        data = {"notice_id": str(notice_id)}
+        icon_url = settings.S3_URL + "/default_icon/Thumbnail_notice_Icon.svg"
+        data = {"notice_id": str(notice_id), "icon_url":icon_url}
         return send_fcm_notification(
             title=title, body=content, fcm_tokens=fcm_tokens, data=data
         )
@@ -104,6 +113,9 @@ class Alarm:
 
         title = "경고"
         body = f"서비스 이용규정 위반으로 경고가 {len(get_all_report)}회 누적되었습니다."
+
+        icon_url = settings.S3_URL + "/default_icon/Thumbnail_reprot_icon.svg"
+        data = {"icon_url":icon_url}
         return send_fcm_notification(
             title=title, body=body, fcm_tokens=[target_fcm_token]
         )
