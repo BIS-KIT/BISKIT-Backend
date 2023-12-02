@@ -29,8 +29,9 @@ class User(ModelBase):
         return self.profile.profile_photo if self.profile else None
 
     @property
-    def nickname(self):
+    def nick_name(self):
         return self.profile.nick_name if self.profile else None
+
 
 class UserNationality(ModelBase):
     nationality_id = Column(Integer, ForeignKey("nationality.id", ondelete="CASCADE"))

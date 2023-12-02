@@ -7,6 +7,7 @@ from schemas.system import BanCreate, ReportCreateIn
 
 from log import log_error
 from crud.base import CRUDBase
+import crud
 from models import system as system_models
 from schemas import system as system_schemas
 from schemas.enum import ReultStatusEnum
@@ -43,7 +44,8 @@ class CRUDReport(
         obj = (
             db.query(Report)
             .filter(
-                Report.target_id == user_id,
+                Report.content_id == user_id,
+                Report.content_type == "User",
                 Report.status == ReultStatusEnum.APPROVE.value,
             )
             .all()
@@ -54,6 +56,9 @@ class CRUDReport(
         approve_obj = db.query(Report).filter(Report.id == report_id).first()
         approve_obj.status = ReultStatusEnum.APPROVE.value
         db.commit()
+        if approve_obj.content_type == "User":
+            alarm = crud.alarm.report_alarm(db=db, target_id=approve_obj.content_id)
+
         return approve_obj
 
 
