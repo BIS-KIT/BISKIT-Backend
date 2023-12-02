@@ -2,6 +2,7 @@ from sqladmin import ModelView, Admin
 
 from models.user import User
 from models.profile import StudentVerification
+from models.system import Report
 
 import os
 from pathlib import Path
@@ -16,6 +17,8 @@ templates_dir = f"{folder_path}/admin/templates"
 class UserAdmin(ModelView, model=User):
     column_list = [User.id, User.name]
 
+class ReportAdmin(ModelView, model=Report):
+    column_list = [Report.id, Report.content_type, Report.content_id, Report.reason]
 
 class StudentVerificationAdmin(ModelView, model=StudentVerification):
     can_edit = False
@@ -30,3 +33,4 @@ class StudentVerificationAdmin(ModelView, model=StudentVerification):
 def register_all(admin: Admin):
     admin.add_view(UserAdmin)
     admin.add_view(StudentVerificationAdmin)
+    admin.add_view(ReportAdmin)
