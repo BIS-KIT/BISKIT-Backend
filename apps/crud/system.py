@@ -80,6 +80,9 @@ class CRUDBan(
         target_id_list = [ban.target_id for ban in ban_list]
         return target_id_list
 
+    def get_ban(self, db:Session, user_id:int, target_id:int):
+        obj = db.query(Ban).filter(Ban.target_id == target_id, Ban.reporter_id == user_id).first()
+        return obj
 
 class CRUDContact(
     CRUDBase[
