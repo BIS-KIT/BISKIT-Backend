@@ -1,5 +1,6 @@
 import httpx, shutil, re
 from typing import Any, List, Optional, Dict
+import random
 
 from fastapi import (
     APIRouter,
@@ -121,6 +122,20 @@ async def check_nick_name(nick_name: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=409, detail="nick_name already used")
 
     return {"status": "Nick_name is available."}
+
+
+@router.get("/profile/random-image")
+def get_random_image():
+    random_profile_images = [
+        "/default_profile_photo/version=1.svg",
+        "/default_profile_photo/version=2.svg",
+        "/default_profile_photo/version=3.svg",
+        "/default_profile_photo/version=4.svg",
+        "/default_profile_photo/version=5.svg",
+    ]
+    selected_image = random.choice(random_profile_images)
+    image_url = settings.S3_URL + selected_image
+    return {"image_url": image_url}
 
 
 @router.get("/profile/random-nickname")
