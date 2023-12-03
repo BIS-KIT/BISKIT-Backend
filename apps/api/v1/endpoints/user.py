@@ -86,7 +86,7 @@ def read_user(user_id: int, db: Session = Depends(get_db)):
 
 
 @router.delete("/user/{user_id}")
-def delete_user(user_id: int, db: Session = Depends(get_db)):
+def delete_user(user_id: int, is_remove: bool = False, db: Session = Depends(get_db)):
     """
     특정 사용자를 삭제합니다.
     (7일간 재가입 막기 위해, 7일 후 삭제)
@@ -101,6 +101,8 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
 
     check_obj = crud.get_object_or_404(db=db, model=User, obj_id=user_id)
     delete_obj = crud.user.deactive_user(db=db, user_id=user_id)
+    if is_remove:
+        delete_obj = crud.user.remove(db=db, id=user_id)
     return status.HTTP_204_NO_CONTENT
 
 
@@ -364,7 +366,9 @@ def delete_user_nationality(
     return status.HTTP_204_NO_CONTENT
 
 
-@router.get("/user/{user_id}/report", response_model=List[system_schemas.ReportResponse])
+@router.get(
+    "/user/{user_id}/report", response_model=List[system_schemas.ReportResponse]
+)
 def get_report_by_user(
     user_id: int,
     db: Session = Depends(get_db),
