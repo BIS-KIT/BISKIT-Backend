@@ -150,6 +150,19 @@ def remove_ban(ban_ids: List[int], db: Session = Depends(get_db)):
     return status.HTTP_204_NO_CONTENT
 
 
+@router.delete("/unban")
+def unban(reporter_id: int, target_id: int, db: Session = Depends(get_db)):
+    check_obj = crud.get_object_or_404(db=db, model=user_model.User, obj_id=reporter_id)
+    check_target_obj = crud.get_object_or_404(
+        db=db, model=user_model.User, obj_id=target_id
+    )
+
+    delete_boj = crud.ban.delete_ban_with_id(
+        db=db, reporter_id=reporter_id, target_id=target_id
+    )
+    return status.HTTP_204_NO_CONTENT
+
+
 @router.get("/notices", response_model=system_schema.NoticeListResponse)
 def read_notices(db: Session = Depends(get_db), skip: int = 0, limit: int = 10):
     notices, total_count = crud.notice.get_multi(db=db, skip=skip, limit=limit)

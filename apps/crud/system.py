@@ -85,9 +85,22 @@ class CRUDBan(
         target_id_list = [ban.target_id for ban in ban_list]
         return target_id_list
 
-    def get_ban(self, db:Session, user_id:int, target_id:int):
-        obj = db.query(Ban).filter(Ban.target_id == target_id, Ban.reporter_id == user_id).first()
+    def get_ban(self, db: Session, user_id: int, target_id: int):
+        obj = (
+            db.query(Ban)
+            .filter(Ban.target_id == target_id, Ban.reporter_id == user_id)
+            .first()
+        )
         return obj
+
+    def delete_ban_with_id(self, db: Session, reporter_id: int, target_id: int):
+        obj = db.query(Ban).filter(Ban.reporter_id == reporter_id).first()
+        if not obj:
+            raise HTTPException(status_code=404, detail=f"Ban is not found")
+        db.delete(obj)
+        db.commit()
+        return obj
+
 
 class CRUDContact(
     CRUDBase[
