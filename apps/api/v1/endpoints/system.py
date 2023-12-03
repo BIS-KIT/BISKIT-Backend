@@ -1,6 +1,7 @@
 from typing import List, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
+from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
 import crud
@@ -64,7 +65,7 @@ def get_report(report_id: int, db: Session = Depends(get_db)):
         db=db, model=system_model.Report, obj_id=report_id
     )
     report = crud.report.approve_report(db=db, report_id=report_id)
-    return report
+    return RedirectResponse(url="/admin/report/list", status_code=303)
 
 
 @router.post("/report", response_model=system_schema.ReportResponse)
@@ -99,13 +100,16 @@ def read_ban_by_user_id(
     )
     return {"ban_list": ban_list, "total_count": total_count}
 
+
 @router.get("/ban/{user_id}/{target_id}")
-def check_user_ban(user_id:int, target_id:int, db: Session = Depends(get_db)):
+def check_user_ban(user_id: int, target_id: int, db: Session = Depends(get_db)):
     """
     차단 상태 확인
     """
     check_user = crud.get_object_or_404(db=db, model=user_model.User, obj_id=user_id)
-    check_target = crud.get_object_or_404(db=db, model=user_model.User, obj_id=target_id)
+    check_target = crud.get_object_or_404(
+        db=db, model=user_model.User, obj_id=target_id
+    )
 
     ban_obj = crud.ban.get_ban(db=db, user_id=user_id, target_id=target_id)
 
@@ -115,6 +119,7 @@ def check_user_ban(user_id:int, target_id:int, db: Session = Depends(get_db)):
         )
 
     return ban_obj
+
 
 @router.post("/ban")
 def create_ban(obj_in: system_schema.BanCreate, db: Session = Depends(get_db)):

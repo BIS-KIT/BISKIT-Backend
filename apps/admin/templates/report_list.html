@@ -159,11 +159,8 @@
             {% endif %}
             {% endfor %}
             <td>
-              <form method="post" action="/v1/student-card/verify/{{row.id}}?action=approve" class="d-inline-block">
+              <form method="get" action="/v1/report/{{ row.id }}/approve" class="d-inline-block">
                 <button type="submit" class="btn btn-primary">Approve</button>
-              </form>
-              <form method="post" action="/v1/student-card/verify/{{row.id}}?action=rejected" class="d-inline-block">
-                <button type="submit" class="btn btn-primary">Rejected</button>
               </form>
             </td>
           </tr>
