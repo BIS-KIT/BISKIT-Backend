@@ -127,11 +127,11 @@ async def check_nick_name(nick_name: str, db: Session = Depends(get_db)):
 @router.get("/profile/random-image")
 def get_random_image():
     random_profile_images = [
-        "/default_profile_photo/version=1.svg",
-        "/default_profile_photo/version=2.svg",
-        "/default_profile_photo/version=3.svg",
-        "/default_profile_photo/version=4.svg",
-        "/default_profile_photo/version=5.svg",
+        "/default_profile_photo/version=1.png",
+        "/default_profile_photo/version=2.png",
+        "/default_profile_photo/version=3.png",
+        "/default_profile_photo/version=4.png",
+        "/default_profile_photo/version=5.png",
     ]
     selected_image = random.choice(random_profile_images)
     image_url = settings.S3_URL + selected_image
