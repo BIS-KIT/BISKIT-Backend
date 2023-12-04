@@ -364,6 +364,8 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
             db_obj.profile_photo = obj_in.profile_photo
         if obj_in.context is not None:
             db_obj.context = obj_in.context
+        if obj_in.is_default_photo is not None:
+            db_obj.is_default_photo = obj_in.is_default_photo
 
         if update_available_languages:
             existing_language_ids = {

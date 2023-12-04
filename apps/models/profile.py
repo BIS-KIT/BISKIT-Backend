@@ -8,6 +8,7 @@ class Profile(ModelBase):
     profile_photo = Column(String, nullable=True)  # 이미지 URL 저장
     nick_name = Column(String)
     context = Column(String, nullable=True)
+    is_default_photo = Column(Boolean, default=False)
 
     user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))
     user = relationship("User", back_populates="profile")

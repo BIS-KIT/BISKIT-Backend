@@ -46,6 +46,7 @@ class ProfileBase(CoreSchema):
     nick_name: Optional[str] = None
     profile_photo: Optional[Union[str, UploadFile]] = None
     user_id: Optional[int] = None
+    is_default_photo: bool = False
 
 
 # 프로필 생성을 위한 스키마
@@ -154,6 +155,7 @@ class ProfileResponse(BaseModel):
     id: int = None
     user_id: int = None
     nick_name: Optional[str] = None
+    is_default_photo: Optional[bool] = None
     context: Optional[str] = None
     profile_photo: Optional[str] = None
     available_languages: Optional[List[AvailableLanguageResponse]] = None
@@ -168,6 +170,7 @@ class ProfileResponse(BaseModel):
 class ProfileRegister(BaseModel):
     nick_name: Optional[str] = None
     profile_photo: Optional[str] = None
+    is_default_photo: Optional[bool] = False
     available_languages: Optional[List[AvailableLanguageIn]]
     introductions: Optional[List[IntroductionIn]] = None
     student_card: Optional[StudentVerificationIn] = None
@@ -177,6 +180,7 @@ class ProfileUpdate(BaseModel):
     nick_name: Optional[str] = None
     context: Optional[str] = None
     profile_photo: Optional[str] = None
+    is_default_photo: Optional[bool] = None
     available_languages: Optional[List[AvailableLanguageIn]] = None
     introductions: Optional[List[IntroductionIn]] = None
     university_info: Optional[ProfileUniversityUpdate] = None
