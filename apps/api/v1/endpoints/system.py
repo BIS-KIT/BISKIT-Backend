@@ -101,24 +101,26 @@ def read_ban_by_user_id(
     return {"ban_list": ban_list, "total_count": total_count}
 
 
-@router.get("/ban/{user_id}/{target_id}")
-def check_user_ban(user_id: int, target_id: int, db: Session = Depends(get_db)):
+@router.get("/bans/{user_id}", response_model=List[system_schema.BanResponse])
+def check_user_ban(
+    user_id: int, target_ids: List[int] = Query(None), db: Session = Depends(get_db)
+):
     """
     차단 상태 확인
     """
+    return_list = []
     check_user = crud.get_object_or_404(db=db, model=user_model.User, obj_id=user_id)
-    check_target = crud.get_object_or_404(
-        db=db, model=user_model.User, obj_id=target_id
-    )
-
-    ban_obj = crud.ban.get_ban(db=db, user_id=user_id, target_id=target_id)
-
-    if not ban_obj:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Ban not found."
+    for target_id in target_ids:
+        check_target = crud.get_object_or_404(
+            db=db, model=user_model.User, obj_id=target_id
         )
 
-    return ban_obj
+        ban_obj = crud.ban.get_ban(db=db, user_id=user_id, target_id=target_id)
+
+        if ban_obj:
+            return_list.append(ban_obj)
+
+    return return_list
 
 
 @router.post("/ban")
