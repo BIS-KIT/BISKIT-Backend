@@ -95,7 +95,12 @@ class CRUDUtility:
             topics = db.query(Topic).filter(Topic.is_custom == False).all()
         return sorted(topics, key=lambda x: ORDERED_TOPICS.get(x.kr_name, 9))
 
-    def read_tags(self, db: Session, is_custom: Optional[bool] = None):
+    def read_tags(
+        self, db: Session, is_custom: Optional[bool] = None, is_home: bool = False
+    ):
+        if is_home:
+            return db.query(Tag).filter(Tag.is_home == is_home).all()
+
         if is_custom is None:
             return db.query(Tag).all()
         elif is_custom:
@@ -103,56 +108,17 @@ class CRUDUtility:
         else:
             return db.query(Tag).filter(Tag.is_custom == False).all()
 
-    def create_fix_topics_tags(self, db: Session):
-        base_url = settings.S3_URL + "/default_icon/"
-
-        topic_mapping = {
-            "푸드": "ic_food_fill_48.svg",
-            "스포츠": "ic_sports_fill_48.svg",
-            "액티비티": "ic_activity_fill_48.svg",
-            "언어교환": "ic_language_exchange_fill_48.svg",
-            "스터디": "ic_study_fill_48.svg",
-            "문화/예술": "ic_culture_fill_48.svg",
-            "취미": "ic_hobby_fill_48.svg",
-            "기타": "ic_talk_fill_48.svg",
-        }
-
-        topic_fixs_mapping = {
-            "푸드": "Food",
-            "언어교환": "Language Exchange",
-            "액티비티": "Activity",
-            "스포츠": "Sprots",
-            "스터디": "Study",
-            "문화/예술": "Culture/Art",
-            "취미": "Hobby",
-            "기타": "etc",
-        }
-
-        tag_fixs_mapping = {
-            "영어 못해도 괜찮아요": "It's okay if you can't speak English",
-            "혼자와도 괜찮아요": "It's okay to come alone",
-            "늦잠가능": "Sleeping in is okay",
-            "한국어 못해도 괜찮아요": "It's okay if you can't speak Korean",
-            "비건": "Vegan",
-            "뒷풀이": "After Party",
-            "여자만": "Only for women",
-            "남자만": "Only for men",
-        }
-
-        for kr, en in topic_fixs_mapping.items():
-            topic = db.query(Topic).filter(Topic.kr_name == kr).first()
-            if not topic:
-                topic = Topic(kr_name=kr, en_name=en, is_custom=False)
-                db.add(topic)
-            topic.icon_url = base_url + topic_mapping[kr]
-
-        for kr, en in tag_fixs_mapping.items():
-            if not db.query(Tag).filter(Tag.kr_name == kr).first():
-                tag = Tag(kr_name=kr, en_name=en, is_custom=False)
-                db.add(tag)
-
+    def display_tag(self, db: Session, tag_id: int):
+        tag = db.query(Tag).filter(Tag.id == tag_id)
+        tag.is_home = True
         db.commit()
-        return {"message": "Items created or updated successfully"}
+        return tag
+
+    def hide_tag(self, db: Session, tag_id: int):
+        tag = db.query(Tag).filter(Tag.id == tag_id)
+        tag.is_home = False
+        db.commit()
+        return tag
 
     def png_to_svg(self, db: Session):
         # tags = db.query(Tag).all()
