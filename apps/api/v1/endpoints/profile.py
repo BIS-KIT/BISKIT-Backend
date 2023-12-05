@@ -1,6 +1,7 @@
 import httpx, shutil, re
 from typing import Any, List, Optional, Dict
 import random
+import asyncio
 
 from fastapi import (
     APIRouter,
@@ -139,25 +140,37 @@ def get_random_image():
 
 
 @router.get("/profile/random-nickname")
-async def get_random_nickname():
+async def get_random_nickname(db: Session = Depends(get_db)):
     async with httpx.AsyncClient() as client:
-        response = await client.get(settings.NICKNAME_API)
+        while True:
+            response = await client.get(settings.NICKNAME_API)
 
-        # API 요청이 성공했는지 확인
-        if response.status_code != 200:
-            raise HTTPException(
-                status_code=503,
-                detail="Nickname API service unavailable",
+            # API 요청이 성공했는지 확인
+            if response.status_code != 200:
+                # 잠시 후에 다시 시도
+                await asyncio.sleep(3)  # 3초 대기
+                continue
+
+            data = response.json()
+
+            kr_nick_name = data.get("words")[0].split(" ")[:-1] + [" 비스킷"]
+            kr_nick_name = "".join(kr_nick_name)
+
+            check_exists = crud.profile.get_with_nick_name(
+                db=db, nick_name=kr_nick_name
             )
 
-        data = response.json()
+            # 중복되지 않은 닉네임이면 break
+            if check_exists is None:
+                break
 
-        kr_nick_name = data.get("words")[0].split(" ")[:-1] + [" 비스킷"]
-        kr_nick_name = "".join(kr_nick_name)
+            # 중복된 경우, 잠시 대기 후 다시 시도
+            await asyncio.sleep(1)  # 1초 대기
+
         # TODO : random english nickname
         en_nick_name = data.get("en_nick_name")
 
-    return {"kr_nick_name": kr_nick_name, "en_nick_name": en_nick_name}
+        return {"kr_nick_name": kr_nick_name, "en_nick_name": en_nick_name}
 
 
 @router.post("/student-card", response_model=StudentVerificationBase)
