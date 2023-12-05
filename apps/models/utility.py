@@ -22,8 +22,10 @@ class Language(ModelBase):
 
 
 class University(ModelBase):
-    kr_name = Column(String)
-    en_name = Column(String)
+    kr_name = Column(String, nullable=True)
+    en_name = Column(String, nullable=True)
+    campus_type = Column(String, nullable=True)
+    location = Column(String, nullable=True)
 
 
 class Tag(ModelBase):
@@ -31,6 +33,7 @@ class Tag(ModelBase):
     en_name = Column(String, nullable=True)
     is_custom = Column(Boolean, default=True)
     icon_url = Column(String, nullable=True)
+    is_home = Column(Boolean, default=True)
 
 
 class Topic(ModelBase):
