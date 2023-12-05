@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Form
 from fastapi.responses import RedirectResponse
 
 import crud
@@ -46,3 +46,32 @@ def approve_varification(
     )
 
     return RedirectResponse(url="/admin/student-verification/list", status_code=303)
+
+
+@router.post("/tag/home/display")
+def display_home_display_tag(tag_id: int = Form(...), db: Session = Depends(get_db)):
+    """
+    admin 에서만 쓰일 api 입니다.
+    """
+
+    tag = crud.utility.display_tag(db=db, tag_id=tag_id)
+    return RedirectResponse(url="/admin/tag/list", status_code=303)
+
+
+@router.post("/tag/home/hide")
+def hide_home_display_tag(tag_id: int = Form(...), db: Session = Depends(get_db)):
+    """
+    admin 에서만 쓰일 api 입니다.
+    """
+
+    tag = crud.utility.hide_tag(db=db, tag_id=tag_id)
+    return RedirectResponse(url="/admin/tag/list", status_code=303)
+
+
+@router.get("/report/{report_id}/approve")
+def get_report(report_id: int, db: Session = Depends(get_db)):
+    """
+    신고 내역 승인 테스트용 api(실제 승인은 admin page에서)
+    """
+    report = crud.report.approve_report(db=db, report_id=report_id)
+    return RedirectResponse(url="/admin/report/list", status_code=303)

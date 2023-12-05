@@ -472,15 +472,6 @@ def get_review(review_id: int, db: Session = Depends(get_db)):
     return obj
 
 
-@router.post("/fix-item")
-def create_fix_item(db: Session = Depends(get_db)):
-    """
-    고정 값 생성
-    """
-    crud.utility.create_fix_topics_tags(db=db)
-    return
-
-
 @router.get("/chat/alarm")
 def read_chat_alarm(chat_id: str = Query(...), db: Session = Depends(get_db)):
     """
