@@ -472,12 +472,12 @@ def get_review(review_id: int, db: Session = Depends(get_db)):
     return obj
 
 
-@router.get("/fix-item")
+@router.post("/fix-item")
 def create_fix_item(db: Session = Depends(get_db)):
     """
     고정 값 생성
     """
-    crud.utility.create_fix_items(db=db)
+    crud.utility.create_fix_topics_tags(db=db)
     return
 
 
