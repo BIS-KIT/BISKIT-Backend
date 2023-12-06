@@ -22,6 +22,7 @@ from schemas.meeting import (
     ReviewUpdateIn,
     ReviewListReponse,
     MeetingUserListResponse,
+    ChatAlarm,
 )
 from models.meeting import Meeting, MeetingUser, Review
 from models.user import User
@@ -472,17 +473,8 @@ def get_review(review_id: int, db: Session = Depends(get_db)):
     return obj
 
 
-@router.get("/fix-item")
-def create_fix_item(db: Session = Depends(get_db)):
-    """
-    고정 값 생성
-    """
-    crud.utility.create_fix_items(db=db)
-    return
-
-
-@router.get("/chat/alarm")
-def read_chat_alarm(chat_id: str = Query(...), db: Session = Depends(get_db)):
+@router.post("/chat/alarm")
+def read_chat_alarm(obj_in: ChatAlarm, db: Session = Depends(get_db)):
     """
     아직 테스트중
     """

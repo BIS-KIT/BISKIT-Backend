@@ -1,8 +1,8 @@
 import pandas as pd
 from sqlalchemy.orm import Session
-from models.utility import Language, Nationality
+from models.utility import Language, Nationality, University, Topic, Tag
 from database.session import SessionLocal
-
+from core.config import settings
 
 # B4:C147 범위 추출 (0부터 시작하는 인덱스를 기준으로)
 # B는 2번째 열, C는 3번째 열이라고 가정합니다.
@@ -11,6 +11,9 @@ subset1 = pd.read_excel("DataSet.xlsx", sheet_name=0, header=None).iloc[3:147, 1
 
 # 2번 시트에서 "B4:D250" 범위의 데이터 가져오기
 subset2 = pd.read_excel("DataSet.xlsx", sheet_name=1, header=None).iloc[3:250, 1:4]
+
+# 3번 시트에서 "B4:D250" 범위의 데이터 가져오기
+subset3 = pd.read_excel("DataSet.xlsx", sheet_name=2, header=None).iloc[2:216, 1:8]
 
 
 def get_nationality(subset: pd.DataFrame):
@@ -70,6 +73,105 @@ def get_language(subset: pd.DataFrame):
         db.close()
 
 
-# 사용법
-get_language(subset1)
-get_nationality(subset2)
+def get_university(subset: pd.DataFrame):
+    db = SessionLocal()
+
+    try:
+        for _, row in subset.iterrows():
+            kr_name = str(row[subset.columns[3]]) or None
+            en_name = str(row[subset.columns[4]]) or None
+            campus_type = str(row[subset.columns[5]]) or None
+            location = str(row[subset.columns[6]]) or None
+
+            existing_university = (
+                db.query(University).filter(University.kr_name == kr_name).first()
+            )
+
+            if not existing_university:
+                university_obj = University(
+                    kr_name=kr_name,
+                    en_name=en_name,
+                    campus_type=campus_type,
+                    location=location,
+                )
+                db.add(university_obj)
+            else:
+                existing_university.kr_name = kr_name
+                existing_university.en_name = en_name
+                existing_university.campus_type = campus_type
+                existing_university.location = location
+
+        db.commit()
+    except Exception as e:
+        print(f"Error: {e}")
+        db.rollback()
+    finally:
+        db.close()
+
+
+def create_fix_topics_tags():
+    db = SessionLocal()
+    base_url = settings.S3_URL + "/default_icon/"
+
+    topic_mapping = {
+        "푸드": "ic_food_fill_48.svg",
+        "스포츠": "ic_sports_fill_48.svg",
+        "액티비티": "ic_activity_fill_48.svg",
+        "언어교환": "ic_language_exchange_fill_48.svg",
+        "스터디": "ic_study_fill_48.svg",
+        "문화/예술": "ic_culture_fill_48.svg",
+        "취미": "ic_hobby_fill_48.svg",
+        "기타": "ic_talk_fill_48.svg",
+    }
+
+    topic_fixs_mapping = {
+        "푸드": "Food",
+        "언어교환": "Language Exchange",
+        "액티비티": "Activity",
+        "스포츠": "Sprots",
+        "스터디": "Study",
+        "문화/예술": "Culture/Art",
+        "취미": "Hobby",
+        "기타": "etc",
+    }
+
+    tag_fixs_mapping = {
+        "영어 못해도 괜찮아요": "It's okay if you can't speak English",
+        "혼자와도 괜찮아요": "It's okay to come alone",
+        "늦잠가능": "Sleeping in is okay",
+        "한국어 못해도 괜찮아요": "It's okay if you can't speak Korean",
+        "비건": "Vegan",
+        "뒷풀이": "After Party",
+        "여자만": "Only for women",
+        "남자만": "Only for men",
+    }
+
+    try:
+        for kr, en in topic_fixs_mapping.items():
+            topic = db.query(Topic).filter(Topic.kr_name == kr).first()
+            if not topic:
+                topic = Topic(kr_name=kr, en_name=en, is_custom=False)
+                db.add(topic)
+            topic.icon_url = base_url + topic_mapping[kr]
+
+        for kr, en in tag_fixs_mapping.items():
+            if not db.query(Tag).filter(Tag.kr_name == kr).first():
+                tag = Tag(kr_name=kr, en_name=en, is_custom=False)
+                db.add(tag)
+
+        db.commit()
+
+    except Exception as e:
+        print(f"Error: {e}")
+        db.rollback()
+    finally:
+        db.close()
+
+    return {"message": "Items created or updated successfully"}
+
+
+if __name__ == "__main__":
+    get_language(subset1)
+    get_nationality(subset2)
+    get_university(subset3)
+    create_fix_topics_tags()

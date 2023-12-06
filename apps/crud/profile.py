@@ -545,5 +545,9 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
 
         return list(all_meetings.offset(skip).limit(limit).all()), total_count
 
+    def get_with_nick_name(self, db: Session, nick_name: str):
+        profile = db.query(Profile).filter(Profile.nick_name == nick_name).first()
+        return profile
+
 
 profile = CRUDProfile(Profile)

@@ -8,6 +8,7 @@ from models.profile import UserUniversity
 from models import user as user_model
 from models import system as system_model
 import crud
+from core.config import settings
 
 
 def check_korean(text):
@@ -77,8 +78,14 @@ class CRUDUtility:
 
     def read_topics(self, db: Session, is_custom: Optional[bool] = None):
         ORDERED_TOPICS = {
-            "푸드": 1, "언어교환": 2, "액티비티": 3, "스포츠": 4,
-            "스터디": 5, "문화/예술": 6, "취미": 7, "기타": 8
+            "푸드": 1,
+            "언어교환": 2,
+            "액티비티": 3,
+            "스포츠": 4,
+            "스터디": 5,
+            "문화/예술": 6,
+            "취미": 7,
+            "기타": 8,
         }
         if is_custom is None:
             topics = db.query(Topic).all()
@@ -88,7 +95,12 @@ class CRUDUtility:
             topics = db.query(Topic).filter(Topic.is_custom == False).all()
         return sorted(topics, key=lambda x: ORDERED_TOPICS.get(x.kr_name, 9))
 
-    def read_tags(self, db: Session, is_custom: Optional[bool] = None):
+    def read_tags(
+        self, db: Session, is_custom: Optional[bool] = None, is_home: bool = False
+    ):
+        if is_home:
+            return db.query(Tag).filter(Tag.is_home == is_home).all()
+
         if is_custom is None:
             return db.query(Tag).all()
         elif is_custom:
@@ -96,58 +108,17 @@ class CRUDUtility:
         else:
             return db.query(Tag).filter(Tag.is_custom == False).all()
 
-    def set_default_icon(self, db: Session):
-        base_url = "https://biskit-bucket.s3.ap-northeast-2.amazonaws.com/default_icon/"
-        topic_mapping = {
-            "푸드": "ic_food_fill_48.svg",
-            "스포츠": "ic_sports_fill_48.svg",
-            "액티비티": "ic_activity_fill_48.svg",
-            "언어교환": "ic_language_exchange_fill_48.svg",
-            "스터디": "ic_study_fill_48.svg",
-            "문화/예술": "ic_culture_fill_48.svg",
-            "취미": "ic_hobby_fill_48.svg",
-            "기타": "ic_talk_fill_48.svg",
-        }
-        for kr, url in topic_mapping.items():
-            obj = db.query(Topic).filter(Topic.kr_name == kr).first()
-            obj.icon_url = base_url + url
+    def display_tag(self, db: Session, tag_id: int):
+        tag = db.query(Tag).filter(Tag.id == tag_id)
+        tag.is_home = True
         db.commit()
+        return tag
 
-    def create_fix_items(self, db: Session):
-        tag_fixs_mapping = {
-            "영어 못해도 괜찮아요": "It's okay if you can't speak English",
-            "혼자와도 괜찮아요": "It's okay to come alone",
-            "늦잠가능": "Sleeping in is okay",
-            "한국어 못해도 괜찮아요": "It's okay if you can't speak Korean",
-            "비건": "Vegan",
-            "여자만": "Only for women",
-            "남자만": "Only for men",
-        }
-
-        topic_fixs_mapping = {
-            "푸드": "Food",
-            "스포츠": "Sprots",
-            "액티비티": "Activity",
-            "언어교환": "Language Exchange",
-            "스터디": "Study",
-            "문화/예술": "Culture/Art",
-            "취미": "Hobby",
-            "기타": "etc",
-        }
-
-        for kr, en in tag_fixs_mapping.items():
-            check_exists = db.query(Tag).filter(Tag.kr_name == kr).first()
-            if not check_exists:
-                tag = Tag(kr_name=kr, en_name=en, is_custom=False)
-                db.add(tag)
-
-        for kr, en in topic_fixs_mapping.items():
-            check_exists = db.query(Topic).filter(Topic.kr_name == kr).first()
-            if not check_exists:
-                topic = Topic(kr_name=kr, en_name=en, is_custom=False)
-                db.add(topic)
-
+    def hide_tag(self, db: Session, tag_id: int):
+        tag = db.query(Tag).filter(Tag.id == tag_id)
+        tag.is_home = False
         db.commit()
+        return tag
 
     def png_to_svg(self, db: Session):
         # tags = db.query(Tag).all()

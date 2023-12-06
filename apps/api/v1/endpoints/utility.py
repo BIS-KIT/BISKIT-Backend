@@ -134,14 +134,19 @@ def get_countries(
 
 
 @router.get("/tags", response_model=List[TagResponse])
-def read_tags(is_custom: bool = None, db: Session = Depends(get_db)):
+def read_tags(
+    is_custom: bool = None, is_home: bool = False, db: Session = Depends(get_db)
+):
     """
     is_costem == None : 모든 tag
     is_costem == True : 사용자가 생성한 tag
     is_costem == False : 고정 tag
+
+    is_home == True : home 화면에서 보여지는 tag 리스트
+    is_home == False : default, 영향 x
     """
 
-    return crud.utility.read_tags(db=db, is_custom=is_custom)
+    return crud.utility.read_tags(db=db, is_custom=is_custom, is_home=is_home)
 
 
 @router.get("/topics", response_model=List[TopicResponse])
@@ -198,8 +203,3 @@ def set_icon(db: Session = Depends(get_db)):
 @router.get("/icon/png")
 def set_png(db: Session = Depends(get_db)):
     crud.utility.png_to_svg(db=db)
-
-
-@router.get("/system/olduser")
-def creaate_old_user_system(db: Session = Depends(get_db)):
-    crud.utility.create_default_system(db=db)

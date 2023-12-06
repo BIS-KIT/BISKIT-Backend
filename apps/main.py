@@ -44,13 +44,6 @@ app.mount("/media", StaticFiles(directory="media"), name="media")
 admin = Admin(app, engine, templates_dir=templates_dir)
 register_all(admin)
 
-
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
-    logger.error(f"An error occurred: {exc}")
-    return JSONResponse(status_code=500, content={"detail": "Internal Server Error"})
-
-
 app.include_router(v1_router, prefix="/v1")
 
 

@@ -3,6 +3,7 @@ from sqladmin import ModelView, Admin
 from models.user import User
 from models.profile import StudentVerification
 from models.system import Report, Contact
+from models.utility import Tag, Topic
 
 import os
 from pathlib import Path
@@ -20,6 +21,20 @@ class UserAdmin(ModelView, model=User):
 
 class ContactAdmin(ModelView, model=Contact):
     column_list = [Contact.id, Contact.user_id, Contact.content]
+
+
+class TagAdmin(ModelView, model=Tag):
+    column_list = [
+        Tag.kr_name,
+        Tag.en_name,
+        Tag.is_custom,
+        Tag.is_custom,
+        Tag.is_custom,
+    ]
+
+
+class TopicAdmin(ModelView, model=Topic):
+    column_list = [Topic.kr_name, Topic.en_name, Topic.is_custom, Topic.is_custom]
 
 
 class ReportAdmin(ModelView, model=Report):
@@ -48,3 +63,5 @@ def register_all(admin: Admin):
     admin.add_view(StudentVerificationAdmin)
     admin.add_view(ReportAdmin)
     admin.add_view(ContactAdmin)
+    admin.add_view(TagAdmin)
+    admin.add_view(TopicAdmin)

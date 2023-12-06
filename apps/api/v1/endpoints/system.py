@@ -1,7 +1,6 @@
 from typing import List, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
-from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
 import crud
@@ -54,18 +53,6 @@ def get_report(report_id: int, db: Session = Depends(get_db)):
     )
     report = crud.report.get(db=db, id=report_id)
     return report
-
-
-@router.get("/report/{report_id}/approve")
-def get_report(report_id: int, db: Session = Depends(get_db)):
-    """
-    신고 내역 승인 테스트용 api(실제 승인은 admin page에서)
-    """
-    check_obj = crud.get_object_or_404(
-        db=db, model=system_model.Report, obj_id=report_id
-    )
-    report = crud.report.approve_report(db=db, report_id=report_id)
-    return RedirectResponse(url="/admin/report/list", status_code=303)
 
 
 @router.post("/report", response_model=system_schema.ReportResponse)
