@@ -366,14 +366,6 @@ def create_profile(
             status_code=409, detail="Profile already exists for the user"
         )
 
-    if re.search(r"[~!@#$%^&*()_+{}[\]:;<>,.?~]", profile.nick_name):
-        raise HTTPException(
-            status_code=400, detail="Nick_name contains special characters."
-        )
-
-    if not re.match("^[a-zA-Z0-9ㄱ-ㅎㅏ-ㅣ가-힣]{2,12}$", profile.nick_name):
-        raise HTTPException(status_code=400, detail="Invalid nickname.")
-
     available_language: List[AvailableLanguageCreate] = profile.available_languages
     if available_language:
         for ava_lang in available_language:
