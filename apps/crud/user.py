@@ -482,6 +482,11 @@ class CRUDSignUP:
         return True
 
     def register_user(self, db: Session, obj_in: user_schmea.UserRegister):
+        new_user = None
+        consent_obj = None
+        user_university_obj = None
+        hashed_password = None
+
         password = obj_in.password
         user_nationality_obj_list = obj_in.nationality_ids
 
