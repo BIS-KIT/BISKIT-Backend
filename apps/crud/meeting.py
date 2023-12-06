@@ -276,8 +276,16 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
             return query
 
     def filter_by_ban(self, db: Session, query, user_id: int):
+        user_university = crud.user.get_university(db=db, user_id=user_id)
+        university_id = user_university.university_id
+
         target_list = crud.ban.get_target_ids(db=db, user_id=user_id)
-        return query.filter(not_(Meeting.creator_id.in_(target_list)))
+
+        # Meeting.university_id가 university_id와 같고, creator_id가 target_list에 속하지 않는 데이터 필터링
+        return query.filter(
+            Meeting.university_id == university_id,
+            not_(Meeting.creator_id.in_(target_list)),
+        )
 
     def get_meetings_by_university(
         self, db: Session, user_id: int, skip: int, limit: int
