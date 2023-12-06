@@ -22,6 +22,7 @@ from schemas.meeting import (
     ReviewUpdateIn,
     ReviewListReponse,
     MeetingUserListResponse,
+    ChatAlarm,
 )
 from models.meeting import Meeting, MeetingUser, Review
 from models.user import User
@@ -472,8 +473,8 @@ def get_review(review_id: int, db: Session = Depends(get_db)):
     return obj
 
 
-@router.get("/chat/alarm")
-def read_chat_alarm(chat_id: str = Query(...), db: Session = Depends(get_db)):
+@router.post("/chat/alarm")
+def read_chat_alarm(obj_in: ChatAlarm, db: Session = Depends(get_db)):
     """
     아직 테스트중
     """

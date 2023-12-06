@@ -256,3 +256,8 @@ class ReviewResponse(CoreSchema, ReviewBase):
 class ReviewListReponse(BaseModel):
     total_count: int
     reviews: Optional[List[ReviewResponse]] = []
+
+
+class ChatAlarm(BaseModel):
+    chat_id: str
+    content: str
