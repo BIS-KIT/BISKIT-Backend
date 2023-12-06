@@ -55,6 +55,9 @@ class StudentVerificationAdmin(ModelView, model=StudentVerification):
         StudentVerification.id,
         StudentVerification.student_card,
         StudentVerification.verification_status,
+        "StudentVerification.user_name",
+        "StudentVerification.user_email",
+        "StudentVerification.user_birth",
     ]
 
 
