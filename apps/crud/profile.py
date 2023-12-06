@@ -304,11 +304,19 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
                     db.add(intro_obj)
 
             if student_card:
-                student_card_obj = StudentVerification(
-                    student_card=student_card.student_card,
-                    verification_status=student_card.verification_status,
-                    profile_id=profile_obj.id,
-                )
+                if student_card.student_card:
+                    student_card_obj = StudentVerification(
+                        student_card=student_card.student_card,
+                        verification_status=ReultStatusEnum.PENDING.value,
+                        profile_id=profile_obj.id,
+                    )
+                else:
+                    student_card_obj = StudentVerification(
+                        student_card=student_card.student_card,
+                        verification_status=ReultStatusEnum.UNVERIFIED.value,
+                        profile_id=profile_obj.id,
+                    )
+
             else:
                 student_card_obj = StudentVerification(
                     student_card=None,

@@ -39,7 +39,7 @@ class StudentVerificationIn(BaseModel):
 
 
 class StudentVerificationUpdate(BaseModel):
-    verification_status: Optional[str] = ReultStatusEnum.UNVERIFIED.value
+    verification_status: Optional[str] = ReultStatusEnum.PENDING.value
 
 
 class ProfileBase(CoreSchema):
