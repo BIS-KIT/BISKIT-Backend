@@ -76,3 +76,11 @@ class StudentVerification(ModelBase):
     @property
     def user_email(self):
         return self.profile.user.email
+
+    @property
+    def user_name(self):
+        return self.profile.user.name
+
+    @property
+    def user_birth(self):
+        return self.profile.user.birth
