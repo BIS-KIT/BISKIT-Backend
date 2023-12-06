@@ -14,6 +14,8 @@ class LanguageBase(CoreSchema):
 class UniversityBase(CoreSchema):
     kr_name: Optional[str] = None
     en_name: Optional[str] = None
+    campus_type: Optional[str] = None
+    location: Optional[str] = None
 
 
 class NationalityBase(CoreSchema):
