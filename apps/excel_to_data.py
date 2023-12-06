@@ -7,7 +7,7 @@ from core.config import settings
 # B4:C147 범위 추출 (0부터 시작하는 인덱스를 기준으로)
 # B는 2번째 열, C는 3번째 열이라고 가정합니다.
 # 1번 시트에서 "B4:C147" 범위의 데이터 가져오기
-subset1 = pd.read_excel("DataSet.xlsx", sheet_name=0, header=None).iloc[3:147, 1:3]
+subset1 = pd.read_excel("DataSet.xlsx", sheet_name=0, header=None).iloc[4:147, 1:3]
 
 # 2번 시트에서 "B4:D250" 범위의 데이터 가져오기
 subset2 = pd.read_excel("DataSet.xlsx", sheet_name=1, header=None).iloc[3:250, 1:4]
@@ -22,7 +22,7 @@ def get_nationality(subset: pd.DataFrame):
         for _, row in subset.iterrows():
             kr_name = str(row[subset.columns[0]])
             en_name = str(row[subset.columns[1]])
-            code = str(row[subset.columns[2]])
+            code = str(row[subset.columns[2]]).lower()
             # 해당 국적이 이미 DB에 있는지 확인
             existing_nationality = (
                 db.query(Nationality).filter_by(kr_name=kr_name).first()
