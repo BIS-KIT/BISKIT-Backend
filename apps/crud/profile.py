@@ -557,5 +557,19 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
         profile = db.query(Profile).filter(Profile.nick_name == nick_name).first()
         return profile
 
+    def check_student_card_verifiy(self, db: Session, user_id: int) -> bool:
+        profile = self.get_by_user_id(db=db, user_id=user_id)
+        student_card = (
+            db.query(StudentVerification)
+            .filter(StudentVerification.profile_id == profile.id)
+            .first()
+        )
+        if (
+            not student_card
+            or not student_card.verification_status == ReultStatusEnum.APPROVE.value
+        ):
+            raise HTTPException(status_code=403, detail="Need to student-card verifiy")
+        return True
+
 
 profile = CRUDProfile(Profile)

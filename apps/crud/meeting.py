@@ -405,11 +405,16 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
         return
 
     def join_request(self, db: Session, obj_in: MeetingUserCreate):
-        # 이미 참가했는지 확인
         user_id = obj_in.user_id
         meeting_id = obj_in.meeting_id
 
+        # TODO : TEST 중에만 잠시 제외
+        # check_student_verifiy = crud.profile.check_student_card_verifiy(
+        #     db=db, user_id=user_id
+        # )
+
         try:
+            # 이미 참가했는지 확인
             meeting = db.query(Meeting).filter(Meeting.id == meeting_id).first()
 
             if not meeting:
