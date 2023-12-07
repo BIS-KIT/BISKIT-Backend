@@ -117,14 +117,10 @@ def check_meeting_request_status(
     """
     check_obj = crud.get_object_or_404(db=db, model=Meeting, obj_id=meeting_id)
     check_obj = crud.get_object_or_404(db=db, model=User, obj_id=user_id)
-
     meeting_request = crud.meeting.check_meeting_request_status(
         db=db, meeting_id=meeting_id, user_id=user_id
     )
-    if not meeting_request:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Meeting request not found."
-        )
+
     return meeting_request
 
 
