@@ -109,13 +109,13 @@ class CRUDUtility:
             return db.query(Tag).filter(Tag.is_custom == False).all()
 
     def display_tag(self, db: Session, tag_id: int):
-        tag = db.query(Tag).filter(Tag.id == tag_id)
+        tag = db.query(Tag).filter(Tag.id == tag_id).first()
         tag.is_home = True
         db.commit()
         return tag
 
     def hide_tag(self, db: Session, tag_id: int):
-        tag = db.query(Tag).filter(Tag.id == tag_id)
+        tag = db.query(Tag).filter(Tag.id == tag_id).first()
         tag.is_home = False
         db.commit()
         return tag

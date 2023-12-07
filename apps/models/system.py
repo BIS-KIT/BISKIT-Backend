@@ -25,6 +25,10 @@ class Report(ModelBase):
         "User", foreign_keys=[reporter_id], backref="reports_made", uselist=False
     )
 
+    @property
+    def user_name(self):
+        return self.reporter.name
+
 
 class Notice(ModelBase):
     title = Column(String)
