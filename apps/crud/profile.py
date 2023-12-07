@@ -303,26 +303,14 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
                     )
                     db.add(intro_obj)
 
+            print(student_card)
             if student_card:
-                if student_card.student_card:
-                    student_card_obj = StudentVerification(
-                        student_card=student_card.student_card,
-                        verification_status=ReultStatusEnum.PENDING.value,
-                        profile_id=profile_obj.id,
-                    )
-                else:
-                    student_card_obj = StudentVerification(
-                        student_card=student_card.student_card,
-                        verification_status=ReultStatusEnum.UNVERIFIED.value,
-                        profile_id=profile_obj.id,
-                    )
-
-            else:
                 student_card_obj = StudentVerification(
-                    student_card=None,
-                    verification_status=ReultStatusEnum.UNVERIFIED,
+                    student_card=student_card.student_card,
+                    verification_status=ReultStatusEnum.PENDING.value,
                     profile_id=profile_obj.id,
                 )
+
                 db.add(student_card_obj)
 
             user_universty = self.matching_useruniversity(db=db, user_id=user_id)

@@ -32,7 +32,7 @@ from schemas.profile import (
     StudentVerificationBase,
     StudentVerificationCreate,
 )
-from schemas.enum import MyMeetingEnum, MeetingOrderingEnum
+from schemas.enum import MyMeetingEnum, MeetingOrderingEnum, ReultStatusEnum
 from schemas.meeting import MeetingListResponse
 from log import log_error
 
@@ -201,6 +201,7 @@ def student_varification(
     obj_in = StudentVerificationCreate(
         student_card=student_card,
         profile_id=profile.id,
+        verification_status=ReultStatusEnum.PENDING.value,
     )
 
     try:
