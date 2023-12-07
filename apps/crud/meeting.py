@@ -395,12 +395,7 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
         return
 
     def join_request_reject(self, db: Session, obj_id: int):
-        join_request = db.query(MeetingUser).filter(MeetingUser.id == obj_id).first()
-
-        if not join_request:
-            raise HTTPException(status_code=400, detail="Join Request not found")
-
-        join_request.status = ReultStatusEnum.REJECTED.value
+        join_request = db.query(MeetingUser).filter(MeetingUser.id == obj_id).delete()
         db.commit()
         return
 
@@ -409,9 +404,9 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
         meeting_id = obj_in.meeting_id
 
         # TODO : TEST 중에만 잠시 제외
-        # check_student_verifiy = crud.profile.check_student_card_verifiy(
-        #     db=db, user_id=user_id
-        # )
+        check_student_verifiy = crud.profile.check_student_card_verifiy(
+            db=db, user_id=user_id
+        )
 
         try:
             # 이미 참가했는지 확인
