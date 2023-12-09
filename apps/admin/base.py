@@ -1,11 +1,17 @@
 from sqladmin import ModelView, Admin
+from sqladmin.authentication import AuthenticationBackend
+from starlette.requests import Request
+from starlette.responses import RedirectResponse
+from jose import jwt
 
+from core.config import settings
+from core.security import create_access_token
 from models.user import User
 from models.profile import StudentVerification
 from models.system import Report, Contact
 from models.utility import Tag, Topic
 
-import os
+import os, secrets
 from pathlib import Path
 
 
@@ -88,3 +94,42 @@ def register_all(admin: Admin):
     admin.add_view(ContactAdmin)
     admin.add_view(TagAdmin)
     admin.add_view(TopicAdmin)
+
+
+class AdminAuth(AuthenticationBackend):
+    async def login(self, request: Request) -> bool:
+        form = await request.form()
+        username, password = form["username"], form["password"]
+
+        correct_username = secrets.compare_digest(username, settings.DOCS_USER)
+        correct_password = secrets.compare_digest(password, settings.DOCS_PW)
+        if not (correct_username and correct_password):
+            return False
+
+        token = create_access_token(data={"sub": username})
+
+        request.session.update({"token": token})
+
+        return True
+
+    async def logout(self, request: Request) -> bool:
+        # Usually you'd want to just clear the session
+        request.session.clear()
+        return True
+
+    async def authenticate(self, request: Request) -> bool:
+        token = request.session.get("token")
+
+        if not token:
+            return False
+
+        payload = jwt.decode(
+            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+        )
+
+        username = payload.get("sub")
+        correct_username = secrets.compare_digest(username, settings.DOCS_USER)
+        if not correct_username:
+            return False
+
+        return True

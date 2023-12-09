@@ -15,7 +15,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 from core.config import settings
 from core.security import get_admin
-from admin.base import register_all, templates_dir
+from admin.base import register_all, templates_dir, AdminAuth
 from api.v1.router import api_router as v1_router
 from log import logger
 from scheduler_module import meeting_active_check, user_remove_after_seven
@@ -45,7 +45,14 @@ app.mount("/media", StaticFiles(directory="media"), name="media")
 
 scheduler = BackgroundScheduler()
 
-admin = Admin(app, engine, templates_dir=templates_dir)
+authentication_backend = AdminAuth(secret_key=settings.SECRET_KEY)
+
+admin = Admin(
+    app,
+    engine,
+    templates_dir=templates_dir,
+    authentication_backend=authentication_backend,
+)
 register_all(admin)
 
 app.include_router(v1_router, prefix="/v1")
