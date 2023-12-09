@@ -11,12 +11,14 @@ from firebase_admin import credentials, initialize_app
 from fastapi.openapi.docs import get_swagger_ui_html
 from sqladmin import Admin
 from database.session import engine
+from apscheduler.schedulers.background import BackgroundScheduler
 
 from core.config import settings
 from core.security import get_admin
 from admin.base import register_all, templates_dir
 from api.v1.router import api_router as v1_router
 from log import logger
+from scheduler_module import meeting_active_check, user_remove_after_seven
 
 
 with open("encoded_key.txt", "r") as file:
@@ -41,6 +43,8 @@ app = FastAPI(
 )
 app.mount("/media", StaticFiles(directory="media"), name="media")
 
+scheduler = BackgroundScheduler()
+
 admin = Admin(app, engine, templates_dir=templates_dir)
 register_all(admin)
 
@@ -50,6 +54,20 @@ app.include_router(v1_router, prefix="/v1")
 @app.get("/docs", include_in_schema=False)
 async def get_documentation(username: str = Depends(get_admin)):
     return get_swagger_ui_html(openapi_url="/openapi.json", title="docs")
+
+
+@app.on_event("startup")
+def start_scheduler():
+    # 스케줄러 시작 및 작업 추가
+    scheduler.add_job(meeting_active_check, "interval", minutes=1)
+    scheduler.add_job(user_remove_after_seven, "interval", minutes=1)
+    scheduler.start()
+
+
+@app.on_event("shutdown")
+def shutdown_scheduler():
+    # 스케줄러 종료
+    scheduler.shutdown()
 
 
 # Set all CORS enabled origins

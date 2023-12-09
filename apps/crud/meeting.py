@@ -506,6 +506,10 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
 
         return {"detail": "Successfully left the meeting"}
 
+    def get_all_active_meeting(self, db: Session):
+        all_meetings = db.query(Meeting).filter(Meeting.is_active == True).all()
+        return all_meetings
+
 
 class CRUDReview(CRUDBase[Review, ReviewCreate, ReviewUpdate]):
     def get_multi(
