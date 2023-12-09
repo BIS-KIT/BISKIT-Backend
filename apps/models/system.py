@@ -1,4 +1,4 @@
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 from sqlalchemy import Column, Integer, String, ForeignKey, Boolean
 
 from models.base import ModelBase
@@ -10,7 +10,9 @@ class System(ModelBase):
     etc_alarm = Column(Boolean, default=True)
 
     user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))
-    user = relationship("User", backref="systems")
+    user = relationship(
+        "User", backref=backref("systems", cascade="all, delete-orphan")
+    )
 
 
 class Report(ModelBase):
@@ -22,7 +24,10 @@ class Report(ModelBase):
 
     reporter_id = Column(Integer, ForeignKey("user.id"))
     reporter = relationship(
-        "User", foreign_keys=[reporter_id], backref="reports_made", uselist=False
+        "User",
+        foreign_keys=[reporter_id],
+        backref=backref("reports_made", cascade="all, delete-orphan"),
+        uselist=False,
     )
 
     @property
@@ -43,10 +48,16 @@ class Ban(ModelBase):
     reporter_id = Column(Integer, ForeignKey("user.id"))
 
     target = relationship(
-        "User", foreign_keys=[target_id], backref="banned_received", uselist=False
+        "User",
+        foreign_keys=[target_id],
+        backref=backref("banned_received", cascade="all, delete-orphan"),
+        uselist=False,
     )
     reporter = relationship(
-        "User", foreign_keys=[reporter_id], backref="ban_made", uselist=False
+        "User",
+        foreign_keys=[reporter_id],
+        backref=backref("ban_made", cascade="all, delete-orphan"),
+        uselist=False,
     )
 
 
@@ -54,4 +65,6 @@ class Contact(ModelBase):
     content = Column(String)
 
     user_id = Column(Integer, ForeignKey("user.id"))
-    user = relationship("User", backref="contact")
+    user = relationship(
+        "User", backref=backref("contact", cascade="all, delete-orphan")
+    )
