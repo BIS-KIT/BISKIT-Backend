@@ -6,6 +6,7 @@ from firebase_admin.exceptions import InvalidArgumentError
 from typing import List, Dict
 
 import crud
+from schemas.enum import LogTypeEnum
 from core.config import settings
 from log import log_error
 
@@ -32,10 +33,10 @@ def send_fcm_notification(
         return response
     except InvalidArgumentError as e:
         # FCM 토큰 관련 오류 처리
-        log_error(e)
+        log_error(e, type=LogTypeEnum.ALARM.value)
         pass
     except Exception as e:
-        log_error(e)
+        log_error(e, type=LogTypeEnum.ALARM.value)
         raise e
 
 
@@ -120,7 +121,7 @@ class Alarm:
             title=title, body=body, fcm_tokens=[target_fcm_token]
         )
 
-    def chat_alarm(self, db: Session, chat_id: str):
+    def chat_alarm(self, db: Session, chat_id: str, content: str):
         # Firebase Realtime Database에서 채팅방 데이터 읽기
         firebase_db = firestore.client()
         # 특정 문서 참조
@@ -131,17 +132,32 @@ class Alarm:
         if not doc.exists:
             raise ValueError("Chat Not Found")
 
+        meeting = crud.meeting.get_meeting_wieh_chat(db=db, chad_id=chat_id)
+        meeting_name = meeting.name
+        data = {"chat_id": str(chat_id)}
+
         # 현재 채팅창에 활성화 되어 있는 유저 제외
         chat_users_dict = crud.user.read_all_chat_users(db=db, chat_id=chat_id)
         doc_data = doc.to_dict()
         connecting_users = doc_data.get("connectingUsers", [])
-        remaining_users = {
-            user_id: fcm_token
+        # remaining_users = {
+        #     user_id: fcm_token
+        #     for user_id, fcm_token in chat_users_dict.items()
+        #     if user_id not in connecting_users
+        # }
+
+        remaining_users_fcm = [
+            fcm_token
             for user_id, fcm_token in chat_users_dict.items()
             if user_id not in connecting_users
-        }
+        ]
+
+        send_fcm_notification(
+            title=meeting_name, body=content, fcm_tokens=remaining_users_fcm, data=data
+        )
 
         # TODO : 각 유저의 차단 유저 제외
+        return True
 
 
 alarm = Alarm()

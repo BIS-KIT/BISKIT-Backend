@@ -4,6 +4,7 @@ import smtplib
 from jinja2 import Environment, FileSystemLoader
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from datetime import datetime
 
 from sqlalchemy.orm import Session, joinedload
 from passlib.context import CryptContext
@@ -96,6 +97,10 @@ class CRUDUser(CRUDBase[User, user_schmea.UserCreate, user_schmea.UserUpdate]):
     """
     CRUD operations for User model.
     """
+
+    def get_deactive_users(self, db: Session):
+        deactive_users = db.query(User).filter(User.is_active == False).all()
+        return deactive_users
 
     def get_user_fcm_token(self, db: Session, user_id):
         obj = db.query(User).filter(User.id == user_id).first()
@@ -398,6 +403,7 @@ class CRUDUser(CRUDBase[User, user_schmea.UserCreate, user_schmea.UserUpdate]):
     def deactive_user(self, db: Session, user_id: int):
         user = db.query(User).filter(User.id == user_id).first()
         user.is_active = False
+        user.deactive_time = datetime.now()
         db.commit()
         return user
 

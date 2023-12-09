@@ -24,8 +24,10 @@ class Meeting(ModelBase):
     is_active = Column(Boolean)
     university_id = Column(Integer, ForeignKey("university.id"), nullable=True)
 
-    creator_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))
-    creator = relationship("User", backref="created_meetings")
+    creator_id = Column(Integer, ForeignKey("user.id"))
+    creator = relationship(
+        "User", backref=backref("created_meetings", cascade="all, delete-orphan")
+    )
 
     meeting_tags = relationship(
         "MeetingTag", back_populates="meeting", cascade="all, delete-orphan"
@@ -59,7 +61,9 @@ class MeetingUser(ModelBase):
     user_id = Column(Integer, ForeignKey("user.id"))
     meeting_id = Column(Integer, ForeignKey("meeting.id"))
 
-    user = relationship("User", backref="meeting_users")
+    user = relationship(
+        "User", backref=backref("meeting_users", cascade="all, delete-orphan")
+    )
     meeting = relationship("Meeting", back_populates="meeting_users")
 
 
@@ -68,7 +72,9 @@ class MeetingLanguage(ModelBase):
     language_id = Column(Integer, ForeignKey("language.id"))
 
     meeting = relationship("Meeting", back_populates="meeting_languages")
-    language = relationship("Language", backref="meeting_languages")
+    language = relationship(
+        "Language", backref=backref("meeting_languages", cascade="all, delete-orphan")
+    )
 
 
 class MeetingTag(ModelBase):
@@ -76,7 +82,9 @@ class MeetingTag(ModelBase):
     tag_id = Column(Integer, ForeignKey("tag.id"))
 
     meeting = relationship("Meeting", back_populates="meeting_tags")
-    tag = relationship("Tag", backref="meeting_tags")
+    tag = relationship(
+        "Tag", backref=backref("meeting_tags", cascade="all, delete-orphan")
+    )
 
 
 class MeetingTopic(ModelBase):
@@ -84,7 +92,9 @@ class MeetingTopic(ModelBase):
     topic_id = Column(Integer, ForeignKey("topic.id"))
 
     meeting = relationship("Meeting", back_populates="meeting_topics")
-    topic = relationship("Topic", backref="meeting_topics")
+    topic = relationship(
+        "Topic", backref=backref("meeting_topics", cascade="all, delete-orphan")
+    )
 
 
 class Review(ModelBase):
@@ -95,7 +105,9 @@ class Review(ModelBase):
     meeting = relationship("Meeting", back_populates="reviews")
 
     creator_id = Column(Integer, ForeignKey("user.id"))
-    creator = relationship("User", backref="reviews", uselist=False)
+    creator = relationship(
+        "User", backref=backref("reviews", cascade="all, delete-orphan"), uselist=False
+    )
 
 
 #     review_photos = relationship("ReviewPhoto", back_populates="review")
