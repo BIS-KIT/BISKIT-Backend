@@ -1,5 +1,14 @@
 from models.base import ModelBase
-from sqlalchemy import Column, Integer, String, Boolean, Date, Enum, ForeignKey
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    Boolean,
+    Date,
+    Enum,
+    ForeignKey,
+    DateTime,
+)
 from sqlalchemy.orm import relationship
 
 
@@ -16,6 +25,7 @@ class User(ModelBase):
     fcm_token = Column(String, nullable=True)
 
     is_active = Column(Boolean, default=True)
+    deactive_time = Column(DateTime, default=None, nullable=True)
     deleted_data = Column(Date, nullable=True)
     is_admin = Column(Boolean, default=False)
 
