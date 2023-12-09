@@ -11,11 +11,14 @@ services:
       - ./requirements:/apps/requirements
     stdin_open: true
     tty: true
+    environment:
+      - TZ=Asia/Seoul
     env_file:
       - ".env"
     depends_on:
       - maindb
-    command: /py/bin/python -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    command: >
+      /bin/bash -c " source /py/bin/activate && alembic revision --autogenerate && alembic upgrade head && python -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload "
 
   maindb:
     container_name: maindb
