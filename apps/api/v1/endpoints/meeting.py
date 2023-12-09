@@ -474,6 +474,6 @@ def read_chat_alarm(obj_in: ChatAlarm, db: Session = Depends(get_db)):
     """
     아직 테스트중
     """
+
     # chat_alarm 함수를 호출하여 데이터 가져오기
-    # return crud.alarm.chat_alarm(db, chat_id)
-    return []
+    return crud.alarm.chat_alarm(db=db, chat_id=obj_in.chat_id, content=obj_in.content)

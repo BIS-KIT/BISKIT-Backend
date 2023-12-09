@@ -510,6 +510,10 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
         all_meetings = db.query(Meeting).filter(Meeting.is_active == True).all()
         return all_meetings
 
+    def get_meeting_wieh_chat(self, db: Session, chad_id: str):
+        meeting = db.query(Meeting).filter(Meeting.chat_id == chad_id).first()
+        return meeting
+
 
 class CRUDReview(CRUDBase[Review, ReviewCreate, ReviewUpdate]):
     def get_multi(

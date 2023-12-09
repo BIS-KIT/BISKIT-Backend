@@ -61,3 +61,9 @@ class ImageSourceEnum(str, Enum):
     STUDENT_CARD = "STUDENT_CARD"
     REVIEW = "REVIEW"
     CHATTING = "CHATTING"
+
+
+class LogTypeEnum(str, Enum):
+    ALARM = "ALARM"
+    SCHEDULER = "SCHEDULER"
+    DEFAULT = "DEFAULT"
