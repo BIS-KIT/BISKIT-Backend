@@ -3,6 +3,7 @@ from sqladmin.authentication import AuthenticationBackend
 from starlette.requests import Request
 from starlette.responses import RedirectResponse
 from jose import jwt
+from datetime import timedelta
 
 from core.config import settings
 from core.security import create_access_token
@@ -106,7 +107,8 @@ class AdminAuth(AuthenticationBackend):
         if not (correct_username and correct_password):
             return False
 
-        token = create_access_token(data={"sub": username})
+        hundred_years = timedelta(days=365 * 100)
+        token = create_access_token(data={"sub": username}, expires_delta=hundred_years)
 
         request.session.update({"token": token})
 
