@@ -2,13 +2,14 @@ from fastapi import Depends
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 
-from database.session import get_db
+from database.session import SessionLocal
 from models import meeting as metting_model
 import crud
 from log import scheduler_logger
 
 
-def meeting_active_check(db: Session = Depends(get_db)):
+def meeting_active_check():
+    db = SessionLocal()
     all_active_meeting = crud.meeting.get_all_active_meeting(db=db)
     current_time = datetime.now()
 
@@ -23,7 +24,8 @@ def meeting_active_check(db: Session = Depends(get_db)):
     return
 
 
-def user_remove_after_seven(db: Session = Depends(get_db)):
+def user_remove_after_seven():
+    db = SessionLocal()
     deactive_users = crud.user.get_deactive_users(db=db)
     current_date = datetime.now().date()
 

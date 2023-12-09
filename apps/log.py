@@ -7,7 +7,13 @@ current_script_path = os.path.abspath(__file__)
 current_directory = os.path.dirname(current_script_path)
 
 handler = RotatingFileHandler(
-    f"{current_directory}/logging/log", maxBytes=1024 * 1024 * 10, backupCount=3
+    f"{current_directory}/logging/log", maxBytes=1024 * 1024 * 10, backupCount=1
+)
+
+scheduler_handler = RotatingFileHandler(
+    f"{current_directory}/logging/scheduler_log",
+    maxBytes=1024 * 1024 * 10,
+    backupCount=1,
 )
 
 logger = logging.getLogger("biskit")
@@ -18,8 +24,10 @@ scheduler_logger.setLevel(logging.WARNING)
 
 formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 handler.setFormatter(formatter)
+scheduler_handler.setFormatter(formatter)
+
 logger.addHandler(handler)
-scheduler_logger.addHandler(handler)
+scheduler_logger.addHandler(scheduler_handler)
 
 
 def log_error(exception: Exception):
