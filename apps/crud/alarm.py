@@ -198,11 +198,18 @@ class Alarm(
             raise ValueError("Chat Not Found")
 
         meeting = crud.meeting.get_meeting_wieh_chat(db=db, chad_id=chat_id)
+        creator_fcm = crud.user.get_user_fcm_token(db=db, user_id=meeting.creator_id)
         meeting_name = meeting.name
+
         data = {"chat_id": str(chat_id)}
 
         # 현재 채팅창에 활성화 되어 있는 유저 제외
         chat_users_dict = crud.user.read_all_chat_users(db=db, chat_id=chat_id)
+
+        # 채팅방 생성자의 FCM 토큰 추가
+        if creator_fcm:
+            chat_users_dict[meeting.creator_id] = creator_fcm
+
         doc_data = doc.to_dict()
         connecting_users = doc_data.get("connectingUsers", [])
         # remaining_users = {
