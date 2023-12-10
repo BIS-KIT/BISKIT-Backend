@@ -15,6 +15,9 @@ router = APIRouter()
 def get_all_alarms_by_user(
     user_id: int, db: Session = Depends(get_db), skip: int = 0, limit: int = 10
 ):
+    """
+    user_id의 알람 목록
+    """
     check_user = crud.get_object_or_404(db=db, model=user_models.User, obj_id=user_id)
 
     alarms, total_count = crud.alarm.get_multi_with_user_id(
