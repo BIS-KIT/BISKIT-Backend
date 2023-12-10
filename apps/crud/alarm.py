@@ -2,17 +2,26 @@ from firebase_admin import messaging
 
 from firebase_admin import firestore
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import SQLAlchemyError
 from firebase_admin.exceptions import InvalidArgumentError
 from typing import List, Dict
 
 import crud
+from crud.base import CRUDBase
 from schemas.enum import LogTypeEnum
+from models import alarm as alarm_model
+from schemas import alarm as alarm_schema
 from core.config import settings
 from log import log_error
 
 
 def send_fcm_notification(
-    title: str, body: str, fcm_tokens: List[str], data: Dict[str, str] = None
+    title: str,
+    body: str,
+    fcm_tokens: List[str],
+    user_id: int = None,
+    db: Session = None,
+    data: Dict[str, str] = None,
 ):
     """
     FCM을 통해 푸시 알림을 전송하는 함수
@@ -30,6 +39,19 @@ def send_fcm_notification(
             for token in fcm_tokens
         ]
         response = messaging.send_all(messages)
+        if db and user_id:
+            try:
+                obj_in = alarm_schema.AlarmCreate(
+                    title=title, content=body, user_id=user_id
+                )
+                created_alarm = alarm.create(db=db, obj_in=obj_in)
+            except SQLAlchemyError as e:
+                # 데이터베이스 오류 처리
+                db.rollback()  # 롤백
+                log_error(e, type=LogTypeEnum.ALARM.value)
+                # 필요에 따라 추가적인 오류 처리
+                raise e
+
         return response
     except InvalidArgumentError as e:
         # FCM 토큰 관련 오류 처리
@@ -40,7 +62,9 @@ def send_fcm_notification(
         raise e
 
 
-class Alarm:
+class Alarm(
+    CRUDBase[alarm_model.Alarm, alarm_schema.AlarmCreate, alarm_schema.AlarmCreate]
+):
     def create_meeting_request(self, db: Session, user_id: int, meeting_id: int):
         meeting = crud.meeting.get(db=db, id=meeting_id)
         requester = crud.user.get(db=db, id=user_id)
@@ -55,7 +79,14 @@ class Alarm:
 
         icon_url = settings.S3_URL + "/default_icon/Thumbnail_Icon_Notify.svg"
         data = {"meeting_id": str(meeting_id), "icon_url": str(icon_url)}
-        return send_fcm_notification(title, body, [target_fcm_token], data)
+        return send_fcm_notification(
+            db=db,
+            title=title,
+            body=body,
+            fcm_tokens=[target_fcm_token],
+            user_id=meeting.creator_id,
+            data=data,
+        )
 
     def exit_meeting(self, db: Session, user_id: int, meeting_id: int):
         meeting = crud.meeting.get(db=db, id=meeting_id)
@@ -72,7 +103,14 @@ class Alarm:
 
         icon_url = settings.S3_URL + "/default_icon/Thumbnail_Icon_Notify.svg"
         data = {"meeting_id": str(meeting_id), "icon_url": str(icon_url)}
-        return send_fcm_notification(title, body, [target_fcm_token], data)
+        return send_fcm_notification(
+            db=db,
+            title=title,
+            body=body,
+            fcm_tokens=[target_fcm_token],
+            user_id=meeting.creator_id,
+            data=data,
+        )
 
     def meeting_request_approve(self, db: Session, user_id: int, meeting_id: int):
         meeting = crud.meeting.get(db=db, id=meeting_id)
@@ -85,7 +123,14 @@ class Alarm:
 
         icon_url = settings.S3_URL + "/default_icon/Thumbnail_Icon_Notify.svg"
         data = {"meeting_id": str(meeting_id), "icon_url": str(icon_url)}
-        return send_fcm_notification(title, body, [target_fcm_token], data)
+        return send_fcm_notification(
+            db=db,
+            title=title,
+            body=body,
+            fcm_tokens=[target_fcm_token],
+            user_id=user_id,
+            data=data,
+        )
 
     def meeting_request_reject(self, db: Session, user_id: int, meeting_id: int):
         meeting = crud.meeting.get(db=db, id=meeting_id)
@@ -98,15 +143,30 @@ class Alarm:
 
         icon_url = settings.S3_URL + "/default_icon/Thumbnail_Icon_Notify.svg"
         data = {"meeting_id": str(meeting_id), "icon_url": str(icon_url)}
-        return send_fcm_notification(title, body, [target_fcm_token], data)
+        return send_fcm_notification(
+            db=db,
+            title=title,
+            body=body,
+            fcm_tokens=[target_fcm_token],
+            user_id=user_id,
+            data=data,
+        )
 
     def notice_alarm(self, db: Session, title: str, content: str, notice_id: int):
-        fcm_tokens = crud.user.get_all_fcm_tokens(db=db)
+        # TODO : 모든 user에게 alarm 객체 만들어야함
+        users = crud.user.get_all_users(db=db)
         icon_url = settings.S3_URL + "/default_icon/Thumbnail_notice_Icon.svg"
         data = {"notice_id": str(notice_id), "icon_url": str(icon_url)}
-        return send_fcm_notification(
-            title=title, body=content, fcm_tokens=fcm_tokens, data=data
-        )
+        for user in users:
+            # 각 사용자의 FCM 토큰을 사용하여 알림을 전송합니다.
+            send_fcm_notification(
+                title=title,
+                body=content,
+                fcm_tokens=[user.fcm_token],
+                user_id=user.id,
+                db=db,
+                data=data,
+            )
 
     def report_alarm(self, db: Session, target_id: int):
         target_fcm_token = crud.user.get_user_fcm_token(db=db, user_id=target_id)
@@ -118,7 +178,12 @@ class Alarm:
         icon_url = settings.S3_URL + "/default_icon/Thumbnail_reprot_icon.svg"
         data = {"icon_url": str(icon_url)}
         return send_fcm_notification(
-            title=title, body=body, fcm_tokens=[target_fcm_token]
+            db=db,
+            title=title,
+            body=body,
+            fcm_tokens=[target_fcm_token],
+            user_id=target_id,
+            data=data,
         )
 
     def chat_alarm(self, db: Session, chat_id: str, content: str):
@@ -159,5 +224,12 @@ class Alarm:
         # TODO : 각 유저의 차단 유저 제외
         return True
 
+    def get_multi_with_user_id(
+        self, db: Session, user_id: int, skip: int = 0, limit: int = 10
+    ) -> List[alarm_model.Alarm]:
+        query = db.query(alarm_model.Alarm).filter(alarm_model.Alarm.user_id == user_id)
+        total_count = query.count()
+        return query.offset(skip).limit(limit).all(), total_count
 
-alarm = Alarm()
+
+alarm = Alarm(alarm_model.Alarm)
