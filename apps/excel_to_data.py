@@ -138,7 +138,7 @@ def create_fix_topics_tags():
     tag_fixs_mapping = {
         "영어 못해도 괜찮아요": "It's okay if you can't speak English",
         "혼자와도 괜찮아요": "It's okay to come alone",
-        "늦잠가능": "Sleeping in is okay",
+        "늦참가능": "Late Arrival Permitted",
         "한국어 못해도 괜찮아요": "It's okay if you can't speak Korean",
         "비건": "Vegan",
         "뒷풀이": "After Party",
