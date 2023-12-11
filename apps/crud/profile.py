@@ -3,7 +3,7 @@ import os, random, string, boto3, re
 from botocore.exceptions import NoCredentialsError
 
 from sqlalchemy import func, desc, asc, extract
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, aliased
 from fastapi import UploadFile, HTTPException
 
 from log import log_error
@@ -16,7 +16,7 @@ from models.profile import (
     StudentVerification,
     UserUniversity,
 )
-from models.meeting import Meeting, MeetingUser
+from models.meeting import Meeting, MeetingUser, Review
 from schemas.profile import (
     ProfileCreate,
     ProfileUpdate,
@@ -516,8 +516,21 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
             total_count = all_meetings.count()
             return all_meetings.offset(skip).limit(limit).all(), total_count
         elif status == MyMeetingEnum.PAST.value:
-            created_meetings = created_meetings.filter(Meeting.is_active == False)
-            participated_query = participated_query.filter(Meeting.is_active == False)
+            user_reviews = aliased(Review)
+            review_subquery = (
+                db.query(user_reviews.meeting_id)
+                .filter(user_reviews.creator_id == user_id)
+                .subquery()
+            )
+
+            created_meetings = created_meetings.filter(
+                Meeting.is_active == False,
+                ~Meeting.id.in_(review_subquery),  # 사용자가 리뷰를 작성한 미팅 제외
+            )
+            participated_query = participated_query.filter(
+                Meeting.is_active == False,
+                ~Meeting.id.in_(review_subquery),  # 사용자가 리뷰를 작성한 미팅 제외
+            )
 
         all_meetings = created_meetings.union(participated_query)
         # order_by 매개변수에 따른 정렬 로직 적용
