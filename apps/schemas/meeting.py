@@ -261,3 +261,4 @@ class ReviewListReponse(BaseModel):
 class ChatAlarm(BaseModel):
     chat_id: str
     content: str
+    user_id: int
