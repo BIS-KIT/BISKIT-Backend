@@ -56,7 +56,7 @@ def send_fcm_notification(
     except InvalidArgumentError as e:
         # FCM 토큰 관련 오류 처리
         log_error(e, type=LogTypeEnum.ALARM.value)
-        pass
+        raise e
     except Exception as e:
         log_error(e, type=LogTypeEnum.ALARM.value)
         raise e

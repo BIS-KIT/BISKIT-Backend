@@ -33,7 +33,7 @@ class Tag(ModelBase):
     en_name = Column(String, nullable=True)
     is_custom = Column(Boolean, default=True)
     icon_url = Column(String, nullable=True)
-    is_home = Column(Boolean, default=True)
+    is_home = Column(Boolean, default=False)
 
 
 class Topic(ModelBase):
