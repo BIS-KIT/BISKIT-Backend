@@ -169,15 +169,6 @@ class ProfileResponse(BaseModel):
         orm_mode = True
         from_attributes = True
 
-    # def __init__(self, **data):
-    #     super().__init__(**data)
-    #     if self.available_languages:
-    #         self.available_languages = sorted(
-    #             self.available_languages,
-    #             key=lambda lang: lang.level_int,
-    #             reverse=True,  # 내림차순 정렬을 원할 경우 True로 설정
-    #         )
-
     @computed_field
     @property
     def available_languages(self) -> List[AvailableLanguageResponse]:
