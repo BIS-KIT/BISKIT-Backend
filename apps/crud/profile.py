@@ -344,7 +344,7 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
         Returns:
             Updated User instance.
         """
-        origin_available_languages = db_obj.available_languages
+        origin_available_languages = db_obj.available_language_list
         update_available_languages = obj_in.available_languages
 
         origin_introductions = db_obj.introductions

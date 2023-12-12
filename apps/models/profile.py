@@ -13,7 +13,7 @@ class Profile(ModelBase):
     user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))
     user = relationship("User", back_populates="profile")
 
-    available_languages = relationship(
+    available_language_list = relationship(
         "AvailableLanguage", back_populates="profile", cascade="all, delete-orphan"
     )
     introductions = relationship(
@@ -55,7 +55,7 @@ class AvailableLanguage(ModelBase):
     language = relationship("Language", backref="available_language")
 
     profile_id = Column(Integer, ForeignKey("profile.id", ondelete="CASCADE"))
-    profile = relationship("Profile", back_populates="available_languages")
+    profile = relationship("Profile", back_populates="available_language_list")
 
 
 class Introduction(ModelBase):

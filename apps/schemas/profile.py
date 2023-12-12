@@ -1,12 +1,12 @@
 from datetime import date
-from pydantic import EmailStr, BaseModel
+from pydantic import EmailStr, BaseModel, computed_field, Field
 
 from typing import Optional, List, Union
 from fastapi import UploadFile
 
 from schemas.base import CoreSchema
 from schemas.utility import LanguageBase, UniversityBase
-from schemas.enum import ReultStatusEnum
+from schemas.enum import ReultStatusEnum, LanguageLevel
 
 
 class StudentVerificationBase(CoreSchema):
@@ -158,13 +158,37 @@ class ProfileResponse(BaseModel):
     is_default_photo: Optional[bool] = None
     context: Optional[str] = None
     profile_photo: Optional[str] = None
-    available_languages: Optional[List[AvailableLanguageResponse]] = None
+    available_language_list: Optional[List[AvailableLanguageResponse]] = Field(
+        ..., exclude=True
+    )
     introductions: Optional[List[IntroductionResponse]] = None
     student_verification: Optional[StudentVerificationReponse] = None
     user_university: Optional[ProfileUniversityResponse] = None
 
     class Config:
         orm_mode = True
+        from_attributes = True
+
+    # def __init__(self, **data):
+    #     super().__init__(**data)
+    #     if self.available_languages:
+    #         self.available_languages = sorted(
+    #             self.available_languages,
+    #             key=lambda lang: lang.level_int,
+    #             reverse=True,  # 내림차순 정렬을 원할 경우 True로 설정
+    #         )
+
+    @computed_field
+    @property
+    def available_languages(self) -> List[AvailableLanguageResponse]:
+        if self.available_language_list:
+            return_obj = sorted(
+                self.available_language_list,
+                key=lambda lang: LanguageLevel[lang.level].value,
+                reverse=False,  # 내림차순 정렬을 원할 경우 True로 설정
+            )
+            return return_obj
+        return []
 
 
 class ProfileRegister(BaseModel):

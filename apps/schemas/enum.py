@@ -6,12 +6,12 @@ class genderEum(str, Enum):
     FEMALE = "female"
 
 
-class LanguageLevel(Enum):
-    BEGINNER = "초보"
-    BASIC = "기초"
-    INTERMEDIATE = "중급"
-    ADVANCED = "고급"
-    PROFICIENT = "능숙"
+class LanguageLevel(str, Enum):
+    BEGINNER = 5
+    BASIC = 4
+    INTERMEDIATE = 3
+    ADVANCED = 2
+    PROFICIENT = 1
 
 
 class ReultStatusEnum(str, Enum):
@@ -67,3 +67,7 @@ class LogTypeEnum(str, Enum):
     ALARM = "ALARM"
     SCHEDULER = "SCHEDULER"
     DEFAULT = "DEFAULT"
+
+
+def level_to_enum(level_str):
+    return LanguageLevel[level_str].value
