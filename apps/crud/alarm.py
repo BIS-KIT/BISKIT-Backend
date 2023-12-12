@@ -78,7 +78,7 @@ class Alarm(
         body = f"{requester_nick_name}님이 {meeting_name} 모임에 신청했어요."
 
         icon_url = settings.S3_URL + "/default_icon/Thumbnail_Icon_Notify.svg"
-        data = {"meeting_id": str(meeting_id), "icon_url": str(icon_url)}
+        data = {"meeting_id": str(meeting_id), "icon_url": str(icon_url),"is_main_alarm" : "True", "is_sub_alarm":"False" }
         return send_fcm_notification(
             db=db,
             title=title,
@@ -102,7 +102,7 @@ class Alarm(
         body = f"{requester_nick_name}님이 {meeting_name} 모임에서 나갔어요."
 
         icon_url = settings.S3_URL + "/default_icon/Thumbnail_Icon_Notify.svg"
-        data = {"meeting_id": str(meeting_id), "icon_url": str(icon_url)}
+        data = {"meeting_id": str(meeting_id), "icon_url": str(icon_url), "is_main_alarm" : "True", "is_sub_alarm":"False"}
         return send_fcm_notification(
             db=db,
             title=title,
@@ -122,7 +122,7 @@ class Alarm(
         body = f"{meeting_name} 모임에 승인되었어요."
 
         icon_url = settings.S3_URL + "/default_icon/Thumbnail_Icon_Notify.svg"
-        data = {"meeting_id": str(meeting_id), "icon_url": str(icon_url)}
+        data = {"meeting_id": str(meeting_id), "icon_url": str(icon_url),"is_main_alarm" : "True", "is_sub_alarm":"False" }
         return send_fcm_notification(
             db=db,
             title=title,
@@ -142,7 +142,7 @@ class Alarm(
         body = f"{meeting_name} 모임에 거절되었어요."
 
         icon_url = settings.S3_URL + "/default_icon/Thumbnail_Icon_Notify.svg"
-        data = {"meeting_id": str(meeting_id), "icon_url": str(icon_url)}
+        data = {"meeting_id": str(meeting_id), "icon_url": str(icon_url),"is_main_alarm" : "True", "is_sub_alarm":"False" }
         return send_fcm_notification(
             db=db,
             title=title,
@@ -156,7 +156,7 @@ class Alarm(
         # TODO : 모든 user에게 alarm 객체 만들어야함
         users = crud.user.get_all_users(db=db)
         icon_url = settings.S3_URL + "/default_icon/Thumbnail_notice_Icon.svg"
-        data = {"notice_id": str(notice_id), "icon_url": str(icon_url)}
+        data = {"notice_id": str(notice_id), "icon_url": str(icon_url),"is_main_alarm" : "False", "is_sub_alarm":"True" }
         for user in users:
             # 각 사용자의 FCM 토큰을 사용하여 알림을 전송합니다.
             send_fcm_notification(
@@ -176,7 +176,7 @@ class Alarm(
         body = f"서비스 이용규정 위반으로 경고가 {len(get_all_report)}회 누적되었습니다."
 
         icon_url = settings.S3_URL + "/default_icon/Thumbnail_reprot_icon.svg"
-        data = {"icon_url": str(icon_url)}
+        data = {"icon_url": str(icon_url),"is_main_alarm" : "False", "is_sub_alarm":"True"}
         return send_fcm_notification(
             db=db,
             title=title,
@@ -201,7 +201,7 @@ class Alarm(
         creator_fcm = crud.user.get_user_fcm_token(db=db, user_id=meeting.creator_id)
         meeting_name = meeting.name
 
-        data = {"chat_id": str(chat_id)}
+        data = {"chat_id": str(chat_id),"is_main_alarm" : "True", "is_sub_alarm":"False" }
 
         # 현재 채팅창에 활성화 되어 있는 유저 제외
         chat_users_dict = crud.user.read_all_chat_users(db=db, chat_id=chat_id)
