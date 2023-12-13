@@ -31,8 +31,12 @@ class Report(ModelBase):
     )
 
     @property
-    def user_name(self):
+    def reporter_name(self):
         return self.reporter.name
+
+    @property
+    def nick_name(self):
+        return self.reporter.nick_name
 
 
 class Notice(ModelBase):

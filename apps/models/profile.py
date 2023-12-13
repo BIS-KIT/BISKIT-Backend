@@ -74,13 +74,21 @@ class StudentVerification(ModelBase):
     profile = relationship("Profile", back_populates="student_verification")
 
     @property
-    def user_email(self):
-        return self.profile.user.email
-
-    @property
     def user_name(self):
         return self.profile.user.name
 
     @property
     def user_birth(self):
         return self.profile.user.birth
+
+    @property
+    def university(self):
+        return self.profile.user_university.university.kr_name
+
+    @property
+    def department(self):
+        return self.profile.user_university.department
+
+    @property
+    def education_status(self):
+        return self.profile.user_university.education_status

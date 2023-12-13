@@ -7,7 +7,7 @@ from datetime import timedelta
 
 from core.config import settings
 from core.security import create_access_token
-from models.user import User
+from models.user import User, AccountDeletionRequest
 from models.profile import StudentVerification
 from models.system import Report, Contact
 from models.utility import Tag, Topic
@@ -30,13 +30,29 @@ class BaseAdmin(ModelView):
 class UserAdmin(BaseAdmin, model=User):
     column_labels = dict(name="Name", id="id")
     column_searchable_list = [User.name, User.id]
-    column_list = [User.id, User.name, User.birth, "nick_name"]
+    column_list = [
+        User.id,
+        User.name,
+        User.birth,
+        "nick_name",
+        User.email,
+        User.gender,
+        User.sns_type,
+    ]
+
+
+class DeletionRequestAdmin(BaseAdmin, model=AccountDeletionRequest):
+    column_list = [
+        AccountDeletionRequest.id,
+        AccountDeletionRequest.created_time,
+        AccountDeletionRequest.reason,
+    ]
 
 
 class ContactAdmin(BaseAdmin, model=Contact):
     column_labels = dict(id="user_id")
     column_searchable_list = [Contact.user_id]
-    column_list = [Contact.id, Contact.user_id, Contact.content]
+    column_list = [Contact.id, Contact.created_time, Contact.user_id, Contact.content]
 
 
 class TagAdmin(BaseAdmin, model=Tag):
@@ -64,13 +80,16 @@ class TopicAdmin(BaseAdmin, model=Topic):
 class ReportAdmin(BaseAdmin, model=Report):
     column_list = [
         Report.id,
+        Report.created_time,
         Report.content_type,
         Report.content_id,
         Report.reason,
         Report.status,
-        "user_name",
+        "reporter_name",
+        "nick_name",
     ]
     list_template = "report_list.html"
+    form_columns = [Report.reason]
 
 
 class StudentVerificationAdmin(BaseAdmin, model=StudentVerification):
@@ -83,8 +102,10 @@ class StudentVerificationAdmin(BaseAdmin, model=StudentVerification):
         StudentVerification.student_card,
         StudentVerification.verification_status,
         "user_name",
-        "user_email",
         "user_birth",
+        "university",
+        "department",
+        "education_status",
     ]
 
 
@@ -95,6 +116,7 @@ def register_all(admin: Admin):
     admin.add_view(ContactAdmin)
     admin.add_view(TagAdmin)
     admin.add_view(TopicAdmin)
+    admin.add_view(DeletionRequestAdmin)
 
 
 class AdminAuth(AuthenticationBackend):
