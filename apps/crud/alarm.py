@@ -65,6 +65,14 @@ def send_fcm_notification(
 class Alarm(
     CRUDBase[alarm_model.Alarm, alarm_schema.AlarmCreate, alarm_schema.AlarmCreate]
 ):
+    def read_alarm(self, db: Session, alarm_id):
+        alarm_obj = (
+            db.query(alarm_model.Alarm).filter(alarm_model.Alarm.id == alarm_id).first()
+        )
+        alarm_obj.is_read = True
+        db.commit()
+        return alarm_obj
+
     def create_meeting_request(self, db: Session, user_id: int, meeting_id: int):
         meeting = crud.meeting.get(db=db, id=meeting_id)
         requester = crud.user.get(db=db, id=user_id)
@@ -78,7 +86,12 @@ class Alarm(
         body = f"{requester_nick_name}님이 {meeting_name} 모임에 신청했어요."
 
         icon_url = settings.S3_URL + "/default_icon/Thumbnail_Icon_Notify.svg"
-        data = {"meeting_id": str(meeting_id), "icon_url": str(icon_url),"is_main_alarm" : "True", "is_sub_alarm":"False" }
+        data = {
+            "meeting_id": str(meeting_id),
+            "icon_url": str(icon_url),
+            "is_main_alarm": "True",
+            "is_sub_alarm": "False",
+        }
         return send_fcm_notification(
             db=db,
             title=title,
@@ -102,7 +115,12 @@ class Alarm(
         body = f"{requester_nick_name}님이 {meeting_name} 모임에서 나갔어요."
 
         icon_url = settings.S3_URL + "/default_icon/Thumbnail_Icon_Notify.svg"
-        data = {"meeting_id": str(meeting_id), "icon_url": str(icon_url), "is_main_alarm" : "True", "is_sub_alarm":"False"}
+        data = {
+            "meeting_id": str(meeting_id),
+            "icon_url": str(icon_url),
+            "is_main_alarm": "True",
+            "is_sub_alarm": "False",
+        }
         return send_fcm_notification(
             db=db,
             title=title,
@@ -122,7 +140,12 @@ class Alarm(
         body = f"{meeting_name} 모임에 승인되었어요."
 
         icon_url = settings.S3_URL + "/default_icon/Thumbnail_Icon_Notify.svg"
-        data = {"meeting_id": str(meeting_id), "icon_url": str(icon_url),"is_main_alarm" : "True", "is_sub_alarm":"False" }
+        data = {
+            "meeting_id": str(meeting_id),
+            "icon_url": str(icon_url),
+            "is_main_alarm": "True",
+            "is_sub_alarm": "False",
+        }
         return send_fcm_notification(
             db=db,
             title=title,
@@ -142,7 +165,12 @@ class Alarm(
         body = f"{meeting_name} 모임에 거절되었어요."
 
         icon_url = settings.S3_URL + "/default_icon/Thumbnail_Icon_Notify.svg"
-        data = {"meeting_id": str(meeting_id), "icon_url": str(icon_url),"is_main_alarm" : "True", "is_sub_alarm":"False" }
+        data = {
+            "meeting_id": str(meeting_id),
+            "icon_url": str(icon_url),
+            "is_main_alarm": "True",
+            "is_sub_alarm": "False",
+        }
         return send_fcm_notification(
             db=db,
             title=title,
@@ -156,7 +184,12 @@ class Alarm(
         # TODO : 모든 user에게 alarm 객체 만들어야함
         users = crud.user.get_all_users(db=db)
         icon_url = settings.S3_URL + "/default_icon/Thumbnail_notice_Icon.svg"
-        data = {"notice_id": str(notice_id), "icon_url": str(icon_url),"is_main_alarm" : "False", "is_sub_alarm":"True" }
+        data = {
+            "notice_id": str(notice_id),
+            "icon_url": str(icon_url),
+            "is_main_alarm": "False",
+            "is_sub_alarm": "True",
+        }
         for user in users:
             # 각 사용자의 FCM 토큰을 사용하여 알림을 전송합니다.
             send_fcm_notification(
@@ -176,7 +209,11 @@ class Alarm(
         body = f"서비스 이용규정 위반으로 경고가 {len(get_all_report)}회 누적되었습니다."
 
         icon_url = settings.S3_URL + "/default_icon/Thumbnail_reprot_icon.svg"
-        data = {"icon_url": str(icon_url),"is_main_alarm" : "False", "is_sub_alarm":"True"}
+        data = {
+            "icon_url": str(icon_url),
+            "is_main_alarm": "False",
+            "is_sub_alarm": "True",
+        }
         return send_fcm_notification(
             db=db,
             title=title,
@@ -201,7 +238,11 @@ class Alarm(
         creator_fcm = crud.user.get_user_fcm_token(db=db, user_id=meeting.creator_id)
         meeting_name = meeting.name
 
-        data = {"chat_id": str(chat_id),"is_main_alarm" : "True", "is_sub_alarm":"False" }
+        data = {
+            "chat_id": str(chat_id),
+            "is_main_alarm": "True",
+            "is_sub_alarm": "False",
+        }
 
         # 현재 채팅창에 활성화 되어 있는 유저 제외
         chat_users_dict = crud.user.read_all_chat_users(db=db, chat_id=chat_id)
@@ -234,7 +275,11 @@ class Alarm(
     def get_multi_with_user_id(
         self, db: Session, user_id: int, skip: int = 0, limit: int = 10
     ) -> List[alarm_model.Alarm]:
-        query = db.query(alarm_model.Alarm).filter(alarm_model.Alarm.user_id == user_id)
+        query = (
+            db.query(alarm_model.Alarm)
+            .filter(alarm_model.Alarm.user_id == user_id)
+            .order_by(alarm_model.Alarm.is_read, alarm_model.Alarm.id)
+        )
         total_count = query.count()
         return query.offset(skip).limit(limit).all(), total_count
 
