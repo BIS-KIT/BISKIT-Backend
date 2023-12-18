@@ -50,16 +50,16 @@ def send_fcm_notification(
                 db.rollback()  # 롤백
                 log_error(e, type=LogTypeEnum.ALARM.value)
                 # 필요에 따라 추가적인 오류 처리
-                raise e
+                pass
 
         return response
     except InvalidArgumentError as e:
         # FCM 토큰 관련 오류 처리
         log_error(e, type=LogTypeEnum.ALARM.value)
-        raise e
+        pass
     except Exception as e:
         log_error(e, type=LogTypeEnum.ALARM.value)
-        raise e
+        pass
 
 
 class Alarm(

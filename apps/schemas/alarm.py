@@ -9,7 +9,7 @@ from schemas.base import CoreSchema
 class AlarmBase(BaseModel):
     title: str
     content: str
-    is_read: Optional[bool]
+    is_read: Optional[bool] = False
 
 
 class AlarmCreate(AlarmBase):
