@@ -9,7 +9,7 @@ class Meeting(ModelBase):
     name = Column(String)
     location = Column(String, nullable=True)
     description = Column(String, nullable=True)
-    meeting_time = Column(DateTime, nullable=True)
+    meeting_time = Column(DateTime, nullable=True, index=True)
     max_participants = Column(Integer)
     current_participants = Column(Integer, nullable=True)
     korean_count = Column(Integer, default=0)
