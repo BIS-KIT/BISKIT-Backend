@@ -51,18 +51,28 @@ def check_time_conditions(time_filters: List[TimeFilterEnum]):
         )
 
     if TimeFilterEnum.TOMORROW in time_filters:
-        tomorrow = today + timedelta(days=1)
+        # 내일의 날짜만을 가져와서 datetime 객체로 변환
+        tomorrow_start = datetime.combine(
+            today.date() + timedelta(days=1), datetime.min.time()
+        )
+        # 다음날 00:00:00 시간
+        next_day_start = tomorrow_start + timedelta(days=1)
+
         date_conditions.append(
-            Meeting.meeting_time.between(tomorrow, tomorrow + timedelta(days=1))
+            Meeting.meeting_time.between(tomorrow_start, next_day_start)
         )
 
     if TimeFilterEnum.THIS_WEEK in time_filters:
-        start_of_week = today - timedelta(days=today.weekday())
+        start_of_week = datetime.combine(
+            (today - timedelta(days=today.weekday())).date(), datetime.min.time()
+        )
         end_of_week = start_of_week + timedelta(days=7)
         date_conditions.append(Meeting.meeting_time.between(start_of_week, end_of_week))
 
     if TimeFilterEnum.NEXT_WEEK in time_filters:
-        start_of_next_week = today + timedelta(days=7 - today.weekday())
+        start_of_next_week = datetime.combine(
+            (today + timedelta(days=7 - today.weekday())).date(), datetime.min.time()
+        )
         end_of_next_week = start_of_next_week + timedelta(days=7)
         date_conditions.append(
             Meeting.meeting_time.between(start_of_next_week, end_of_next_week)
