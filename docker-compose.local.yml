@@ -30,6 +30,7 @@ services:
     env_file:
       - ".env"
     environment:
+      - TZ=Asia/Seoul
       - POSTGRES_PASSWORD=${DB_ROOT_PASSWORD}
       - POSTGRES_USER=postgres
       - BISKIT_USER=${BISKIT_USER}
