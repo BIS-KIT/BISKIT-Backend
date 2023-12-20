@@ -1,12 +1,20 @@
 from typing import Any, List, Optional, Dict
 
-from fastapi import APIRouter, Body, Depends
+from fastapi import APIRouter, Body, Depends, UploadFile, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, asc, desc
 
 import crud
+from log import log_error
 from database.session import get_db
-from schemas.utility import LanguageBase, UniversityBase, NationalityBase
+from schemas.utility import (
+    LanguageBase,
+    UniversityBase,
+    NationalityBase,
+    TagResponse,
+    TopicResponse,
+)
+from schemas.enum import ImageSourceEnum
 from models.utility import Language, University, Nationality, OsLanguage
 
 
@@ -123,3 +131,75 @@ def get_countries(
     countries = query.all()
 
     return [NationalityBase.from_orm(country) for country in countries]
+
+
+@router.get("/tags", response_model=List[TagResponse])
+def read_tags(
+    is_custom: bool = None, is_home: bool = False, db: Session = Depends(get_db)
+):
+    """
+    is_costem == None : 모든 tag
+    is_costem == True : 사용자가 생성한 tag
+    is_costem == False : 고정 tag
+
+    is_home == True : home 화면에서 보여지는 tag 리스트
+    is_home == False : default, 영향 x
+    """
+
+    return crud.utility.read_tags(db=db, is_custom=is_custom, is_home=is_home)
+
+
+@router.get("/topics", response_model=List[TopicResponse])
+def read_topics(is_custom: bool = None, db: Session = Depends(get_db)):
+    """
+    is_costem == None : 모든 tag
+    is_costem == True : 사용자가 생성한 tag
+    is_costem == False : 고정 tag
+    """
+
+    return crud.utility.read_topics(db=db, is_custom=is_custom)
+
+
+@router.post("/upload/image")
+def upload_image_to_s3(
+    image_source: ImageSourceEnum, photo: UploadFile, db: Session = Depends(get_db)
+):
+    """
+    s3 upload
+
+    - **image_source**
+        - PROFILE : /profile_photo 저장
+        - STUDENT_CARD : /student_card 저장
+        - REVIEW : /review 저장
+        - CHATTING : /chat_file 저장
+
+    ** Return **
+    - image_url : image 주소
+    """
+    file_path = None
+    if image_source == ImageSourceEnum.PROFILE.value:
+        file_path = f"profile_photo/{crud.generate_random_string()}_{photo.filename}"
+    elif image_source == ImageSourceEnum.STUDENT_CARD.value:
+        file_path = f"student_card/{crud.generate_random_string()}_{photo.filename}"
+    elif image_source == ImageSourceEnum.REVIEW.value:
+        file_path = f"review/{crud.generate_random_string()}_{photo.filename}"
+    elif image_source == ImageSourceEnum.CHATTING.value:
+        file_path = f"chat_file/{crud.generate_random_string()}_{photo.filename}"
+
+    try:
+        image_url = crud.save_upload_file(upload_file=photo, destination=file_path)
+    except Exception as e:  # 어떤 예외든지 캐치합니다.
+        log_error(e)
+        # 클라이언트에게 에러 메시지와 상태 코드를 반환합니다.
+        raise HTTPException(status_code=500)
+    return {"image_url": image_url}
+
+
+@router.get("/icon/setting")
+def set_icon(db: Session = Depends(get_db)):
+    crud.utility.set_default_icon(db=db)
+
+
+@router.get("/icon/png")
+def set_png(db: Session = Depends(get_db)):
+    crud.utility.png_to_svg(db=db)

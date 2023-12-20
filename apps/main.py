@@ -11,12 +11,14 @@ from firebase_admin import credentials, initialize_app
 from fastapi.openapi.docs import get_swagger_ui_html
 from sqladmin import Admin
 from database.session import engine
+from apscheduler.schedulers.background import BackgroundScheduler
 
 from core.config import settings
 from core.security import get_admin
-from admin.base import register_all, templates_dir
+from admin.base import register_all, templates_dir, AdminAuth
 from api.v1.router import api_router as v1_router
 from log import logger
+from scheduler_module import meeting_active_check, user_remove_after_seven
 
 
 with open("encoded_key.txt", "r") as file:
@@ -26,7 +28,12 @@ decoded_data = base64.b64decode(encoded_data).decode("utf-8")
 firebase_config = json.loads(decoded_data)
 # Firebase 초기화
 cred = credentials.Certificate(firebase_config)
-initialize_app(cred)
+
+try:
+    firebase_app = initialize_app(cred, {"databaseURL": settings.FIRESTORE_URL})
+    print("Firebase app initialized successfully.")
+except Exception as e:
+    print(f"Error initializing Firebase app: {e}")
 
 load_dotenv()
 
@@ -36,15 +43,17 @@ app = FastAPI(
 )
 app.mount("/media", StaticFiles(directory="media"), name="media")
 
-admin = Admin(app, engine, templates_dir=templates_dir)
+scheduler = BackgroundScheduler()
+
+authentication_backend = AdminAuth(secret_key=settings.SECRET_KEY)
+
+admin = Admin(
+    app,
+    engine,
+    templates_dir=templates_dir,
+    authentication_backend=authentication_backend,
+)
 register_all(admin)
-
-
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
-    logger.error(f"An error occurred: {exc}")
-    return JSONResponse(status_code=500, content={"detail": "Internal Server Error"})
-
 
 app.include_router(v1_router, prefix="/v1")
 
@@ -52,6 +61,20 @@ app.include_router(v1_router, prefix="/v1")
 @app.get("/docs", include_in_schema=False)
 async def get_documentation(username: str = Depends(get_admin)):
     return get_swagger_ui_html(openapi_url="/openapi.json", title="docs")
+
+
+@app.on_event("startup")
+def start_scheduler():
+    # 스케줄러 시작 및 작업 추가
+    scheduler.add_job(meeting_active_check, "interval", minutes=1)
+    scheduler.add_job(user_remove_after_seven, "interval", minutes=1)
+    scheduler.start()
+
+
+@app.on_event("shutdown")
+def shutdown_scheduler():
+    # 스케줄러 종료
+    scheduler.shutdown()
 
 
 # Set all CORS enabled origins

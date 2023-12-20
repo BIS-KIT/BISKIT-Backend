@@ -7,20 +7,22 @@ from models.utility import Nationality
 
 
 class LanguageBase(CoreSchema):
-    kr_name: Optional[str]
-    en_name: Optional[str]
+    kr_name: Optional[str] = None
+    en_name: Optional[str] = None
 
 
 class UniversityBase(CoreSchema):
-    kr_name: Optional[str]
-    en_name: Optional[str]
+    kr_name: Optional[str] = None
+    en_name: Optional[str] = None
+    campus_type: Optional[str] = None
+    location: Optional[str] = None
 
 
 class NationalityBase(CoreSchema):
-    kr_name: Optional[str]
-    en_name: Optional[str]
+    kr_name: Optional[str] = None
+    en_name: Optional[str] = None
 
-    code: Optional[str]
+    code: Optional[str] = None
 
     @classmethod
     def from_orm(cls, nationality: Nationality):
@@ -30,3 +32,35 @@ class NationalityBase(CoreSchema):
             en_name=nationality.en_name,
             code=nationality.code.lower(),  # 이 부분에서 소문자로 변환합니다.
         )
+
+
+class TopicBase(BaseModel):
+    kr_name: Optional[str] = None
+    en_name: Optional[str] = None
+    is_custom: Optional[bool] = True
+    icon_url: Optional[str] = None
+
+
+class TagBase(BaseModel):
+    kr_name: Optional[str] = None
+    en_name: Optional[str] = None
+    is_custom: Optional[bool] = True
+    icon_url: Optional[str] = None
+
+
+class TopicCreate(TopicBase):
+    pass
+
+
+class TagCreate(TopicBase):
+    pass
+
+
+class TopicResponse(TopicBase, CoreSchema):
+    class Config:
+        orm_mode = True
+
+
+class TagResponse(TagBase, CoreSchema):
+    class Config:
+        orm_mode = True

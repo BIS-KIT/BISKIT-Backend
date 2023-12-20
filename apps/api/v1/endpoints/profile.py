@@ -1,5 +1,7 @@
 import httpx, shutil, re
 from typing import Any, List, Optional, Dict
+import random
+import asyncio
 
 from fastapi import (
     APIRouter,
@@ -13,6 +15,7 @@ from fastapi import (
     Path,
     Query,
     Request,
+    status,
 )
 from pydantic.networks import EmailStr
 from sqlalchemy.orm import Session
@@ -20,24 +23,17 @@ from sqlalchemy.orm import Session
 import crud
 from database.session import get_db
 from core.config import settings
-from models.user import User
-from models.profile import Profile, AvailableLanguage, Introduction
 from schemas.profile import (
-    ProfileCreate,
     ProfileResponse,
-    AvailableLanguageResponse,
     ProfileUpdate,
     ProfileBase,
     AvailableLanguageCreate,
-    AvailableLanguageBase,
-    IntroductionCreate,
-    IntroductionResponse,
-    IntroductionUpdate,
-    AvailableLanguageUpdate,
     ProfileRegister,
     StudentVerificationBase,
     StudentVerificationCreate,
 )
+from schemas.enum import MyMeetingEnum, MeetingOrderingEnum, ReultStatusEnum
+from schemas.meeting import MeetingListResponse
 from log import log_error
 
 router = APIRouter()
@@ -129,187 +125,52 @@ async def check_nick_name(nick_name: str, db: Session = Depends(get_db)):
     return {"status": "Nick_name is available."}
 
 
-@router.get("/profile/random-nickname")
-async def get_random_nickname():
-    async with httpx.AsyncClient() as client:
-        response = await client.get(settings.NICKNAME_API)
+@router.get("/profile/random-image")
+def get_random_image():
+    random_profile_images = [
+        "/default_profile_photo/version=1.png",
+        "/default_profile_photo/version=2.png",
+        "/default_profile_photo/version=3.png",
+        "/default_profile_photo/version=4.png",
+        "/default_profile_photo/version=5.png",
+    ]
+    selected_image = random.choice(random_profile_images)
+    image_url = settings.S3_URL + selected_image
+    return {"image_url": image_url}
 
-        # API 요청이 성공했는지 확인
-        if response.status_code != 200:
-            raise HTTPException(
-                status_code=503,
-                detail="Nickname API service unavailable",
+
+@router.get("/profile/random-nickname")
+async def get_random_nickname(db: Session = Depends(get_db)):
+    async with httpx.AsyncClient() as client:
+        while True:
+            response = await client.get(settings.NICKNAME_API)
+
+            # API 요청이 성공했는지 확인
+            if response.status_code != 200:
+                # 잠시 후에 다시 시도
+                await asyncio.sleep(3)  # 3초 대기
+                continue
+
+            data = response.json()
+
+            kr_nick_name = data.get("words")[0].split(" ")[:-1] + [" 비스킷"]
+            kr_nick_name = "".join(kr_nick_name)
+
+            check_exists = crud.profile.get_with_nick_name(
+                db=db, nick_name=kr_nick_name
             )
 
-        data = response.json()
+            # 중복되지 않은 닉네임이면 break
+            if check_exists is None:
+                break
 
-        kr_nick_name = data.get("words")[0].split(" ")[:-1] + [" 비스킷"]
-        kr_nick_name = "".join(kr_nick_name)
+            # 중복된 경우, 잠시 대기 후 다시 시도
+            await asyncio.sleep(1)  # 1초 대기
+
         # TODO : random english nickname
         en_nick_name = data.get("en_nick_name")
 
-    return {"kr_nick_name": kr_nick_name, "en_nick_name": en_nick_name}
-
-
-@router.post("/profile/introduction", response_model=List[IntroductionResponse])
-def create_introduction(
-    introduction: List[IntroductionCreate],
-    db: Session = Depends(get_db),
-):
-    """
-    사용자 소개 생성 API.
-
-    이 API는 주어진 사용자 소개 정보로 새로운 사용자 소개를 생성합니다.
-
-    매개변수:
-    - introduction (List[IntroductionCreate]): 사용자 소개 목록.
-    - db (Session): 데이터베이스 세션.
-
-    반환값:
-    - List[IntroductionResponse]: 생성된 사용자 소개 목록.
-    """
-    created_introductions = []
-
-    profile = crud.profile.get(db=db, id=introduction[0].profile_id)
-    if not profile:
-        raise HTTPException(status_code=400, detail="Profile not found")
-
-    try:
-        for intro in introduction:
-            new_introduction = crud.profile.create_introduction(db=db, obj_in=intro)
-            created_introductions.append(new_introduction)
-    except Exception as e:
-        log_error(e)
-        if created_introductions:
-            for intro in created_introductions:
-                crud.profile.remove_introduction(db=db, profile_id=intro.profile_id)
-        raise HTTPException(status_code=500)
-
-    return created_introductions
-
-
-@router.put(
-    "/profile/introduction/{introduction_id}", response_model=IntroductionResponse
-)
-def update_introduction(
-    introduction_id: int,
-    introduction: IntroductionUpdate,
-    db: Session = Depends(get_db),
-):
-    existing_introduction = crud.profile.get_introduction(db=db, id=introduction_id)
-    if not existing_introduction:
-        raise HTTPException(status_code=404, detail="Introduction not found")
-
-    update_introdu = crud.profile.update_introduction(
-        db=db, db_obj=existing_introduction, obj_in=introduction
-    )
-    return update_introdu
-
-
-@router.get(
-    "/profile/introduction/{introduction_id}", response_model=IntroductionResponse
-)
-def get_introduction(introduction_id: int, db: Session = Depends(get_db)):
-    db_obj = crud.profile.get_introduction(db=db, id=introduction_id)
-    if not db_obj:
-        raise HTTPException(status_code=404, detail="Introduction not found")
-    return db_obj
-
-
-@router.delete(
-    "/profile/introduction/{introduction_id}", response_model=IntroductionResponse
-)
-def delete_introduction(introduction_id: int, db: Session = Depends(get_db)):
-    db_obj = crud.profile.remove_introduction(db=db, id=introduction_id)
-    return db_obj
-
-
-@router.post("/profile/available-language", response_model=List[AvailableLanguageBase])
-async def create_available_language(
-    available_language: List[AvailableLanguageCreate],
-    db: Session = Depends(get_db),
-):
-    """
-    사용자의 사용 가능 언어 생성 API.
-
-    매개변수:
-    - available_language (List[AvailableLanguageCreate]): 사용자의 사용 가능 언어 목록.
-    - db (Session): 데이터베이스 세션.
-
-    반환값:
-    - List[AvailableLanguageBase]: 생성된 사용 가능 언어 목록.
-    """
-    return_list = []
-
-    if len(available_language) >= 5:
-        raise HTTPException(status_code=409, detail="Only up to 5 can be created.")
-
-    profile = crud.profile.get(db=db, id=available_language[0].profile_id)
-    if not profile:
-        raise HTTPException(status_code=404, detail="profile not found")
-
-    for ava_lang in available_language:
-        lang = crud.utility.get(db=db, language_id=ava_lang.language_id)
-
-        if not lang:
-            raise HTTPException(status_code=404, detail="Languag not found")
-
-        obj = AvailableLanguageCreate(
-            level=ava_lang.level,
-            language_id=ava_lang.language_id,
-            profile_id=ava_lang.profile_id,
-        )
-        new_ava = crud.profile.create_ava_lan(db=db, obj_in=obj)
-        return_list.append(new_ava)
-
-    return return_list
-
-
-@router.get(
-    "/profile/available-language/{ava_lang_id}", response_model=AvailableLanguageBase
-)
-async def get_available_language(ava_lang_id: int, db: Session = Depends(get_db)):
-    db_obj = crud.profile.get_ava_lan(db=db, id=ava_lang_id)
-    if not db_obj:
-        raise HTTPException(status_code=404, detail="AvailableLanguage not found")
-    return db_obj
-
-
-@router.delete(
-    "/profile/available-language/{ava_lang_id}", response_model=AvailableLanguageBase
-)
-async def delete_available_language(ava_lang_id: int, db: Session = Depends(get_db)):
-    db_obj = crud.profile.remove_ava_lan(db=db, id=ava_lang_id)
-    return db_obj
-
-
-@router.put(
-    "/profile/available-language/{ava_lang_id}", response_model=AvailableLanguageBase
-)
-async def update_available_language(
-    ava_lang_id: int,
-    available_language: AvailableLanguageUpdate,
-    db: Session = Depends(get_db),
-):
-    """
-    사용자의 사용 가능 언어 업데이트 API.
-
-    매개변수:
-    - ava_lang_id (int): 업데이트할 사용 가능 언어의 ID.
-    - available_language (AvailableLanguageUpdate): 업데이트할 사용 가능 언어 정보.
-    - db (Session): 데이터베이스 세션.
-
-    반환값:
-    - AvailableLanguageBase: 업데이트된 사용 가능 언어 정보.
-    """
-    existing_ava_lang = crud.profile.get_ava_lan(db=db, id=ava_lang_id)
-    if not existing_ava_lang:
-        raise HTTPException(status_code=404, detail="Introduction not found")
-
-    update_introdu = crud.profile.update_ava_lan(
-        db=db, db_obj=existing_ava_lang, obj_in=available_language
-    )
-    return update_introdu
+        return {"kr_nick_name": kr_nick_name, "en_nick_name": en_nick_name}
 
 
 @router.post("/student-card", response_model=StudentVerificationBase)
@@ -340,6 +201,7 @@ def student_varification(
     obj_in = StudentVerificationCreate(
         student_card=student_card,
         profile_id=profile.id,
+        verification_status=ReultStatusEnum.PENDING.value,
     )
 
     try:
@@ -394,7 +256,7 @@ def read_student_cards(db: Session = Depends(get_db)):
     return obj_list
 
 
-@router.delete("/profile/user/{user_id}", response_model=ProfileBase)
+@router.delete("/profile/user/{user_id}")
 def delete_profile_by_user(user_id: int, db: Session = Depends(get_db)):
     """
     사용자 ID를 기반으로 프로필 삭제 API
@@ -404,7 +266,8 @@ def delete_profile_by_user(user_id: int, db: Session = Depends(get_db)):
         raise HTTPException(
             status_code=404, detail="Profile not found for the given user_id"
         )
-    return crud.profile.remove(db, id=profile.id)
+    delete_obj = crud.profile.remove(db, id=profile.id)
+    return status.HTTP_204_NO_CONTENT
 
 
 @router.delete("/profile/{user_id}/photo")
@@ -423,7 +286,8 @@ async def delete_profile_photo(user_id: int, db: Session = Depends(get_db)):
     if not profile:
         raise HTTPException(status_code=404, detail="User not found")
 
-    return crud.profile.remove_profile_photo(db=db, user_id=user_id)
+    delete_obj = crud.profile.remove_profile_photo(db=db, user_id=user_id)
+    return status.HTTP_204_NO_CONTENT
 
 
 @router.get("/profile/{user_id}", response_model=ProfileResponse)
@@ -446,7 +310,7 @@ def get_profile_by_user_id(
     return db_profile
 
 
-@router.delete("/profile/{profile_id}", response_model=ProfileResponse)
+@router.delete("/profile/{profile_id}")
 def delete_profile(profile_id: int, db: Session = Depends(get_db)):
     """
     프로필 삭제 API
@@ -464,7 +328,8 @@ def delete_profile(profile_id: int, db: Session = Depends(get_db)):
     profile = crud.profile.get(db, id=profile_id)
     if not profile:
         raise HTTPException(status_code=404, detail="Profile not found")
-    return crud.profile.remove(db, id=profile_id)
+    delete_obj = crud.profile.remove(db, id=profile_id)
+    return status.HTTP_204_NO_CONTENT
 
 
 @router.post("/profile", response_model=ProfileResponse)
@@ -486,15 +351,11 @@ def create_profile(
             - context : 자기소개
         - student_verification
             - student_card : file_path
-            - verification_status : 인증 상태 ["PENDING","VERIFIED","REJECTED","UNVERIFIED"]
+            - verification_status : 인증 상태 ["PENDING","APPROVE","REJECTED","UNVERIFIED"]
     """
     new_profile = None
     ava_list = []
     intro_list = []
-
-    available_language: List[AvailableLanguageCreate] = profile.available_languages
-    Introductions: List[IntroductionCreate] = profile.introductions
-    student_card = profile.student_card
 
     user = crud.user.get(db=db, id=user_id)
     if not user:
@@ -506,81 +367,19 @@ def create_profile(
             status_code=409, detail="Profile already exists for the user"
         )
 
-    if re.search(r"[~!@#$%^&*()_+{}[\]:;<>,.?~]", profile.nick_name):
-        raise HTTPException(
-            status_code=400, detail="Nick_name contains special characters."
-        )
-
-    if not re.match("^[a-zA-Z0-9ㄱ-ㅎㅏ-ㅣ가-힣]{2,12}$", profile.nick_name):
-        raise HTTPException(status_code=400, detail="Invalid nickname.")
-
-    if len(available_language) >= 5:
-        raise HTTPException(status_code=409, detail="Only up to 5 can be created.")
-
-    for ava_lang in available_language:
-        lang = crud.utility.get(db=db, language_id=ava_lang.language_id)
-
-        if not lang:
-            raise HTTPException(status_code=404, detail="Languag not found")
-
-    try:
-        obj_in = ProfileCreate(
-            nick_name=profile.nick_name,
-            profile_photo=profile.profile_photo,
-            user_id=user_id,
-        )
-        new_profile = crud.profile.create(db=db, obj_in=obj_in)
-    except Exception as e:
-        if new_profile:
-            crud.profile.remove(db=db, id=new_profile.id)
-        log_error(e)
-        raise HTTPException(status_code=500)
-
-    try:
+    available_language: List[AvailableLanguageCreate] = profile.available_languages
+    if available_language:
         for ava_lang in available_language:
-            obj_in = AvailableLanguageCreate(
-                level=ava_lang.level,
-                language_id=ava_lang.language_id,
-                profile_id=new_profile.id,
-            )
-            new_ava = crud.profile.create_ava_lan(db=db, obj_in=obj_in)
-            ava_list.append(new_ava)
-    except Exception as e:
-        if available_language:
-            for ava in ava_list:
-                crud.profile.remove_ava_lan(db=db, id=ava.id)
-        log_error(e)
-        raise HTTPException(status_code=500)
+            lang = crud.utility.get(db=db, language_id=ava_lang.language_id)
 
-    try:
-        for intro in Introductions:
-            obj_in = IntroductionCreate(
-                keyword=intro.keyword, context=intro.context, profile_id=new_profile.id
-            )
-            new_introduction = crud.profile.create_introduction(db=db, obj_in=obj_in)
-            intro_list.append(new_introduction)
-    except Exception as e:
-        if available_language:
-            for ava in ava_list:
-                crud.profile.remove_ava_lan(db=db, id=ava.id)
-        log_error(e)
-        raise HTTPException(status_code=500)
-    if student_card:
-        try:
-            obj_in = StudentVerificationCreate(
-                student_card=student_card.student_card,
-                verification_status=student_card.verification_status,
-                profile_id=new_profile.id,
-            )
+            if not lang:
+                raise HTTPException(status_code=404, detail="Languag not found")
 
-            crud.profile.create_verification(db=db, obj_in=obj_in)
-        except Exception as e:
-            log_error(e)
-
+    new_profile = crud.profile.create(db=db, obj_in=profile, user_id=user_id)
     return new_profile
 
 
-@router.put("/profile/{profile_id}", response_model=ProfileResponse)
+@router.put("/profile/{profile_id}", status_code=status.HTTP_200_OK)
 def update_profile(
     profile_id: int,
     profile_in: ProfileUpdate,
@@ -606,7 +405,6 @@ def update_profile(
         raise HTTPException(status_code=404, detail="Profile not found")
 
     new_nickname = profile_in.nick_name
-    new_photo = profile_in.profile_photo
     if new_nickname:
         if re.search(r"[~!@#$%^&*()_+{}[\]:;<>,.?~]", new_nickname):
             raise HTTPException(
@@ -618,14 +416,38 @@ def update_profile(
         if check_exists_nickname:
             raise HTTPException(status_code=409, detail="nick_name already used")
 
-    if new_photo:
-        if existing_profile.profile_photo:
-            crud.profile.delete_file_from_s3(file_url=existing_profile.profile_photo)
     try:
         new_profile = crud.profile.update(
             db=db, db_obj=existing_profile, obj_in=profile_in
         )
+        return {"status": "Profile updated successfully"}
     except Exception as e:
         log_error(e)
         raise HTTPException(status_code=500, detail="Error updating profile")
-    return new_profile
+
+
+@router.get("/profile/{user_id}/meetings", response_model=MeetingListResponse)
+def get_user_meetings(
+    user_id: int,
+    order_by: MeetingOrderingEnum = MeetingOrderingEnum.CREATED_TIME,
+    status: MyMeetingEnum = MyMeetingEnum.APPROVE.value,
+    db: Session = Depends(get_db),
+    skip: int = 0,
+    limit: int = 10,
+):
+    """
+    User 모임 리스트
+
+    - **status**
+        - APPROVE : 승인 완료된 모임(현재 참여중인 모임)
+        - Pending : 승인 대기중 모임
+        - PAST : 과거 참여했던 모임
+    """
+    user = crud.user.get(db=db, id=user_id)
+    if user is None:
+        raise HTTPException(status_code=404, detail="user not found")
+
+    meetings, total_count = crud.profile.get_user_all_meetings(
+        db=db, order_by=order_by, user_id=user_id, status=status, skip=skip, limit=limit
+    )
+    return {"meetings": meetings, "total_count": total_count}

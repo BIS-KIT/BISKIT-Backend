@@ -1,37 +1,18 @@
 from datetime import date
-from pydantic import EmailStr, BaseModel
-from enum import Enum
+from pydantic import EmailStr, BaseModel, computed_field, Field
+
 from typing import Optional, List, Union
 from fastapi import UploadFile
 
 from schemas.base import CoreSchema
-from schemas.utility import LanguageBase
-
-
-class genderEum(str, Enum):
-    MALE = "male"
-    FEMALE = "female"
-
-
-class LanguageLevel(Enum):
-    BEGINNER = "초보"
-    BASIC = "기초"
-    INTERMEDIATE = "중급"
-    ADVANCED = "고급"
-    PROFICIENT = "능숙"
-
-
-class VerificationStatus(str, Enum):
-    PENDING = "pending"
-    VERIFIED = "verified"
-    REJECTED = "rejected"
-    UNVERIFIED = "unverified"
+from schemas.utility import LanguageBase, UniversityBase
+from schemas.enum import ReultStatusEnum, LanguageLevel
 
 
 class StudentVerificationBase(CoreSchema):
     profile_id: Optional[int] = None
     student_card: Optional[Union[str, UploadFile]] = None
-    verification_status: Optional[str] = VerificationStatus.UNVERIFIED.value
+    verification_status: Optional[str] = ReultStatusEnum.UNVERIFIED.value
 
     class Config:
         orm_mode = True
@@ -40,7 +21,7 @@ class StudentVerificationBase(CoreSchema):
 class StudentVerificationReponse(BaseModel):
     id: Optional[int] = None
     student_card: Optional[Union[str, UploadFile]] = None
-    verification_status: str = VerificationStatus.UNVERIFIED.value
+    verification_status: str = ReultStatusEnum.UNVERIFIED.value
 
     class Config:
         orm_mode = True
@@ -49,22 +30,23 @@ class StudentVerificationReponse(BaseModel):
 class StudentVerificationCreate(BaseModel):
     profile_id: Optional[int] = None
     student_card: Optional[Union[str, UploadFile]] = None
-    verification_status: str = VerificationStatus.UNVERIFIED.value
+    verification_status: str = ReultStatusEnum.UNVERIFIED.value
 
 
 class StudentVerificationIn(BaseModel):
     student_card: Optional[Union[str, UploadFile]] = None
-    verification_status: str = VerificationStatus.UNVERIFIED.value
+    verification_status: str = ReultStatusEnum.UNVERIFIED.value
 
 
 class StudentVerificationUpdate(BaseModel):
-    verification_status: Optional[str] = VerificationStatus.UNVERIFIED.value
+    verification_status: Optional[str] = ReultStatusEnum.PENDING.value
 
 
 class ProfileBase(CoreSchema):
     nick_name: Optional[str] = None
     profile_photo: Optional[Union[str, UploadFile]] = None
     user_id: Optional[int] = None
+    is_default_photo: bool = False
 
 
 # 프로필 생성을 위한 스키마
@@ -80,13 +62,16 @@ class ProfilePhoto(BaseModel):
 class AvailableLanguageBase(CoreSchema):
     level: Optional[str] = None
     language: Optional[LanguageBase] = None
-    profile_id: Optional[int] = None
+    # profile_id: Optional[int] = None
 
 
 class AvailableLanguageCreate(BaseModel):
     level: str
     language_id: int
     profile_id: Optional[int] = None
+
+    class Meta:
+        orm_mode = True
 
 
 class AvailableLanguageIn(BaseModel):
@@ -147,30 +132,70 @@ class IntroductCreateLanguage(BaseModel):
         orm_mode = True
 
 
+class ProfileUniversityBase(BaseModel):
+    department: Optional[str] = None
+    education_status: Optional[str] = None
+
+    class Meta:
+        orm_mode = True
+
+
+class ProfileUniversityUpdate(ProfileUniversityBase):
+    pass
+
+
+class ProfileUniversityResponse(ProfileUniversityBase):
+    university: Optional[UniversityBase] = None
+
+    class Meta:
+        orm_mode = True
+
+
 class ProfileResponse(BaseModel):
     id: int = None
-    user_id: int
+    user_id: int = None
     nick_name: Optional[str] = None
+    is_default_photo: Optional[bool] = None
+    context: Optional[str] = None
     profile_photo: Optional[str] = None
-    available_languages: Optional[List[AvailableLanguageResponse]]
-    introductions: Optional[List[IntroductionResponse]]
+    available_language_list: Optional[List[AvailableLanguageResponse]] = Field(
+        ..., exclude=True
+    )
+    introductions: Optional[List[IntroductionResponse]] = None
     student_verification: Optional[StudentVerificationReponse] = None
+    user_university: Optional[ProfileUniversityResponse] = None
 
     class Config:
         orm_mode = True
+        from_attributes = True
+
+    @computed_field
+    @property
+    def available_languages(self) -> List[AvailableLanguageResponse]:
+        if self.available_language_list:
+            return_obj = sorted(
+                self.available_language_list,
+                key=lambda lang: LanguageLevel[lang.level].value,
+                reverse=False,  # 내림차순 정렬을 원할 경우 True로 설정
+            )
+            return return_obj
+        return []
 
 
 class ProfileRegister(BaseModel):
     nick_name: Optional[str] = None
     profile_photo: Optional[str] = None
+    is_default_photo: Optional[bool] = False
     available_languages: Optional[List[AvailableLanguageIn]]
-    introductions: Optional[List[IntroductionIn]]
+    introductions: Optional[List[IntroductionIn]] = None
     student_card: Optional[StudentVerificationIn] = None
 
 
 class ProfileUpdate(BaseModel):
     nick_name: Optional[str] = None
+    context: Optional[str] = None
     profile_photo: Optional[str] = None
-    # available_languages: Optional[List[AvailableLanguageIn]] = None
-    # introductions: Optional[List[IntroductionIn]] = None
-    # student_card: Optional[StudentVerificationIn] = None
+    is_default_photo: Optional[bool] = None
+    available_languages: Optional[List[AvailableLanguageIn]] = None
+    introductions: Optional[List[IntroductionIn]] = None
+    university_info: Optional[ProfileUniversityUpdate] = None

@@ -22,6 +22,7 @@ class Setting(BaseSettings):
     SMTP_PORT: int
     SMTP_USER: str
     SMTP_PASSWORD: str
+    S3_URL : str
 
     AWS_ACCESS_KEY_ID: str
     AWS_SECRET_ACCESS_KEY: str
@@ -29,6 +30,8 @@ class Setting(BaseSettings):
     BUCKET_NAME: str
 
     LOGO_URL: str
+
+    FIRESTORE_URL: str
 
     @property
     def cors_origins_list(self) -> List[str]:

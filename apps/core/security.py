@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import Any, Union, Optional, Annotated
+from typing import Any, Dict, Annotated
 import secrets
 
 from jose import jwt, JWTError, ExpiredSignatureError
@@ -61,7 +61,9 @@ def create_refresh_token(data: dict):
     """
     ...
     to_encode = data.copy()
-    expire = datetime.utcnow() + timedelta(minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES)
+    expire = datetime.utcnow() + timedelta(
+        minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES
+    )
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(
         to_encode, settings.REFRESH_SECRET_KEY, algorithm=settings.ALGORITHM
@@ -88,28 +90,6 @@ def verify_id_token(token: str) -> dict:
         raise HTTPException(
             status_code=403, detail="Invalid authentication credentials"
         )
-
-
-def get_user_by_fb(authorization: Optional[str] = Header(None)) -> dict:
-    """
-    Firebase 토큰을 사용하여 사용자 정보를 검색한다.
-
-    Args:
-    - authorization: Bearer 형식의 Firebase 토큰.
-
-    Returns:
-    - 검증된 사용자의 정보를 포함하는 사전.
-    """
-    if not authorization:
-        raise HTTPException(status_code=403, detail="Unauthorized")
-    # Bearer 토큰에서 실제 토큰 분리
-    token_prefix, firebase_token = authorization.split(" ")
-    if token_prefix != "Bearer":
-        raise HTTPException(
-            status_code=403, detail="Invalid authentication token format"
-        )
-
-    return verify_id_token(firebase_token)
 
 
 def get_current_token(authorization: str = Header(...)) -> str:
@@ -162,7 +142,7 @@ def get_current_user(
             token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
         )
         auth_method = payload.get("auth_method")
-        
+
         if auth_method == "email":
             email = payload.get("sub")
             user = crud.user.get_by_email(db=db, email=email)
@@ -172,7 +152,7 @@ def get_current_user(
             user = crud.user.get_by_sns(db=db, sns_id=sns_id, sns_type=sns_type)
         else:
             raise HTTPException(status_code=400, detail="Unknown auth_method")
-        
+
         if user is None:
             raise HTTPException(
                 status_code=401,
@@ -180,9 +160,9 @@ def get_current_user(
                 headers={"WWW-Authenticate": "Bearer"},
             )
     except ExpiredSignatureError:
-        raise HTTPException(status_code=400, detail="Token has expired")
+        raise HTTPException(status_code=401, detail="Token has expired")
     except JWTError:
-        raise HTTPException(status_code=400, detail="Could not validate credentials")
+        raise HTTPException(status_code=401, detail="Could not validate credentials")
     return user
 
 
@@ -196,3 +176,39 @@ def get_admin(credentials: Annotated[HTTPBasicCredentials, Depends(security)]):
             headers={"WWW-Authenticate": "Basic"},
         )
     return credentials.username
+
+
+def create_tokens_for_user(user: User) -> Dict[str, Any]:
+    """
+    주어진 사용자에 대해 액세스 토큰과 리프레시 토큰을 생성하고 반환합니다.
+
+    Args:
+        user (User): 토큰을 생성할 사용자 객체.
+
+    Returns:
+        Dict[str, Any]: 생성된 토큰과 사용자 정보를 포함하는 딕셔너리.
+    """
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+
+    if user.email:
+        token_data = {"sub": user.email, "auth_method": "email"}
+    else:
+        token_data = {
+            "sub": user.sns_id,
+            "sns_type": user.sns_type,
+            "auth_method": "sns",
+        }
+
+    access_token = create_access_token(
+        data=token_data, expires_delta=access_token_expires
+    )
+    refresh_token = create_refresh_token(data=token_data)
+
+    return {
+        "id": user.id,
+        "token": access_token,
+        "refresh_token": refresh_token,
+        "email": user.email,
+        "sns_type": user.sns_type,
+        "sns_id": user.sns_id,
+    }

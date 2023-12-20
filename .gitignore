@@ -163,3 +163,5 @@ encoded_key.txt
 # *.json
 apps/alembic/versions/*
 media/
+*log
+.vscode/

@@ -29,7 +29,8 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     def get_multi(
         self, db: Session, *, skip: int = 0, limit: int = 100
     ) -> List[ModelType]:
-        return db.query(self.model).offset(skip).limit(limit).all()
+        total_count = db.query(self.model).count()
+        return db.query(self.model).offset(skip).limit(limit).all(), total_count
 
     def create(self, db: Session, *, obj_in: CreateSchemaType) -> ModelType:
         obj_in_data = jsonable_encoder(obj_in)
@@ -46,15 +47,16 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         db_obj: ModelType,
         obj_in: Union[UpdateSchemaType, Dict[str, Any]]
     ) -> ModelType:
-        obj_data = jsonable_encoder(db_obj)
+        obj_data = db_obj.to_dict()
         if isinstance(obj_in, dict):
             update_data = obj_in
         else:
             update_data = obj_in.dict(exclude_unset=True)
-        for field in obj_data:
-            if field in update_data:
-                setattr(db_obj, field, update_data[field])
-        db.add(db_obj)
+
+        for field, value in update_data.items():
+            if hasattr(db_obj, field):
+                setattr(db_obj, field, value)
+            db.add(db_obj)
         db.commit()
         db.refresh(db_obj)
         return db_obj

@@ -1,7 +1,7 @@
 from typing import Any, List, Optional, Dict
 import re, traceback
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from jose import jwt, JWTError, ExpiredSignatureError
 from sqlalchemy.exc import IntegrityError
@@ -17,7 +17,11 @@ from schemas.user import (
     UserUniversityUpdateIn,
     UserUpdate,
     UserBaseUpdate,
+    UserListResponse,
+    DeletionRequestCreate,
+    DeletionRequestResponse,
 )
+from schemas import system as system_schemas
 from models.user import User
 from core.security import (
     get_current_user,
@@ -42,7 +46,7 @@ async def read_current_user(current_user=Depends(get_current_user)):
     return current_user
 
 
-@router.get("/users", response_model=List[UserResponse])
+@router.get("/users", response_model=UserListResponse)
 def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     """
     사용자 목록을 반환합니다.
@@ -56,10 +60,10 @@ def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
 
     * 사용자 목록
     """
-    users = crud.user.get_multi(db, skip=skip, limit=limit)
+    users, total_count = crud.user.get_multi(db, skip=skip, limit=limit)
     if users is None:
         raise HTTPException(status_code=404, detail="Users not found")
-    return users
+    return {"users": users, "total_count": total_count}
 
 
 @router.get("/users/{user_id}", response_model=UserResponse)
@@ -82,10 +86,10 @@ def read_user(user_id: int, db: Session = Depends(get_db)):
 
 
 @router.delete("/user/{user_id}")
-def delete_user(user_id: int, db: Session = Depends(get_db)):
+def delete_user(user_id: int, is_remove: bool = False, db: Session = Depends(get_db)):
     """
     특정 사용자를 삭제합니다.
-
+    (7일간 재가입 막기 위해, 7일 후 삭제)
     **파라미터**
 
     * `user_id`: 삭제하려는 사용자의 ID
@@ -95,10 +99,25 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
     * 삭제된 사용자의 정보
     """
 
-    user = crud.user.get(db, id=user_id)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    return crud.user.remove(db, id=user_id)
+    check_obj = crud.get_object_or_404(db=db, model=User, obj_id=user_id)
+    delete_obj = crud.user.deactive_user(db=db, user_id=user_id)
+    if is_remove:
+        delete_obj = crud.user.remove(db=db, id=user_id)
+    return status.HTTP_204_NO_CONTENT
+
+
+@router.post("/deletion-requests", response_model=DeletionRequestResponse)
+def save_deletion_requests(
+    reason: DeletionRequestCreate, db: Session = Depends(get_db)
+):
+    obj = crud.deletion_requests.create(db=db, obj_in=reason)
+    return obj
+
+
+# @router.get("/deletion-requests", response_model=DeletionRequestResponse)
+# def read_deletion_requests(reason: DeletionRequestCreate, db: Session = Depends(get_db)):
+#     obj = crud.deletion_requests.create(db=db, obj_in=reason)
+#     return status.HTTP_201_CREATED
 
 
 @router.put("/user/{user_id}", response_model=UserResponse)
@@ -189,7 +208,7 @@ def get_user_consent(
     return consent
 
 
-@router.delete("/user/{user_id}/consent", response_model=ConsentResponse)
+@router.delete("/user/{user_id}/consent")
 def delete_user_consent(
     user_id: int,
     db: Session = Depends(get_db),
@@ -213,7 +232,7 @@ def delete_user_consent(
         raise HTTPException(status_code=400, detail="Consent not found")
 
     db_obj = crud.user.remove_consent(db=db, id=consent.id)
-    return db_obj
+    return status.HTTP_204_NO_CONTENT
 
 
 @router.get("/user/{user_id}/university", response_model=UserUniversityBase)
@@ -241,7 +260,7 @@ def get_user_university(
     return user_university
 
 
-@router.delete("/user/{user_id}/university", response_model=UserUniversityBase)
+@router.delete("/user/{user_id}/university")
 def delete_user_university(
     user_id: int,
     db: Session = Depends(get_db),
@@ -265,7 +284,7 @@ def delete_user_university(
         raise HTTPException(status_code=400, detail="user_university not found")
 
     db_obj = crud.user.remove_university(db=db, id=user_university.id)
-    return db_obj
+    return status.HTTP_204_NO_CONTENT
 
 
 @router.put("/user/{user_id}/university", response_model=UserUniversityBase)
@@ -320,7 +339,7 @@ def get_user_nationality(
     return user_nationality
 
 
-@router.delete("/user/{user_id}/nationality", response_model=UserNationalityResponse)
+@router.delete("/user/{user_id}/nationality")
 def delete_user_nationality(
     user_id: int,
     db: Session = Depends(get_db),
@@ -344,4 +363,29 @@ def delete_user_nationality(
         raise HTTPException(status_code=400, detail="user_nationality not found")
 
     db_obj = crud.user.remove_nationality(db=db, id=user_nationality.id)
-    return db_obj
+    return status.HTTP_204_NO_CONTENT
+
+
+@router.get(
+    "/user/{user_id}/report", response_model=List[system_schemas.ReportResponse]
+)
+def get_report_by_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+):
+    """
+    유저가 받은 신고 중 관리자가 승인한 신고 내역(경고내역)
+    """
+    check_user = crud.get_object_or_404(db=db, model=User, obj_id=user_id)
+    report_list = crud.report.get_by_user_id(db=db, user_id=user_id)
+    return report_list
+
+
+@router.get("/user/{user_id}/admin")
+def made_admin(
+    user_id: int,
+    db: Session = Depends(get_db),
+):
+    check_user = crud.get_object_or_404(db=db, model=User, obj_id=user_id)
+    update_admin = crud.user.made_admin(db=db, user_id=user_id)
+    return status.HTTP_202_ACCEPTED

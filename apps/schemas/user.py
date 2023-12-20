@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from pydantic import EmailStr, BaseModel
 from enum import Enum
 from typing import Optional, List, Union
@@ -35,7 +35,7 @@ class UserWithStatus(UserBase):
 
 # 유저 생성을 위한 스키마
 class UserCreate(BaseModel):
-    email: Optional[EmailStr]=None
+    email: Optional[EmailStr] = None
     password: Optional[str] = None
     name: str
     birth: date
@@ -46,7 +46,7 @@ class UserCreate(BaseModel):
 
 
 class UserRegister(BaseModel):
-    email: Optional[EmailStr]=None
+    email: Optional[EmailStr] = None
     password: Optional[str] = None
     name: str
     birth: date
@@ -152,15 +152,15 @@ class RefreshToken(BaseModel):
 
 
 class TokenData(BaseModel):
-    email: Optional[EmailStr]=None
+    email: Optional[EmailStr] = None
 
 
 class EmailCertificationIn(BaseModel):
-    email: Optional[EmailStr]=None
+    email: Optional[EmailStr] = None
 
 
 class EmailCertificationCheck(BaseModel):
-    email: Optional[EmailStr]=None
+    email: Optional[EmailStr] = None
     certification: Union[str, int]
 
 
@@ -223,20 +223,56 @@ class UserNationalityUpdate(BaseModel):
 
 class UserResponse(BaseModel):
     id: int
-    email: Optional[EmailStr]=None
+    email: Optional[EmailStr] = None
     name: str = None
     birth: date = None
     gender: str = None
     is_active: bool = None
     is_admin: bool = None
     sns_type: Optional[str] = None
-    sns_id: Optional[str] = None
+    # sns_id: Optional[str] = None
     fcm_token: Optional[str] = None
+    created_time: datetime = None
 
     profile: Optional[ProfileResponse] = None
     consents: Optional[List[ConsentResponse]] = None
-    user_university: Optional[List[UserUniversityBase]] = None
     user_nationality: Optional[List[UserNationalityBase]] = None
 
     class Config:
+        orm_mode = True
+
+
+class UserListResponse(BaseModel):
+    total_count: int
+    users: Optional[List[UserResponse]] = []
+
+
+class UserSimpleResponse(CoreSchema):
+    email: Optional[EmailStr]
+    profile_photo: Optional[str] = None
+    name: Optional[str]
+    nick_name: Optional[str]
+    birth: Optional[date]
+    gender: Optional[str]
+    user_nationality: Optional[List[UserNationalityBase]] = None
+
+    class Config:
+        orm_mode = True
+
+
+class ConfirmPassword(BaseModel):
+    user_id: int
+    password: str
+
+
+class DeletionRequestBase(BaseModel):
+    reason: str
+
+
+class DeletionRequestCreate(DeletionRequestBase):
+    pass
+
+
+class DeletionRequestResponse(CoreSchema, DeletionRequestBase):
+    class Meta:
         orm_mode = True

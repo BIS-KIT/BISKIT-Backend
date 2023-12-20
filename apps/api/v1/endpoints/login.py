@@ -3,11 +3,7 @@ from random import randint
 from datetime import timedelta
 import re, traceback
 
-from fastapi import (
-    APIRouter,
-    Depends,
-    HTTPException,
-)
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from jose import jwt, JWTError, ExpiredSignatureError
 from sqlalchemy.exc import IntegrityError
@@ -27,13 +23,14 @@ from schemas.user import (
     UserRegister,
     UserUniversityCreate,
     UserNationalityCreate,
+    ConfirmPassword,
 )
 from models.user import User
 from core.security import (
     get_current_token,
     create_access_token,
-    get_user_by_fb,
     create_refresh_token,
+    create_tokens_for_user,
 )
 from database.session import get_db
 from core.config import settings
@@ -73,117 +70,12 @@ def register_user(
     - dict: 새로 등록된 사용자의 ID와 이메일.
     """
 
-    new_user = None
-    consent_obj = None
-    user_university_obj = None
-    hashed_password = None
-    user_nationality_obj_list = []
-    # 데이터베이스에서 이메일로 사용자 확인
-    if user_in.email:
-        user = crud.user.get_by_email(db=db, email=user_in.email)
-        if user:
-            raise HTTPException(status_code=409, detail="User already registered.")
-    elif user_in.sns_type and user_in.sns_id:
-        user = crud.user.get_by_sns(
-            db=db, sns_type=user_in.sns_type, sns_id=user_in.sns_id
-        )
-        if user:
-            raise HTTPException(status_code=409, detail="User already registered.")
+    exists_check = crud.signup.check_exists(db=db, obj_in=user_in)
 
-    check_user = crud.user.get_by_birth(db=db, name=user_in.name, birth=user_in.birth)
-    if check_user:
-        raise HTTPException(
-            status_code=409,
-            detail="User with same name and birthdate already registered.",
-        )
+    new_user = crud.signup.register_user(db=db, obj_in=user_in)
 
-    password = user_in.password
-    if password:
-        hashed_password = crud.get_password_hash(password)
-
-    university = crud.utility.get(db=db, university_id=user_in.university_id)
-    if not university:
-        raise HTTPException(status_code=400, detail="University Not Found")
-
-    user_nationality_obj_list = user_in.nationality_ids
-    for id in user_nationality_obj_list:
-        nation = crud.utility.get(db=db, nationality_id=id)
-        if not nation:
-            raise HTTPException(status_code=400, detail="Nationality Not Found")
-    try:
-        obj_in = UserCreate(
-            email=user_in.email,
-            password=hashed_password,
-            name=user_in.name,
-            birth=user_in.birth,
-            gender=user_in.gender,
-            sns_type=user_in.sns_type,
-            sns_id=user_in.sns_id,
-            fcm_token=user_in.fcm_token,
-        )
-
-        new_user = crud.user.create(db=db, obj_in=obj_in)
-
-        consent = ConsentCreate(
-            terms_mandatory=user_in.terms_mandatory,
-            terms_optional=user_in.terms_optional,
-            terms_push=user_in.terms_push,
-            user_id=new_user.id,
-        )
-
-        user_university = UserUniversityCreate(
-            department=user_in.department,
-            education_status=user_in.education_status,
-            university_id=user_in.university_id,
-            user_id=new_user.id,
-        )
-
-        for id in user_nationality_obj_list:
-            user_nationality = UserNationalityCreate(
-                nationality_id=id, user_id=new_user.id
-            )
-            user_nationality_obj = crud.user.create_nationality(
-                db=db, obj_in=user_nationality
-            )
-
-        consent_obj = crud.user.create_consent(db=db, obj_in=consent)
-        user_university_obj = crud.user.create_university(db=db, obj_in=user_university)
-    except Exception as e:
-        log_error(e)
-        if new_user:
-            crud.user.remove(db=db, id=new_user.id)
-        if consent_obj:
-            crud.user.remove_consent(db=db, id=id)
-        if user_university_obj:
-            crud.user.remove_university(db=db, id=user_university_obj.id)
-        if user_nationality_obj_list:
-            for id in user_nationality_obj_list:
-                crud.user.remove_nationality(db=db, id=id)
-        raise HTTPException(status_code=500)
-
-    # 토큰 생성 및 반환
-    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    if new_user.email:
-        token_data = {"sub": new_user.email, "auth_method": "email"}
-    else:
-        token_data = {
-            "sub": new_user.sns_id,
-            "sns_type": new_user.sns_type,
-            "auth_method": "sns",
-        }
-
-    access_token = create_access_token(
-        data=token_data, expires_delta=access_token_expires
-    )
-    refresh_token = create_refresh_token(data=token_data)
-    return {
-        "id": new_user.id,
-        "token": access_token,
-        "refresh_token": refresh_token,
-        "email": new_user.email,
-        "sns_type": new_user.sns_type,
-        "sns_id": new_user.sns_id,
-    }
+    return_token_dict = create_tokens_for_user(user=new_user)
+    return return_token_dict
 
 
 @router.post("/login", response_model=Dict[str, Any])
@@ -220,6 +112,9 @@ def login_for_access_token(login_obj: UserLogin, db: Session = Depends(get_db)):
             raise HTTPException(status_code=400, detail="User Not Found")
     else:
         raise HTTPException(status_code=400, detail="Incorrect credentials")
+    
+    if not user.is_active:
+        raise HTTPException(status_code=400, detail="Account in the process of withdrawal")
 
     # 비밀번호 검증
     ## 일반 로그인
@@ -299,9 +194,9 @@ async def refresh_token(
                 headers={"WWW-Authenticate": "Bearer"},
             )
     except ExpiredSignatureError:
-        raise HTTPException(status_code=400, detail="Token has expired")
+        raise HTTPException(status_code=401, detail="Token has expired")
     except JWTError as e:
-        raise HTTPException(status_code=400, detail="Could not validate credentials")
+        raise HTTPException(status_code=401, detail="Could not validate credentials")
 
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     if user.email:
@@ -381,6 +276,28 @@ def validate_token(
     return {"detail": "Token is valid"}
 
 
+@router.post("/confirm-password")
+def check_current_password(obj_in: ConfirmPassword, db: Session = Depends(get_db)):
+    """
+    user 의 현재 패스워드 확인
+    (user_id는 후에 token에서 추출)
+
+    Return
+        - 400 : password 틀림
+        - 400 : password 없는 유저(sns 가입 유저)
+        - 200 : Corrent Password
+    """
+    check_obj = crud.get_object_or_404(db=db, model=User, obj_id=obj_in.user_id)
+    if not check_obj.password:
+        raise HTTPException(status_code=400, detail="Password Not Found")
+
+    if not crud.verify_password(obj_in.password, check_obj.password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Incorrect credentials"
+        )
+    return status.HTTP_200_OK
+
+
 @router.post("/change-password")
 def change_password(
     password_data: PasswordChange,
@@ -423,9 +340,9 @@ def change_password(
             )
 
     except ExpiredSignatureError:
-        raise HTTPException(status_code=400, detail="Token has expired")
+        raise HTTPException(status_code=401, detail="Token has expired")
     except JWTError:
-        raise HTTPException(status_code=400, detail="Could not validate credentials")
+        raise HTTPException(status_code=401, detail="Could not validate credentials")
 
     user_in = PasswordUpdate(password=password_data.new_password)
     updated_user = crud.user.update(db=db, db_obj=user, obj_in=user_in)
@@ -514,8 +431,9 @@ async def certificate_check(
     )
     if user_cert:
         access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        token_data = {"sub": cert_check.email, "auth_method": "email"}
         access_token = create_access_token(
-            data={"sub": cert_check.email}, expires_delta=access_token_expires
+            data=token_data, expires_delta=access_token_expires
         )
         # db.delete(user_cert)
         # db.commit()
