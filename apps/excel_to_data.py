@@ -16,7 +16,8 @@ subset2 = pd.read_excel("DataSet.xlsx", sheet_name=1, header=None).iloc[3:250, 1
 subset3 = pd.read_excel("DataSet.xlsx", sheet_name=2, header=None).iloc[2:216, 1:8]
 
 
-def get_nationality(subset: pd.DataFrame):
+def get_nationality():
+    subset = subset2
     db = SessionLocal()
     try:
         for _, row in subset.iterrows():
@@ -46,7 +47,8 @@ def get_nationality(subset: pd.DataFrame):
         db.close()
 
 
-def get_language(subset: pd.DataFrame):
+def get_language():
+    subset = subset1
     db = SessionLocal()
     try:
         for _, row in subset.iterrows():
@@ -73,7 +75,8 @@ def get_language(subset: pd.DataFrame):
         db.close()
 
 
-def get_university(subset: pd.DataFrame):
+def get_university():
+    subset = subset3
     db = SessionLocal()
 
     try:
@@ -171,7 +174,7 @@ def create_fix_topics_tags():
 
 
 if __name__ == "__main__":
-    get_language(subset1)
-    get_nationality(subset2)
-    get_university(subset3)
+    get_language()
+    get_nationality()
+    get_university()
     create_fix_topics_tags()
