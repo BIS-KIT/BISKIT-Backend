@@ -10,6 +10,8 @@ from main import app
 from core.config import settings
 from database.session import Base, get_db
 from models.base import ModelBase
+from models import utility as utility_models
+
 
 DATABASE_URL = f"postgresql+psycopg2://postgres:{settings.DB_ROOT_PASSWORD}@maindb:5432/{settings.TEST_DB}"
 
@@ -49,3 +51,18 @@ def client(session):
     app.dependency_overrides[get_db] = override_get_db
 
     yield TestClient(app)
+
+
+@pytest.fixture(scope="function")
+def create_test_data(session):
+    # University 객체 생성 예시
+    university = utility_models.University(kr_name="test1")
+    session.add(university)
+    session.commit()
+
+    # Nationality 객체 생성 예시
+    nationality = utility_models.Nationality(kr_name="test1")
+    session.add(nationality)
+    session.commit()
+
+    return university, nationality
