@@ -1,6 +1,13 @@
 import pytest
 import json
-from tests.confest import client, session, test_nationality, test_university
+from tests.confest import (
+    client,
+    session,
+    test_nationality,
+    test_university,
+    test_user,
+    test_token,
+)
 
 from schemas import user as user_schmea
 from models import user as user_models
@@ -13,7 +20,7 @@ class TestLogin:
         university = test_university
         nationality1, nationality2 = test_nationality
 
-        obj_in = user_schmea.UserRegister(
+        schema_obj = user_schmea.UserRegister(
             email="ssss@example.com",
             password="string",
             name="string",
@@ -31,7 +38,7 @@ class TestLogin:
             terms_push=False,
         )
 
-        json_data = json.loads(obj_in.model_dump_json())
+        json_data = json.loads(schema_obj.model_dump_json())
 
         # HTTP 요청 시뮬레이션
         response = client.post("/v1/register", json=json_data)
@@ -66,3 +73,50 @@ class TestLogin:
         )
         assert db_user_university is not None
         assert db_user_university.university_id == json_data["university_id"]
+
+    def test_login(self, client, test_user):
+        user = test_user
+
+        password = "guswns95@@"
+
+        email_login_schema = user_schmea.UserLogin(
+            email=test_user.email, password=password
+        )
+        sns_login_schema = user_schmea.UserLogin(
+            sns_id=test_user.sns_id, sns_type=test_user.sns_type
+        )
+        email_json_data = json.loads(email_login_schema.model_dump_json())
+        sns_json_data = json.loads(sns_login_schema.model_dump_json())
+
+        email_response = client.post("/v1/login", json=email_json_data)
+        sns_response = client.post("/v1/login", json=sns_json_data)
+
+        assert email_response.status_code == 200, email_response.content
+        assert "access_token" in email_response.json()
+
+        assert sns_response.status_code == 200, sns_response.content
+        assert "access_token" in sns_response.json()
+
+    def test_current_password(self, client, test_user):
+        user = test_user
+
+        schema_obj = user_schmea.ConfirmPassword(user_id=user.id, password="guswns95@@")
+
+        json_data = json.loads(schema_obj.model_dump_json())
+
+        response = client.post("/v1/confirm-password", json=json_data)
+
+        assert response.status_code == 200, response.content
+
+    def test_change_password(self, client, test_token):
+        schema_obj = user_schmea.PasswordChange(new_password="testpassword@@")
+
+        json_data = json.loads(schema_obj.model_dump_json())
+
+        response = client.post(
+            "/v1/change-password",
+            json=json_data,
+            headers={"Authorization": f"Bearer {test_token}"},
+        )
+
+        assert response.status_code == 200, response.content
