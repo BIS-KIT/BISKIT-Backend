@@ -1,5 +1,5 @@
 from datetime import date, datetime
-from pydantic import EmailStr, BaseModel
+from pydantic import EmailStr, BaseModel, ConfigDict
 from enum import Enum
 from typing import Optional, List, Union
 
@@ -115,8 +115,7 @@ class ConsentCreate(ConsentBase):
 class ConsentResponse(ConsentBase):
     pass
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class FirebaseAuthBase(BaseModel):
@@ -137,8 +136,7 @@ class FirebaseAuthUpdate(FirebaseAuthBase):
 class FirebaseAuthResponse(FirebaseAuthBase):
     user_id: int
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class Token(BaseModel):
@@ -171,8 +169,7 @@ class UserUniversityBase(CoreSchema):
     university: Optional[UniversityBase] = None
     user_id: Optional[int] = None
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserUniversityUpdate(BaseModel):
@@ -200,16 +197,14 @@ class UserNationalityBase(CoreSchema):
     # nationality_id: Optional[int]
     user_id: Optional[int]
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserNationalityResponse(BaseModel):
     user_id: Optional[int]
     nationality: Optional[NationalityBase]
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserNationalityCreate(BaseModel):
@@ -238,8 +233,7 @@ class UserResponse(BaseModel):
     consents: Optional[List[ConsentResponse]] = None
     user_nationality: Optional[List[UserNationalityBase]] = None
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserListResponse(BaseModel):
@@ -256,8 +250,7 @@ class UserSimpleResponse(CoreSchema):
     gender: Optional[str]
     user_nationality: Optional[List[UserNationalityBase]] = None
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ConfirmPassword(BaseModel):
@@ -275,4 +268,4 @@ class DeletionRequestCreate(DeletionRequestBase):
 
 class DeletionRequestResponse(CoreSchema, DeletionRequestBase):
     class Meta:
-        orm_mode = True
+        from_attributes = True
