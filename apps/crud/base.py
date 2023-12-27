@@ -51,7 +51,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         if isinstance(obj_in, dict):
             update_data = obj_in
         else:
-            update_data = obj_in.dict(exclude_unset=True)
+            update_data = obj_in.model_dump(exclude_unset=True)
 
         for field, value in update_data.items():
             if hasattr(db_obj, field):

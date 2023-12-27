@@ -242,7 +242,7 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
             return None
 
         obj_data = db_obj.to_dict()
-        update_data = obj_in.dict(exclude_unset=True)
+        update_data = obj_in.model_dump(exclude_unset=True)
         if "profile_id" in update_data:
             raise ValueError("Cannot change the profile association via this method.")
 

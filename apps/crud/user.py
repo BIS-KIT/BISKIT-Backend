@@ -155,7 +155,7 @@ class CRUDUser(CRUDBase[User, user_schmea.UserCreate, user_schmea.UserUpdate]):
         if isinstance(obj_in, dict):
             update_data = obj_in
         else:
-            update_data = obj_in.dict(exclude_unset=True)
+            update_data = obj_in.model_dump(exclude_unset=True)
         return super().update(db, db_obj=db_obj, obj_in=update_data)
 
     def get_nationality(self, db: Session, user_id: int):
@@ -355,7 +355,7 @@ class CRUDUser(CRUDBase[User, user_schmea.UserCreate, user_schmea.UserUpdate]):
         if isinstance(obj_in, dict):
             update_data = obj_in
         else:
-            update_data = obj_in.dict(exclude_unset=True)
+            update_data = obj_in.model_dump(exclude_unset=True)
 
         if "password" in update_data and update_data["password"]:
             hashed_password = get_password_hash(update_data["password"])
