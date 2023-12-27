@@ -54,15 +54,19 @@ def client(session):
 
 
 @pytest.fixture(scope="function")
-def create_test_data(session):
-    # University 객체 생성 예시
-    university = utility_models.University(kr_name="test1")
+def test_university(session):
+    university = utility_models.University(kr_name="서울대학교 ")
     session.add(university)
     session.commit()
 
-    # Nationality 객체 생성 예시
-    nationality = utility_models.Nationality(kr_name="test1")
-    session.add(nationality)
-    session.commit()
+    return university
 
-    return university, nationality
+
+@pytest.fixture(scope="function")
+def test_nationality(session):
+    nationality1 = utility_models.Nationality(kr_name="대한민국")
+    nationality2 = utility_models.Nationality(kr_name="미국")
+    session.add(nationality1)
+    session.add(nationality2)
+    session.commit()
+    return nationality1, nationality2
