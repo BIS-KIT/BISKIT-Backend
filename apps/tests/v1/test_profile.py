@@ -61,3 +61,17 @@ def test_student_varification(client, test_profile):
 
     assert student_card == data.get("student_card")
     assert ReultStatusEnum.PENDING.value == data.get("verification_status")
+
+
+def test_read_student_varification(client, test_profile):
+    user_id = test_profile.user_id
+    test_student_card = test_profile.student_verification
+
+    response = client.get(f"v1/student-card/{user_id}")
+
+    assert response.status_code == 200, response.content
+
+    data = response.json()
+
+    assert data.get("student_card") == test_student_card.student_card
+    assert data.get("verification_status") == test_student_card.verification_status

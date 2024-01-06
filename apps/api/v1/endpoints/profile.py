@@ -213,7 +213,7 @@ def student_varification(
 
 
 @router.get("/student-card/{user_id}", response_model=StudentVerificationBase)
-def student_varification(
+def read_student_varification(
     user_id: int,
     db: Session = Depends(get_db),
 ):
