@@ -75,3 +75,13 @@ def test_read_student_varification(client, test_profile):
 
     assert data.get("student_card") == test_student_card.student_card
     assert data.get("verification_status") == test_student_card.verification_status
+
+
+def test_delete_profile_photo(client, test_profile):
+    user_id = test_profile.user_id
+
+    response = client.delete(f"v1/profile/{user_id}/photo")
+
+    assert response.status_code == 200, response.content
+
+    assert test_profile.profile_photo == None
