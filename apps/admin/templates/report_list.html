@@ -162,6 +162,10 @@
               <form method="get" action="/v1/report/{{ row.id }}/approve" class="d-inline-block">
                 <button type="submit" class="btn btn-primary">Approve</button>
               </form>
+              <form method="get" action="/v1/admin/{{ row.content_type|lower }}/{{ row.content_id }}"
+                class="d-inline-block">
+                <button type="submit" class="btn btn-primary">Contect Check</button>
+              </form>
             </td>
           </tr>
           {% endfor %}
