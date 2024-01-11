@@ -50,7 +50,6 @@ class DeletionRequestAdmin(BaseAdmin, model=AccountDeletionRequest):
 
 
 class ContactAdmin(BaseAdmin, model=Contact):
-    column_labels = dict(id="user_id")
     column_searchable_list = [Contact.user_id]
     column_list = [Contact.id, Contact.created_time, Contact.user_id, Contact.content]
 

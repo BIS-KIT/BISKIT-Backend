@@ -87,7 +87,7 @@ def get_meeting_in_admin(
     meeting = crud.meeting.get(db=db, id=meeting_id)
     # HTML 템플릿에 변수 전달
     return templates.TemplateResponse(
-        "report_details.html", {"request": request, "obj": meeting.to_dict()}
+        "content_details.html", {"request": request, "obj": meeting.to_dict()}
     )
 
 
@@ -98,7 +98,7 @@ def get_review_in_admin(
     review = crud.review.get(db=db, id=review_id)
     # HTML 템플릿에 변수 전달
     return templates.TemplateResponse(
-        "report_details.html", {"request": request, "obj": review.to_dict()}
+        "content_details.html", {"request": request, "obj": review.to_dict()}
     )
 
 
@@ -107,5 +107,5 @@ def get_user_in_admin(request: Request, user_id: int, db: Session = Depends(get_
     user = crud.user.get(db=db, id=user_id)
     # HTML 템플릿에 변수 전달
     return templates.TemplateResponse(
-        "report_details.html", {"request": request, "obj": user.to_dict()}
+        "content_details.html", {"request": request, "obj": user.to_dict()}
     )
