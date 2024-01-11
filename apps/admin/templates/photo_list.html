@@ -1,5 +1,52 @@
 {% extends "layout.html" %}
 {% block content %}
+
+
+
+<style>
+  .modal {
+    display: none;
+    /* 기본적으로 숨김 */
+    position: fixed;
+    /* 고정 위치 */
+    z-index: 1;
+    /* 상단에 표시 */
+    padding-top: 100px;
+    /* 상단 패딩 */
+    left: 0;
+    top: 0;
+    width: 100%;
+    /* 전체 너비 */
+    height: 100%;
+    /* 전체 높이 */
+    overflow: auto;
+    /* 스크롤 가능 */
+    background-color: rgb(0, 0, 0);
+    /* 검은색 배경 */
+    background-color: rgba(0, 0, 0, 0.9);
+    /* 어둡게 처리 */
+  }
+
+  /* 모달 이미지 스타일 */
+  .modal-content {
+    margin: auto;
+    display: block;
+    width: 80%;
+    max-width: 700px;
+  }
+
+  /* 모달 닫기 버튼 스타일 */
+  .close {
+    position: absolute;
+    top: 15px;
+    right: 35px;
+    color: #f1f1f1;
+    font-size: 40px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+</style>
+
 <div class="col-12">
   <div class="card">
     <div class="card-header">
@@ -152,7 +199,15 @@
             {% endif %}
             {% else %}
             {% if name == "student_card" %}
-            <td><img src="{{ formatted_value }}" alt="Image" width="100"></td>
+            <td>
+              <img src="{{ formatted_value }}" alt="Student Card Image" width="100" class="modal-trigger">
+            </td>
+            <!-- 모달 -->
+            <div id="imageModal" class="modal">
+              <span class="close">&times;</span>
+              <img class="modal-content" id="modalImage">
+              <div id="caption"></div>
+            </div>
             {% else %}
             <td>{{ formatted_value }}</td>
             {% endif %}
@@ -231,4 +286,32 @@
   {% endif %}
   {% endfor %}
 </div>
+<script>
+  // 이미지와 모달 요소를 가져옵니다.
+  var modal = document.getElementById("imageModal");
+  var modalImg = document.getElementById("modalImage");
+  var captionText = document.getElementById("caption");
+
+  // 이미지 클릭 이벤트
+  document.querySelectorAll('.modal-trigger').forEach(item => {
+    item.onclick = function () {
+      modal.style.display = "block";
+      modalImg.src = this.src;
+      captionText.innerHTML = this.alt;
+    }
+  });
+
+  // 닫기 버튼 클릭 이벤트
+  var span = document.getElementsByClassName("close")[0];
+  span.onclick = function () {
+    modal.style.display = "none";
+  }
+
+  // 모달 밖의 영역을 클릭하면 닫히게 설정
+  window.onclick = function (event) {
+    if (event.target == modal) {
+      modal.style.display = "none";
+    }
+  }
+</script>
 {% endblock %}

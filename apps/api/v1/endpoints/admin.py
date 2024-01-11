@@ -1,12 +1,15 @@
 from sqlalchemy.orm import Session
-from fastapi import APIRouter, Depends, HTTPException, Form
+from fastapi import APIRouter, Depends, HTTPException, Form, Request
 from fastapi.responses import RedirectResponse
+from fastapi.templating import Jinja2Templates
 
 import crud
 from database.session import get_db
 from schemas.profile import StudentVerificationUpdate, ReultStatusEnum
 
 router = APIRouter()
+
+templates = Jinja2Templates(directory="/apps/admin/templates/")
 
 
 @router.post("/student-card/verify/{id}")
@@ -75,3 +78,34 @@ def get_report(report_id: int, db: Session = Depends(get_db)):
     """
     report = crud.report.approve_report(db=db, report_id=report_id)
     return RedirectResponse(url="/admin/report/list", status_code=303)
+
+
+@router.get("/admin/meeting/{meeting_id}")
+def get_meeting_in_admin(
+    request: Request, meeting_id: int, db: Session = Depends(get_db)
+):
+    meeting = crud.meeting.get(db=db, id=meeting_id)
+    # HTML 템플릿에 변수 전달
+    return templates.TemplateResponse(
+        "content_details.html", {"request": request, "obj": meeting.to_dict()}
+    )
+
+
+@router.get("/admin/review/{review_id}")
+def get_review_in_admin(
+    request: Request, review_id: int, db: Session = Depends(get_db)
+):
+    review = crud.review.get(db=db, id=review_id)
+    # HTML 템플릿에 변수 전달
+    return templates.TemplateResponse(
+        "content_details.html", {"request": request, "obj": review.to_dict()}
+    )
+
+
+@router.get("/admin/user/{user_id}")
+def get_user_in_admin(request: Request, user_id: int, db: Session = Depends(get_db)):
+    user = crud.user.get(db=db, id=user_id)
+    # HTML 템플릿에 변수 전달
+    return templates.TemplateResponse(
+        "content_details.html", {"request": request, "obj": user.to_dict()}
+    )
