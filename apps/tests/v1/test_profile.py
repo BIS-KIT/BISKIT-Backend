@@ -10,7 +10,7 @@ from tests.confest import (
     test_language,
 )
 
-from schemas.enum import ReultStatusEnum
+from schemas.enum import ReultStatusEnum, LanguageLevelEnum
 from schemas import profile as profile_schmea
 from models import profile as profile_models
 
@@ -85,3 +85,32 @@ def test_delete_profile_photo(client, test_profile):
     assert response.status_code == 200, response.content
 
     assert test_profile.profile_photo == None
+
+
+def test_create_profile(client, test_user, test_language):
+    user_id = test_user.id
+    test_language_confest = test_language
+
+    language_schema_obj = profile_schmea.AvailableLanguageIn(
+        level="BASIC", language_id=test_language_confest.id
+    )
+
+    profile_schmea_obj = profile_schmea.ProfileRegister(
+        nick_name="test_profile",
+        profile_photo="test_profile_photo",
+        available_languages=[language_schema_obj],
+    )
+
+    json_data = json.loads(profile_schmea_obj.model_dump_json())
+
+    # HTTP 요청 시뮬레이션
+    response = client.post(f"/v1/profile?user_id={user_id}", json=json_data)
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data["nick_name"] == "test_profile"
+    assert data["profile_photo"] == "test_profile_photo"
+
+    assert data["available_languages"][0]["level"] == "BASIC"
