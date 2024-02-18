@@ -6,7 +6,7 @@ from fastapi import UploadFile
 
 from schemas.base import CoreSchema
 from schemas.utility import LanguageBase, UniversityBase
-from schemas.enum import ReultStatusEnum, LanguageLevel
+from schemas.enum import ReultStatusEnum, LanguageLevelEnum
 
 
 class StudentVerificationBase(CoreSchema):
@@ -166,7 +166,7 @@ class ProfileResponse(BaseModel):
         if self.available_language_list:
             return_obj = sorted(
                 self.available_language_list,
-                key=lambda lang: LanguageLevel[lang.level].value,
+                key=lambda lang: LanguageLevelEnum[lang.level].value,
                 reverse=False,  # 내림차순 정렬을 원할 경우 True로 설정
             )
             return return_obj
