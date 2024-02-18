@@ -87,8 +87,9 @@ def test_nationality(session):
 
 
 @pytest.fixture(scope="function")
-def test_user(session, test_nationality):
+def test_user(session, test_nationality, test_university):
     nationality1, nationality2 = test_nationality
+    test_university_fixture = test_university
 
     user = user_models.User(
         email="test@gmail.com",
@@ -118,6 +119,16 @@ def test_user(session, test_nationality):
     )
     session.add(user_nationality1)
     session.add(user_nationality2)
+
+    user_university = profile_models.UserUniversity(
+        department="test_department",
+        education_status="test_status",
+        university_id=test_university_fixture.id,
+        user_id=user.id,
+    )
+
+    session.add(user_university)
+
     session.commit()
 
     return user
