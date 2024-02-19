@@ -424,7 +424,7 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
 
         db.commit()
         # db.refresh(profile)
-        return profile
+        return db_obj
 
     def delete_file_from_s3(self, file_url: str) -> None:
         s3_client = get_aws_client()
