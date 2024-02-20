@@ -1,5 +1,5 @@
 import pytest
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -16,6 +16,7 @@ from models.base import ModelBase
 from models import utility as utility_models
 from models import user as user_models
 from models import profile as profile_models
+from models import meeting as meeting_models
 
 
 DATABASE_URL = f"postgresql+psycopg2://postgres:{settings.DB_ROOT_PASSWORD}@maindb:5432/{settings.TEST_DB}"
@@ -74,6 +75,22 @@ def test_language(session):
     session.commit()
 
     return language
+
+
+@pytest.fixture(scope="function")
+def test_tag(session):
+    tag = utility_models.Tag(name="Networking")
+    session.add(tag)
+    session.commit()
+    return tag
+
+
+@pytest.fixture(scope="function")
+def test_topic(session):
+    topic = utility_models.Topic(name="Technology")
+    session.add(topic)
+    session.commit()
+    return topic
 
 
 @pytest.fixture(scope="function")
@@ -187,11 +204,58 @@ def test_token(session, test_user):
     return access_token
 
 
-@pytest.fixture(scope="function")
-def test_meeting(session):
-    pass
+def create_test_meeting(
+    session, user_id: int, test_profile, test_topic, test_tag, test_language
+):
+
+    meeting_obj = meeting_models.Meeting(
+        name="Test Meeting",
+        location="Test Location",
+        description="This is a test meeting.",
+        meeting_time=datetime.now(),
+        max_participants=10,
+        current_participants=5,
+        korean_count=3,
+        foreign_count=2,
+        chat_id="testChatId123",
+        place_url="http://example.com/test-meeting-location",
+        x_coord="127.001",
+        y_coord="37.001",
+        image_url="http://example.com/test-meeting-image.jpg",
+        is_active=True,
+        creator_id=user_id,
+    )
+    session.add(meeting_obj)
+    session.flush()  # Use flush to ensure meeting.id is populated
+
+    # Associate Language, Tag, and Topic with the Meeting
+    meeting_language = profile_models.MeetingLanguage(
+        meeting_id=meeting_obj.id, language_id=test_language.id
+    )
+    meeting_tag = profile_models.MeetingTag(
+        meeting_id=meeting_obj.id, tag_id=test_tag.id
+    )
+    meeting_topic = profile_models.MeetingTopic(
+        meeting_id=meeting_obj.id, topic_id=test_topic.id
+    )
+
+    session.add_all([meeting_language, meeting_tag, meeting_topic])
+    session.commit()
+    return meeting_obj
 
 
 @pytest.fixture(scope="function")
-def test_review(session):
-    pass
+def test_review(session, test_user, test_meeting):
+    meeting_fixture = test_meeting
+    user_fixture = test_user
+
+    review_obj = meeting_models.Review(
+        context="test_review",
+        image_url="http://example.com/test_review_image",
+        meeting_id=meeting_fixture,
+        creator_id=user_fixture.id,
+    )
+
+    session.add(review_obj)
+    session.commit()
+    return review_obj
