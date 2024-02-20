@@ -151,3 +151,9 @@ def test_update_profile(client, test_profile):
     assert data["introductions"][0]["context"] == "test"
     assert data["available_languages"][0]["level"] == "ADVANCED"
     assert data["user_university"]["education_status"] == "졸업"
+
+
+def test_get_user_meetings(client, test_user):
+    user_fixture = test_user
+
+    response = client.get(f"v1/profile/{user_fixture.id}/meetings")
