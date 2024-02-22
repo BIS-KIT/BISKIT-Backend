@@ -32,7 +32,7 @@ class Tag(ModelBase):
     kr_name = Column(String, nullable=True)
     en_name = Column(String, nullable=True)
     is_custom = Column(Boolean, default=True)
-    icon_url = Column(String, nullable=True)
+    icon = Column(String, nullable=True)
     is_home = Column(Boolean, default=False)
 
 
