@@ -155,7 +155,7 @@ class CRUDUser(CRUDBase[User, user_schmea.UserCreate, user_schmea.UserUpdate]):
         if isinstance(obj_in, dict):
             update_data = obj_in
         else:
-            update_data = obj_in.model_dump(exclude_unset=True)
+            update_data = obj_in.model_dump(exclude_unset=True, exclude_none=True)
         return super().update(db, db_obj=db_obj, obj_in=update_data)
 
     def get_nationality(self, db: Session, user_id: int):
@@ -339,7 +339,7 @@ class CRUDUser(CRUDBase[User, user_schmea.UserCreate, user_schmea.UserUpdate]):
         db: Session,
         *,
         db_obj: User,
-        obj_in: Union[user_schmea.UserUpdate, Dict[str, Any]],
+        obj_in: Union[user_schmea.UserBaseUpdate, Dict[str, Any]],
     ) -> User:
         """
         Update a user's details.
@@ -355,7 +355,7 @@ class CRUDUser(CRUDBase[User, user_schmea.UserCreate, user_schmea.UserUpdate]):
         if isinstance(obj_in, dict):
             update_data = obj_in
         else:
-            update_data = obj_in.model_dump(exclude_unset=True)
+            update_data = obj_in.model_dump(exclude_unset=True, exclude_none=True)
 
         if "password" in update_data and update_data["password"]:
             hashed_password = get_password_hash(update_data["password"])
@@ -393,7 +393,9 @@ class CRUDUser(CRUDBase[User, user_schmea.UserCreate, user_schmea.UserUpdate]):
     ) -> List[UserNationality]:
         user_nationalities = (
             db.query(UserNationality)
-            .options(joinedload(UserNationality.nationality))  # Nationality를 join하여 로드
+            .options(
+                joinedload(UserNationality.nationality)
+            )  # Nationality를 join하여 로드
             .filter(UserNationality.user_id == user_id)
             .all()
         )
