@@ -7,6 +7,7 @@ from models import profile as profile_models
 from models import meeting as meeting_models
 from models import user as user_models
 from models import utility as utility_models
+from models import system as system_models
 from schemas.enum import MyMeetingEnum
 
 
@@ -138,6 +139,14 @@ def create_test_university(session, name: str):
     session.add(university_obj)
     session.commit()
     return university_obj.to_dict()
+
+
+def create_test_report(session, reason: str, reporter_id: int):
+
+    report_obj = system_models.Report(reason=reason, reporter_id=reporter_id)
+    session.add(report_obj)
+    session.commit()
+    return report_obj.to_dict()
 
 
 def create_test_review(session):
