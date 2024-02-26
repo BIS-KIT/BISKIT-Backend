@@ -86,9 +86,9 @@ class UserUpdate(BaseModel):
 
 
 class UserBaseUpdate(BaseModel):
-    name: Optional[str]
-    birth: Optional[date]
-    gender: Optional[str]
+    name: Optional[str] = None
+    birth: Optional[date] = None
+    gender: Optional[str] = None
 
 
 class PasswordChange(BaseModel):
