@@ -6,7 +6,7 @@ from models import utility as utility_models
 
 @pytest.fixture(scope="function")
 def test_university(session):
-    university = utility_models.University(kr_name="서울대학교 ")
+    university = utility_models.University(kr_name="서울대학교")
     session.add(university)
     session.commit()
 

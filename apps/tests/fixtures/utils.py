@@ -6,6 +6,7 @@ from crud.user import get_password_hash
 from models import profile as profile_models
 from models import meeting as meeting_models
 from models import user as user_models
+from models import utility as utility_models
 from schemas.enum import MyMeetingEnum
 
 
@@ -130,6 +131,13 @@ def create_test_user(session, test_nationality, test_university, is_sns: bool = 
     session.commit()
 
     return user.to_dict()
+
+
+def create_test_university(session, name: str):
+    university_obj = utility_models.University(kr_name=name)
+    session.add(university_obj)
+    session.commit()
+    return university_obj.to_dict()
 
 
 def create_test_review(session):
