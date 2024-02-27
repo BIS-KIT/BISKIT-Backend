@@ -180,7 +180,7 @@ def join_meeting_approve(obj_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/meeting/join/reject")
-def join_meeting_approve(obj_id: int, db: Session = Depends(get_db)):
+def join_meeting_reject(obj_id: int, db: Session = Depends(get_db)):
     check_obj = crud.get_object_or_404(db=db, model=MeetingUser, obj_id=obj_id)
     """
     모임 참가 요청 거절
