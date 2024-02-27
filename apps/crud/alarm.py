@@ -38,7 +38,7 @@ def send_fcm_notification(
             )
             for token in fcm_tokens
         ]
-        response = messaging.send_all(messages)
+        response = messaging.send_each(messages)
         if db and user_id:
             try:
                 obj_in = alarm_schema.AlarmCreate(
@@ -206,7 +206,9 @@ class Alarm(
         get_all_report = crud.report.get_by_user_id(db=db, user_id=target_id)
 
         title = "경고"
-        body = f"서비스 이용규정 위반으로 경고가 {len(get_all_report)}회 누적되었습니다."
+        body = (
+            f"서비스 이용규정 위반으로 경고가 {len(get_all_report)}회 누적되었습니다."
+        )
 
         icon_url = settings.S3_URL + "/default_icon/Thumbnail_reprot_icon.svg"
         data = {
