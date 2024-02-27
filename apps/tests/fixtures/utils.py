@@ -1,14 +1,14 @@
 import pytest, random
 from datetime import timedelta, datetime
 
-from .utility_fixture import test_topic, test_tag, test_language
+from .utility_fixture import test_topic, test_tag, test_language, test_nationality
 from crud.user import get_password_hash
 from models import profile as profile_models
 from models import meeting as meeting_models
 from models import user as user_models
 from models import utility as utility_models
 from models import system as system_models
-from schemas.enum import MyMeetingEnum
+from schemas.enum import MyMeetingEnum, ReultStatusEnum
 
 
 def create_test_meeting(
@@ -69,39 +69,46 @@ def create_test_meeting_user(
     return meeting_user_obj.to_dict()
 
 
-def create_test_user(session, test_nationality, test_university, is_sns: bool = False):
-    nationality1, nationality2 = test_nationality
-    test_university_fixture = test_university
-
+def create_random_birth() -> str:
     start_date = datetime(1990, 1, 1)
     end_date = datetime(2010, 12, 31)
     time_between_dates = end_date - start_date
     days_between_dates = time_between_dates.days
     random_number_of_days = random.randrange(days_between_dates)
     random_birth = start_date + timedelta(days=random_number_of_days)
-    random_birth_str = random_birth.strftime("%Y-%m-%d")
+    return random_birth.strftime("%Y-%m-%d")
 
-    if is_sns:
-        user = user_models.User(
-            email="test1@gmail.com",
-            password=get_password_hash("guswns95@@"),
-            sns_type="kakao",
-            sns_id="testsnslogin",
-            name="이현준",
-            birth=random_birth_str,
-            gender="male",
-            fcm_token="e5k60HCtTo-NPXw1L1OIGe:APA91bEvp9T5wTAjTEq5yEQFaExjbA8LpkKr_C92t-5_XlGvWQh4cVKSxQYb6ybysMlbwd9hV-RMCyoR_VfjS1gqxV0eIPI0Pzcd_ukYGAmvEPuyETU8NXvKBeE_urAxKBHCOpsPLWz8",
-        )
-    else:
-        user = user_models.User(
-            email="test2@gmail.com",
-            password=get_password_hash("guswns95@@"),
-            name="이현준",
-            birth=random_birth_str,
-            gender="male",
-            fcm_token="e5k60HCtTo-NPXw1L1OIGe:APA91bEvp9T5wTAjTEq5yEQFaExjbA8LpkKr_C92t-5_XlGvWQh4cVKSxQYb6ybysMlbwd9hV-RMCyoR_VfjS1gqxV0eIPI0Pzcd_ukYGAmvEPuyETU8NXvKBeE_urAxKBHCOpsPLWz8",
-        )
+
+def create_user(session, email: str, is_sns: bool = False):
+    """User 객체 생성 및 반환"""
+    user = user_models.User(
+        email=email,
+        password=get_password_hash("guswns95@@"),
+        sns_type="kakao" if is_sns else None,
+        sns_id="testsnslogin" if is_sns else None,
+        name="이현준",
+        birth=create_random_birth(),
+        gender="male",
+        fcm_token="e5k60HCtTo-NPXw1L1OIGe:APA91bEvp9T5wTAjTEq5yEQFaExjbA8LpkKr_C92t-5_XlGvWQh4cVKSxQYb6ybysMlbwd9hV-RMCyoR_VfjS1gqxV0eIPI0Pzcd_ukYGAmvEPuyETU8NXvKBeE_urAxKBHCOpsPLWz8",
+    )
     session.add(user)
+    session.flush()
+    return user
+
+
+def create_associations_for_user(
+    session, user, test_nationality, test_language, test_university
+):
+    nationality1, nationality2 = test_nationality
+
+    profile = profile_models.Profile(
+        user_id=user.id,
+        profile_photo="test",
+        nick_name="test_nick",
+        context="introduction",
+        is_default_photo=False,
+    )
+    session.add(profile)
     session.flush()
 
     # Consent 객체 생성 및 연결
@@ -120,17 +127,43 @@ def create_test_user(session, test_nationality, test_university, is_sns: bool = 
     session.add(user_nationality1)
     session.add(user_nationality2)
 
-    user_university = profile_models.UserUniversity(
-        department="test_department",
-        education_status="test_status",
-        university_id=test_university_fixture.id,
-        user_id=user.id,
+    intoroduction = profile_models.Introduction(
+        profile_id=profile.id, keyword="운동", context="건강"
     )
 
+    available_language = profile_models.AvailableLanguage(
+        profile_id=profile.id, language_id=test_language.id, level="BASIC"
+    )
+
+    student_verification = profile_models.StudentVerification(
+        profile_id=profile.id, verification_status="APPROVE", student_card="test_image"
+    )
+
+    user_university = profile_models.UserUniversity(
+        university_id=test_university.id,
+        department="대학원",
+        education_status="재학중",
+        profile_id=profile.id,
+    )
+
+    session.add(intoroduction)
+    session.add(available_language)
+    session.add(student_verification)
     session.add(user_university)
+    return
+
+
+def create_test_user(
+    session, test_nationality, test_university, test_language, is_sns: bool = False
+):
+    """Test 유저와 해당 유저의 profile, consent, student_verification 등 생성"""
+    email = "test{}@gmail.com".format("1" if is_sns else "2")
+    user = create_user(session, email, is_sns)
+    create_associations_for_user(
+        session, user, test_nationality, test_language, test_university
+    )
 
     session.commit()
-
     return user.to_dict()
 
 
@@ -147,6 +180,15 @@ def create_test_report(session, reason: str, reporter_id: int):
     session.add(report_obj)
     session.commit()
     return report_obj.to_dict()
+
+
+def create_test_join_request(session, meeting_id: int, user_id: int):
+    join_request_obj = meeting_models.MeetingUser(
+        meeting_id=meeting_id, user_id=user_id, status=ReultStatusEnum.PENDING
+    )
+    session.add(join_request_obj)
+    session.commit()
+    return join_request_obj.to_dict()
 
 
 def create_test_review(session):
