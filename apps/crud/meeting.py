@@ -402,7 +402,7 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
             else:
                 meeting.foreign_count = meeting.foreign_count + 1
         db.commit()
-        return
+        return join_request
 
     def join_request_reject(self, db: Session, obj_id: int):
         join_request = db.query(MeetingUser).filter(MeetingUser.id == obj_id).delete()
