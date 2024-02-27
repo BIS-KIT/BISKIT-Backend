@@ -40,7 +40,7 @@ def test_topic(session):
 
 @pytest.fixture(scope="function")
 def test_nationality(session):
-    nationality1 = utility_models.Nationality(kr_name="대한민국")
+    nationality1 = utility_models.Nationality(kr_name="대한민국", code="kr")
     nationality2 = utility_models.Nationality(kr_name="미국")
     session.add(nationality1)
     session.add(nationality2)
