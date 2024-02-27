@@ -7,7 +7,7 @@ from schemas import meeting as meeting_schmea
 from schemas.enum import ReultStatusEnum
 
 
-@pytest.mark.skip()
+# @pytest.mark.skip()
 def test_create_meeting(client, test_user, test_tag, test_topic, test_language):
     meeting_time = datetime.now() + timedelta(days=3)
 
@@ -42,7 +42,7 @@ def test_create_meeting(client, test_user, test_tag, test_topic, test_language):
     assert data["foreign_count"] == 0
 
 
-@pytest.mark.skip()
+# @pytest.mark.skip()
 def test_get_meeting_requests(client, session, test_meeting, test_user):
     test_join_request = create_test_join_request(
         session=session, user_id=test_user.id, meeting_id=test_meeting.id
@@ -57,7 +57,7 @@ def test_get_meeting_requests(client, session, test_meeting, test_user):
     assert data["total_count"] == 1
 
 
-@pytest.mark.skip()
+# @pytest.mark.skip()
 def test_check_meeting_request_status(client, session, test_user, test_meeting):
     test_join_request = create_test_join_request(
         session=session, user_id=test_user.id, meeting_id=test_meeting.id
@@ -72,7 +72,7 @@ def test_check_meeting_request_status(client, session, test_user, test_meeting):
     assert data["status"] == ReultStatusEnum.PENDING
 
 
-@pytest.mark.skip()
+# @pytest.mark.skip()
 def test_join_meeting_request(
     session, client, test_meeting, test_nationality, test_university, test_language
 ):
@@ -116,3 +116,58 @@ def test_join_meeting_approve(
     data = response.json()
 
     assert data["status"] == ReultStatusEnum.APPROVE
+
+
+# @pytest.mark.skip()
+def test_exit_meeting(session, client):
+    pass
+
+
+# @pytest.mark.skip()
+def test_join_meeting_reject():
+    pass
+
+
+# @pytest.mark.skip()
+def test_get_meetings_by_user_university():
+    pass
+
+
+# @pytest.mark.skip()
+def test_get_meetings_detail():
+    pass
+
+
+# @pytest.mark.skip()
+def test_delete_meeting():
+    pass
+
+
+# @pytest.mark.skip()
+def test_update_meeting():
+    pass
+
+
+# @pytest.mark.skip()
+def test_get_meeting_with_filter():
+    pass
+
+
+# @pytest.mark.skip()
+def test_get_meeting_all_review():
+    pass
+
+
+# @pytest.mark.skip()
+def test_create_review():
+    pass
+
+
+# @pytest.mark.skip()
+def test_update_review():
+    pass
+
+
+# @pytest.mark.skip()
+def test_delete_review():
+    pass
