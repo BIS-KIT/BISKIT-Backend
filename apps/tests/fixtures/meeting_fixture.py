@@ -8,7 +8,9 @@ from models import meeting as meeting_models
 
 
 @pytest.fixture(scope="function")
-def test_meeting(session, test_user, test_topic, test_tag, test_language):
+def test_meeting(
+    session, test_user, test_topic, test_tag, test_language, test_university
+):
     meeting_time = datetime.now() + timedelta(days=3)
 
     meeting = meeting_models.Meeting(
@@ -27,6 +29,7 @@ def test_meeting(session, test_user, test_topic, test_tag, test_language):
         image_url="http://example.com",
         is_active=True,
         creator_id=test_user.id,
+        university_id=test_university.id,
     )
 
     session.add(meeting)

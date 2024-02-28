@@ -14,6 +14,7 @@ from schemas.enum import MyMeetingEnum, ReultStatusEnum
 def create_test_meeting(
     session,
     user_id: int,
+    university_id: int,
     test_topic,
     test_tag,
     test_language,
@@ -36,6 +37,7 @@ def create_test_meeting(
         image_url="http://example.com/test-meeting-image.jpg",
         is_active=True,
         creator_id=user_id,
+        university_id=university_id,
     )
     session.add(meeting_obj)
     session.flush()  # Use flush to ensure meeting.id is populated
@@ -79,14 +81,14 @@ def create_random_birth() -> str:
     return random_birth.strftime("%Y-%m-%d")
 
 
-def create_user(session, email: str, is_sns: bool = False):
+def create_user(session, email: str, name: str, is_sns: bool = False):
     """User 객체 생성 및 반환"""
     user = user_models.User(
         email=email,
         password=get_password_hash("guswns95@@"),
         sns_type="kakao" if is_sns else None,
         sns_id="testsnslogin" if is_sns else None,
-        name="이현준",
+        name=name,
         birth=create_random_birth(),
         gender="male",
         fcm_token="e5k60HCtTo-NPXw1L1OIGe:APA91bEvp9T5wTAjTEq5yEQFaExjbA8LpkKr_C92t-5_XlGvWQh4cVKSxQYb6ybysMlbwd9hV-RMCyoR_VfjS1gqxV0eIPI0Pzcd_ukYGAmvEPuyETU8NXvKBeE_urAxKBHCOpsPLWz8",
@@ -154,11 +156,16 @@ def create_associations_for_user(
 
 
 def create_test_user(
-    session, test_nationality, test_university, test_language, is_sns: bool = False
+    session,
+    test_nationality,
+    test_university,
+    test_language,
+    name: str = "이현준",
+    is_sns: bool = False,
 ):
     """Test 유저와 해당 유저의 profile, consent, student_verification 등 생성"""
     email = "test{}@gmail.com".format("1" if is_sns else "2")
-    user = create_user(session, email, is_sns)
+    user = create_user(session, email, name, is_sns)
     create_associations_for_user(
         session, user, test_nationality, test_language, test_university
     )
@@ -191,5 +198,13 @@ def create_test_join_request(session, meeting_id: int, user_id: int):
     return join_request_obj.to_dict()
 
 
-def create_test_review(session):
-    pass
+def create_test_review(
+    session, meeting_id: int, user_id: int, context: str = "test_context"
+):
+    review_obj = meeting_models.Review(
+        context=context, meeting_id=meeting_id, creator_id=user_id
+    )
+
+    session.add(review_obj)
+    session.commit()
+    return review_obj.to_dict()
