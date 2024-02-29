@@ -141,7 +141,7 @@ def get_random_image():
 
 @router.get("/profile/random-nickname")
 async def get_random_nickname(os_lang: str = "kr", db: Session = Depends(get_db)):
-    kr_nick_name, en_nick_name = None
+    kr_nick_name, en_nick_name = None, None
     if os_lang == "kr":
         async with httpx.AsyncClient() as client:
             while True:
