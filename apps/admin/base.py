@@ -30,7 +30,9 @@ class BaseAdmin(ModelView):
 class UserAdmin(BaseAdmin, model=User):
     column_labels = dict(name="Name", id="id")
     column_searchable_list = [User.name, User.id]
+    column_sortable_list = [User.created_time]
     column_list = [
+        User.created_time,
         User.id,
         User.name,
         User.birth,
@@ -51,7 +53,8 @@ class DeletionRequestAdmin(BaseAdmin, model=AccountDeletionRequest):
 
 class ContactAdmin(BaseAdmin, model=Contact):
     column_searchable_list = [Contact.user_id]
-    column_list = [Contact.id, Contact.created_time, Contact.user_id, Contact.content]
+    column_sortable_list = [Contact.created_time]
+    column_list = [Contact.created_time, Contact.id, Contact.user_id, Contact.content]
 
 
 class TagAdmin(BaseAdmin, model=Tag):
@@ -89,14 +92,19 @@ class ReportAdmin(BaseAdmin, model=Report):
     ]
     list_template = "report_list.html"
     form_columns = [Report.reason]
+    column_sortable_list = [Report.created_time]
 
 
 class StudentVerificationAdmin(BaseAdmin, model=StudentVerification):
     can_edit = False
     list_template = "photo_list.html"
     column_labels = dict(name="Name")
-    column_sortable_list = [StudentVerification.verification_status]
+    column_sortable_list = [
+        StudentVerification.created_time,
+        StudentVerification.verification_status,
+    ]
     column_list = [
+        StudentVerification.created_time,
         StudentVerification.id,
         StudentVerification.student_card,
         StudentVerification.verification_status,
