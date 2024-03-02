@@ -93,7 +93,7 @@ def check_user_ban(
     user_id: int, target_ids: List[int] = Query(None), db: Session = Depends(get_db)
 ):
     """
-    차단 상태 확인
+    User의 Target 차단 상태 확인
     """
     return_list = []
     check_user = crud.get_object_or_404(db=db, model=user_model.User, obj_id=user_id)
