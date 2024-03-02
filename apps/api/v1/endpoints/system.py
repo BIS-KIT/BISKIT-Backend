@@ -110,10 +110,10 @@ def check_user_ban(
     return return_list
 
 
-@router.post("/ban")
+@router.post("/ban", response_model=system_schema.BanResponse)
 def create_ban(obj_in: system_schema.BanCreate, db: Session = Depends(get_db)):
     """
-    target_id 사용자 차단
+    target_id 사용자 차단(유저 프로필-탭-차단하기)
     """
     check_obj = crud.get_object_or_404(
         db=db, model=user_model.User, obj_id=obj_in.reporter_id
@@ -126,9 +126,9 @@ def create_ban(obj_in: system_schema.BanCreate, db: Session = Depends(get_db)):
 
 
 @router.delete("/ban")
-def remove_ban(ban_ids: List[int], db: Session = Depends(get_db)):
+def unban_with_ban_obj(ban_ids: List[int], db: Session = Depends(get_db)):
     """
-    차단 해제
+    차단 해제(설정-차단해제)
 
     - ban_id를 쉼표(,)로 구분해서 넣어주시면 됩니다.
         - ex) [3,5]
@@ -140,7 +140,10 @@ def remove_ban(ban_ids: List[int], db: Session = Depends(get_db)):
 
 
 @router.delete("/unban")
-def unban(reporter_id: int, target_id: int, db: Session = Depends(get_db)):
+def unban_with_user_id(reporter_id: int, target_id: int, db: Session = Depends(get_db)):
+    """
+    (유저 프로필-탭-차단해제)
+    """
     check_obj = crud.get_object_or_404(db=db, model=user_model.User, obj_id=reporter_id)
     check_target_obj = crud.get_object_or_404(
         db=db, model=user_model.User, obj_id=target_id
