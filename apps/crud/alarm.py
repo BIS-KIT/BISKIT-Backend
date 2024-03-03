@@ -190,16 +190,22 @@ class Alarm(
             "is_main_alarm": "False",
             "is_sub_alarm": "True",
         }
-        for user in users:
-            # 각 사용자의 FCM 토큰을 사용하여 알림을 전송합니다.
-            send_fcm_notification(
-                title=title,
-                body=content,
-                fcm_tokens=[user.fcm_token],
-                user_id=user.id,
-                db=db,
-                data=data,
-            )
+
+        try:
+            for user in users:
+                # 각 사용자의 FCM 토큰을 사용하여 알림을 전송합니다.
+                send_fcm_notification(
+                    title=title,
+                    body=content,
+                    fcm_tokens=[user.fcm_token],
+                    user_id=user.id,
+                    db=db,
+                    data=data,
+                )
+        except Exception as e:
+            log_error(e)
+            return False
+        return True
 
     def report_alarm(self, db: Session, target_id: int):
         target_fcm_token = crud.user.get_user_fcm_token(db=db, user_id=target_id)
