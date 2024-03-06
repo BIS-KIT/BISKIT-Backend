@@ -360,7 +360,7 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
         else:
             query = query.order_by(desc(Meeting.created_time))
 
-        total_count = query.count()
+        total_count = query.distinct().count()
         if is_count_only:
             return [], total_count
 
