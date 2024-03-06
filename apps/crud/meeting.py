@@ -42,7 +42,7 @@ def check_time_conditions(time_filters: List[TimeFilterEnum]):
     day_of_week_conditions = []
     time_of_day_conditions = []
 
-    today = datetime.today()
+    today = datetime.combine(datetime.today(), datetime.min.time())
 
     # 날짜 관련 필터
     if TimeFilterEnum.TODAY in time_filters:
