@@ -394,6 +394,9 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
             db.query(Meeting).filter(Meeting.id == join_request.meeting_id).first()
         )
 
+        if meeting.current_participants >= meeting.max_participants:
+            raise HTTPException(status_code=404, detail="It's full of people.")
+
         codes = [un.nationality.code for un in user_nationalities]
         meeting.current_participants = meeting.current_participants + 1
         if codes:
