@@ -119,7 +119,7 @@ async def check_nick_name(nick_name: str, db: Session = Depends(get_db)):
         or "관리자" in nick_name.lower()
     ):
         raise HTTPException(
-            status_code=400,
+            status_code=409,
             detail="Nick_name contains special characters or restricted keywords.",
         )
 
