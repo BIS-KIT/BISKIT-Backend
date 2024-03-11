@@ -343,6 +343,10 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
         if search_word:
             query = self.filter_by_search_word(query=query, search_word=search_word)
 
+        # order by 전에 count
+        total_count_query = query.distinct()
+        total_count = total_count_query.count()
+
         if order_by == MeetingOrderingEnum.CREATED_TIME:
             query = query.order_by(desc(Meeting.created_time))
         elif order_by == MeetingOrderingEnum.MEETING_TIME:
@@ -356,11 +360,18 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
             time_difference_seconds = extract(
                 "epoch", Meeting.meeting_time - func.now()
             )
-            query = query.order_by(time_difference_seconds)
+
+            # 참여 인원 적은 순
+            participants_difference = func.abs(
+                Meeting.max_participants - Meeting.current_participants
+            )
+
+            query = query.order_by(
+                participants_difference.asc(), time_difference_seconds.asc()
+            )
         else:
             query = query.order_by(desc(Meeting.created_time))
 
-        total_count = query.distinct().count()
         if is_count_only:
             return [], total_count
 
