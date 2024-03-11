@@ -2,7 +2,7 @@ from typing import Any, Dict, Optional, Union, List
 from datetime import datetime, timedelta
 
 from sqlalchemy import desc, asc, func, extract, and_, or_, not_
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from fastapi import HTTPException
 
 from crud.base import CRUDBase
@@ -258,14 +258,27 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
         search_filter = or_(
             Meeting.name.like(f"%{search_word}%"),
             Meeting.description.like(f"%{search_word}%"),
+            # MeetingLanguage를 통해 연결된 Language의 kr_name 또는 en_name 필드 검색
             Meeting.meeting_languages.any(
-                or_(
-                    Language.kr_name.like(f"%{search_word}%"),
-                    Language.en_name.like(f"%{search_word}%"),
+                MeetingLanguage.language.has(
+                    or_(
+                        Language.kr_name.like(f"%{search_word}%"),
+                        Language.en_name.like(f"%{search_word}%"),
+                    )
                 )
             ),
         )
-        return query.filter(search_filter)
+
+        return_query = (
+            query
+            .filter(search_filter)
+            .options(
+                joinedload(Meeting.meeting_languages).joinedload(
+                    MeetingLanguage.language
+                )
+            )
+        )
+        return return_query
 
     def filter_by_nationality(self, query, nationality_name: str):
         if nationality_name == CreatorNationalityEnum.KOREAN.value:
