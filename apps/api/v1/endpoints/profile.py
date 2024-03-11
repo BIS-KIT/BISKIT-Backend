@@ -112,10 +112,15 @@ async def check_nick_name(nick_name: str, db: Session = Depends(get_db)):
     - 닉네임 사용 가능 여부에 대한 메시지.
     """
 
-    # 닉네임에 특수문자 포함 여부 체크
-    if re.search(r"[~!@#$%^&*()_+{}[\]:;<>,.?~]", nick_name):
+    # 닉네임 유효성 검사 (특수문자 포함 여부 및 예약어 사용 여부)
+    if (
+        re.search(r"[~!@#$%^&*()_+{}[\]:;<>,.?~]", nick_name)
+        or "admin" in nick_name.lower()
+        or "관리자" in nick_name.lower()
+    ):
         raise HTTPException(
-            status_code=400, detail="Nick_name contains special characters."
+            status_code=400,
+            detail="Nick_name contains special characters or restricted keywords.",
         )
 
     exists_nick = crud.profile.get_by_nick_name(db=db, nick_name=nick_name)
