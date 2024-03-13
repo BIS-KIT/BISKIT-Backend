@@ -28,6 +28,7 @@ class BaseAdmin(ModelView):
 
 
 class UserAdmin(BaseAdmin, model=User):
+    column_default_sort = ("created_time", True)
     column_labels = dict(name="Name", id="id")
     column_searchable_list = [User.name, User.id]
     column_sortable_list = [User.created_time]
@@ -44,6 +45,7 @@ class UserAdmin(BaseAdmin, model=User):
 
 
 class DeletionRequestAdmin(BaseAdmin, model=AccountDeletionRequest):
+    column_default_sort = ("created_time", True)
     column_list = [
         AccountDeletionRequest.id,
         AccountDeletionRequest.created_time,
@@ -52,12 +54,14 @@ class DeletionRequestAdmin(BaseAdmin, model=AccountDeletionRequest):
 
 
 class ContactAdmin(BaseAdmin, model=Contact):
+    column_default_sort = ("created_time", True)
     column_searchable_list = [Contact.user_id]
     column_sortable_list = [Contact.created_time]
     column_list = [Contact.created_time, Contact.id, Contact.user_id, Contact.content]
 
 
 class TagAdmin(BaseAdmin, model=Tag):
+    column_default_sort = ("created_time", True)
     column_labels = dict(name="Name", id="id")
     column_searchable_list = [Tag.kr_name, Tag.en_name, Tag.id]
     column_sortable_list = [Tag.is_home, Tag.is_custom]
@@ -73,6 +77,7 @@ class TagAdmin(BaseAdmin, model=Tag):
 
 
 class TopicAdmin(BaseAdmin, model=Topic):
+    column_default_sort = ("created_time", True)
     column_labels = dict(name="Name", id="id")
     column_searchable_list = [Topic.kr_name, Topic.en_name, Topic.id]
     column_list = [Topic.kr_name, Topic.en_name, Topic.is_custom]
@@ -80,6 +85,7 @@ class TopicAdmin(BaseAdmin, model=Topic):
 
 
 class ReportAdmin(BaseAdmin, model=Report):
+    column_default_sort = ("created_time", True)
     column_list = [
         Report.id,
         Report.created_time,
@@ -96,6 +102,7 @@ class ReportAdmin(BaseAdmin, model=Report):
 
 
 class StudentVerificationAdmin(BaseAdmin, model=StudentVerification):
+    column_default_sort = ("created_time", True)
     can_edit = False
     list_template = "photo_list.html"
     column_labels = dict(name="Name")
