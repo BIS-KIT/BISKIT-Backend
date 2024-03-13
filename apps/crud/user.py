@@ -216,7 +216,7 @@ class CRUDUser(CRUDBase[User, user_schmea.UserCreate, user_schmea.UserUpdate]):
         self,
         db: Session,
         *,
-        db_obj: user_schmea.EmailCertificationCheck,
+        db_obj: user_schmea.EmailCertificationCheck = None,
         obj_id: int = None,
     ):
         if obj_id:
