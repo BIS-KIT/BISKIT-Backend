@@ -269,14 +269,8 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
             ),
         )
 
-        return_query = (
-            query
-            .filter(search_filter)
-            .options(
-                joinedload(Meeting.meeting_languages).joinedload(
-                    MeetingLanguage.language
-                )
-            )
+        return_query = query.filter(search_filter).options(
+            joinedload(Meeting.meeting_languages).joinedload(MeetingLanguage.language)
         )
         return return_query
 
