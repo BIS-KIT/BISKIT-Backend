@@ -397,7 +397,14 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
         return query.offset(skip).limit(limit).all(), total_count
 
     def join_request_approve(self, db: Session, obj_id: int):
-        join_request = db.query(MeetingUser).filter(MeetingUser.id == obj_id).first()
+        join_request = (
+            db.query(MeetingUser)
+            .filter(
+                MeetingUser.id == obj_id,
+                MeetingUser.status == ReultStatusEnum.PENDING,
+            )
+            .first()
+        )
 
         if not join_request:
             raise HTTPException(status_code=400, detail="Join Request not found")
