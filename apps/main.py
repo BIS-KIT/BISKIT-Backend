@@ -12,7 +12,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 from core.config import settings
 from core.security import get_admin
-from core.redis_driver import RedisDriver
+from core.redis_driver import redis_driver
 from admin.base import register_all, templates_dir, AdminAuth
 from api.v1.router import api_router as v1_router
 from scheduler_module import meeting_active_check, user_remove_after_seven
@@ -40,8 +40,6 @@ app = FastAPI(
 )
 app.mount("/media", StaticFiles(directory="media"), name="media")
 
-redis_instance = RedisDriver(redis_url=f"redis://{settings.REDIS_HOST}")
-
 scheduler = BackgroundScheduler()
 
 authentication_backend = AdminAuth(secret_key=settings.SECRET_KEY)
@@ -63,23 +61,23 @@ async def get_documentation(username: str = Depends(get_admin)):
 
 
 @app.on_event("startup")
-def start_scheduler():
+async def start_event():
     # 스케줄러 시작 및 작업 추가
     scheduler.add_job(meeting_active_check, "interval", minutes=1)
     scheduler.add_job(user_remove_after_seven, "interval", minutes=1)
     scheduler.start()
 
     # redis connect
-    redis_instance.connect()
+    await redis_driver.connect()
 
 
 @app.on_event("shutdown")
-def shutdown_scheduler():
+async def shutdown_event():
     # 스케줄러 종료
     scheduler.shutdown()
 
     # redis disconnect
-    redis_instance.disconnect()
+    await redis_driver.disconnect()
 
 
 # Set all CORS enabled origins
