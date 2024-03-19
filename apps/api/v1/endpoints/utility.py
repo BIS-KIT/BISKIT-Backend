@@ -16,7 +16,7 @@ from schemas.utility import (
 )
 from schemas.enum import ImageSourceEnum
 from models.utility import Language, University, Nationality, OsLanguage
-
+from core.redis_driver import redis_driver
 
 router = APIRouter()
 
@@ -203,3 +203,16 @@ def set_icon(db: Session = Depends(get_db)):
 @router.get("/icon/png")
 def set_png(db: Session = Depends(get_db)):
     crud.utility.png_to_svg(db=db)
+
+
+@router.get("/check-cache/{key}")
+async def get_value(key: str):
+    """
+    Cache에 저장된 값 확인
+    """
+    if not redis_driver.redis_client:
+        raise HTTPException(status_code=503, detail="Redis connection not initialized")
+    value = await redis_driver.redis_client.get(key, encoding="utf-8")
+    if value is None:
+        raise HTTPException(status_code=404, detail="Key not found")
+    return {"key": key, "value": value}
