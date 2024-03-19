@@ -1,11 +1,8 @@
 import base64, json
 from dotenv import load_dotenv
-from typing import Annotated
 
-from fastapi import FastAPI, Depends, HTTPException, Request
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, Depends
 from fastapi.staticfiles import StaticFiles
-from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from starlette.middleware.cors import CORSMiddleware
 from firebase_admin import credentials, initialize_app
 from fastapi.openapi.docs import get_swagger_ui_html
@@ -15,9 +12,9 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 from core.config import settings
 from core.security import get_admin
+from core.redis_driver import RedisDriver
 from admin.base import register_all, templates_dir, AdminAuth
 from api.v1.router import api_router as v1_router
-from log import logger
 from scheduler_module import meeting_active_check, user_remove_after_seven
 
 
@@ -42,6 +39,8 @@ app = FastAPI(
     docs_url=None,
 )
 app.mount("/media", StaticFiles(directory="media"), name="media")
+
+redis_instance = RedisDriver(redis_url=f"redis://{settings.REDIS_HOST}")
 
 scheduler = BackgroundScheduler()
 
@@ -70,11 +69,17 @@ def start_scheduler():
     scheduler.add_job(user_remove_after_seven, "interval", minutes=1)
     scheduler.start()
 
+    # redis connect
+    redis_instance.connect()
+
 
 @app.on_event("shutdown")
 def shutdown_scheduler():
     # 스케줄러 종료
     scheduler.shutdown()
+
+    # redis disconnect
+    redis_instance.disconnect()
 
 
 # Set all CORS enabled origins
