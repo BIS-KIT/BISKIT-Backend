@@ -18,7 +18,7 @@ services:
     depends_on:
       - maindb
     command: >
-      /bin/bash -c " source /py/bin/activate && alembic revision --autogenerate && alembic upgrade head && python -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload "
+      /bin/bash -c "alembic revision --autogenerate && alembic upgrade head && python -m uvicorn main:app --host 0.0.0.0 --port 80 --reload "
 
   maindb:
     container_name: maindb
@@ -41,12 +41,9 @@ services:
 
   nginx:
     container_name: nginx
-    image: nginx:latest
+    build: ./nginx
     ports:
       - "8000:8000"
-    volumes:
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
-      - ./nginx:/nginx
     depends_on:
       - backends
     restart: always
