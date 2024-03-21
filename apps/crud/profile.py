@@ -130,7 +130,7 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
         profile = db.query(Profile).filter(Profile.id == obj_in.profile_id)
         if not profile:
             raise ValueError("There is no Profile")
-        db_obj = StudentVerification(**obj_in.dict())
+        db_obj = StudentVerification(**obj_in.model_dump())
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)
@@ -179,7 +179,7 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
     def create_introduction(
         self, db: Session, obj_in: IntroductionCreate, profile_id: int = None
     ):
-        create_obj = IntroductionCreate(**obj_in.dict()).dict()
+        create_obj = IntroductionCreate(**obj_in.model_dump()).model_dump()
         if profile_id is not None:
             create_obj["profile_id"] = profile_id
         db_obj = Introduction(**create_obj)
@@ -223,7 +223,7 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
     def create_ava_lan(
         self, db: Session, obj_in: AvailableLanguageCreate, profile_id: int = None
     ):
-        create_obj = AvailableLanguageCreate(**obj_in.dict()).dict()
+        create_obj = AvailableLanguageCreate(**obj_in.model_dump()).model_dump()
         if profile_id is not None:
             create_obj["profile_id"] = profile_id
         db_obj = AvailableLanguage(**create_obj)
@@ -242,7 +242,7 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
             return None
 
         obj_data = db_obj.to_dict()
-        update_data = obj_in.dict(exclude_unset=True)
+        update_data = obj_in.model_dump(exclude_unset=True)
         if "profile_id" in update_data:
             raise ValueError("Cannot change the profile association via this method.")
 
@@ -424,7 +424,7 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
 
         db.commit()
         # db.refresh(profile)
-        return profile
+        return db_obj
 
     def delete_file_from_s3(self, file_url: str) -> None:
         s3_client = get_aws_client()

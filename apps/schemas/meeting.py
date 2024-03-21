@@ -1,5 +1,5 @@
 from datetime import datetime
-from pydantic import BaseModel, computed_field, Field
+from pydantic import BaseModel, computed_field, Field, ConfigDict
 from enum import Enum
 from typing import Optional, List, Union
 
@@ -36,22 +36,19 @@ class MeetingUserBase(BaseModel):
 class MeetingTagBase(BaseModel):
     tag: Optional[TagResponse]
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class MeetingTopicBase(BaseModel):
     topic: Optional[TopicResponse]
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class MeetingLanguageBase(BaseModel):
     language: Optional[LanguageBase]
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class MeetingCountBase(BaseModel):
@@ -141,8 +138,7 @@ class MeetingResponse(CoreSchema, MeetingBase, MeetingCountBase):
     def tags(self) -> List[TagResponse]:
         return [meeting_tag.tag for meeting_tag in self.meeting_tags]
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class MeetingListResponse(BaseModel):
@@ -170,8 +166,7 @@ class CommentBase(BaseModel):
 
 
 class CommentCreate(CommentBase):
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class MeetingDetailResponse(MeetingResponse):
@@ -191,6 +186,17 @@ class MeetingDetailResponse(MeetingResponse):
 
     @computed_field
     @property
+    def users_languages(self) -> List[LanguageBase]:
+        user_languages = []
+        available_languages = [meeting_user.user.profile.available_language_list for meeting_user in self.meeting_users]
+        for languages in available_languages:
+             for language in languages:
+                if language not in user_languages and language in self.languages:
+                    user_languages.append(language)
+        return user_languages
+
+    @computed_field
+    @property
     def participants(self) -> List[UserResponse]:
         return [self.creator] + [
             instance.user
@@ -200,8 +206,7 @@ class MeetingDetailResponse(MeetingResponse):
 
 
 class MeetingUserResponse(CoreSchema, MeetingUserBase):
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class MeetingUserListResponse(BaseModel):
@@ -250,7 +255,7 @@ class ReviewResponse(CoreSchema, ReviewBase):
     creator: Optional[UserSimpleResponse] = None
 
     class Meta:
-        orm_mode = True
+        from_attributes = True
 
 
 class ReviewListReponse(BaseModel):

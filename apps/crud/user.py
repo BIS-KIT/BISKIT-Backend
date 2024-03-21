@@ -114,7 +114,7 @@ class CRUDUser(CRUDBase[User, user_schmea.UserCreate, user_schmea.UserUpdate]):
         return db.query(Consent).filter(Consent.user_id == user_id).first()
 
     def create_consent(self, db: Session, obj_in: user_schmea.ConsentCreate):
-        db_obj = Consent(**obj_in.dict())
+        db_obj = Consent(**obj_in.model_dump())
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)
@@ -133,7 +133,7 @@ class CRUDUser(CRUDBase[User, user_schmea.UserCreate, user_schmea.UserUpdate]):
         )
 
     def create_university(self, db: Session, obj_in: user_schmea.UserUniversityCreate):
-        db_obj = UserUniversity(**obj_in.dict())
+        db_obj = UserUniversity(**obj_in.model_dump())
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)
@@ -155,7 +155,7 @@ class CRUDUser(CRUDBase[User, user_schmea.UserCreate, user_schmea.UserUpdate]):
         if isinstance(obj_in, dict):
             update_data = obj_in
         else:
-            update_data = obj_in.dict(exclude_unset=True)
+            update_data = obj_in.model_dump(exclude_unset=True, exclude_none=True)
         return super().update(db, db_obj=db_obj, obj_in=update_data)
 
     def get_nationality(self, db: Session, user_id: int):
@@ -171,7 +171,7 @@ class CRUDUser(CRUDBase[User, user_schmea.UserCreate, user_schmea.UserUpdate]):
     def create_nationality(
         self, db: Session, obj_in: user_schmea.UserNationalityCreate
     ):
-        db_obj = UserNationality(**obj_in.dict())
+        db_obj = UserNationality(**obj_in.model_dump())
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)
@@ -251,7 +251,7 @@ class CRUDUser(CRUDBase[User, user_schmea.UserCreate, user_schmea.UserUpdate]):
         Returns:
             Created EmailCertificationCheck instance.
         """
-        db_obj = EmailCertification(**obj_in.dict())
+        db_obj = EmailCertification(**obj_in.model_dump())
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)
@@ -349,7 +349,7 @@ class CRUDUser(CRUDBase[User, user_schmea.UserCreate, user_schmea.UserUpdate]):
         """
         if "password" in obj_in:
             obj_in.password = get_password_hash(obj_in.password)
-        db_obj = User(**obj_in.dict())
+        db_obj = User(**obj_in.model_dump())
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)
@@ -360,7 +360,7 @@ class CRUDUser(CRUDBase[User, user_schmea.UserCreate, user_schmea.UserUpdate]):
         db: Session,
         *,
         db_obj: User,
-        obj_in: Union[user_schmea.UserUpdate, Dict[str, Any]],
+        obj_in: Union[user_schmea.UserBaseUpdate, Dict[str, Any]],
     ) -> User:
         """
         Update a user's details.
@@ -376,7 +376,7 @@ class CRUDUser(CRUDBase[User, user_schmea.UserCreate, user_schmea.UserUpdate]):
         if isinstance(obj_in, dict):
             update_data = obj_in
         else:
-            update_data = obj_in.dict(exclude_unset=True)
+            update_data = obj_in.model_dump(exclude_unset=True, exclude_none=True)
 
         if "password" in update_data and update_data["password"]:
             hashed_password = get_password_hash(update_data["password"])

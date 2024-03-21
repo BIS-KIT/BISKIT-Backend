@@ -51,7 +51,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         if isinstance(obj_in, dict):
             update_data = obj_in
         else:
-            update_data = obj_in.dict(exclude_unset=True)
+            update_data = obj_in.model_dump(exclude_unset=True, exclude_none=True)
 
         for field, value in update_data.items():
             if hasattr(db_obj, field):
@@ -62,7 +62,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         return db_obj
 
     def remove(self, db: Session, *, id: int) -> ModelType:
-        obj = db.query(self.model).get(id)
+        obj = db.get(self.model, id)
         db.delete(obj)
         db.commit()
         return obj
