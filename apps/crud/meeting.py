@@ -438,6 +438,7 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
             raise HTTPException(status_code=409, detail=str(e))
         return
 
+
     def join_request_reject(self, db: Session, obj_id: int):
         join_request = db.query(MeetingUser).filter(MeetingUser.id == obj_id).delete()
         db.commit()

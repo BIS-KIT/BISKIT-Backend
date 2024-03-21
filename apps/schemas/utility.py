@@ -1,4 +1,4 @@
-from pydantic import EmailStr, BaseModel
+from pydantic import ConfigDict, BaseModel
 from datetime import date
 from typing import Optional
 
@@ -57,10 +57,8 @@ class TagCreate(TopicBase):
 
 
 class TopicResponse(TopicBase, CoreSchema):
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class TagResponse(TagBase, CoreSchema):
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)

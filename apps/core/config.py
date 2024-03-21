@@ -1,12 +1,15 @@
 from typing import List, Optional
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Setting(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env")
+
     PROJECT_NAME: str
     BISKIT_USER: str
     BISKIT_USER_PW: str
     POSTGRES_DB: str
+    TEST_DB: str
     DB_ROOT_PASSWORD: str
     CORS_ORIGINS: str
     SECRET_KEY: str
@@ -21,7 +24,7 @@ class Setting(BaseSettings):
     SMTP_PORT: int
     SMTP_USER: str
     SMTP_PASSWORD: str
-    S3_URL : str
+    S3_URL: str
 
     AWS_ACCESS_KEY_ID: str
     AWS_SECRET_ACCESS_KEY: str
@@ -35,9 +38,6 @@ class Setting(BaseSettings):
     @property
     def cors_origins_list(self) -> List[str]:
         return self.CORS_ORIGINS.split(",")
-
-    class Config:
-        env_file = ".env"
 
 
 settings = Setting()

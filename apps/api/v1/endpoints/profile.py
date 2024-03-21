@@ -219,7 +219,7 @@ def student_varification(
 
 
 @router.get("/student-card/{user_id}", response_model=StudentVerificationBase)
-def student_varification(
+def read_student_varification(
     user_id: int,
     db: Session = Depends(get_db),
 ):
@@ -385,7 +385,11 @@ def create_profile(
     return new_profile
 
 
-@router.put("/profile/{profile_id}", status_code=status.HTTP_200_OK)
+@router.put(
+    "/profile/{profile_id}",
+    response_model=ProfileResponse,
+    status_code=status.HTTP_200_OK,
+)
 def update_profile(
     profile_id: int,
     profile_in: ProfileUpdate,
@@ -426,7 +430,7 @@ def update_profile(
         new_profile = crud.profile.update(
             db=db, db_obj=existing_profile, obj_in=profile_in
         )
-        return {"status": "Profile updated successfully"}
+        return new_profile
     except Exception as e:
         log_error(e)
         raise HTTPException(status_code=500, detail="Error updating profile")

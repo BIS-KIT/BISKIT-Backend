@@ -158,7 +158,11 @@ def join_meeting_request(obj_in: MeetingUserCreate, db: Session = Depends(get_db
     return status.HTTP_201_CREATED
 
 
-@router.post("/meeting/join/approve")
+@router.post(
+    "/meeting/join/approve",
+    status_code=201,
+    response_model=Optional[MeetingUserResponse],
+)
 def join_meeting_approve(obj_id: int, db: Session = Depends(get_db)):
     """
     모임 참가 요청 승인
@@ -166,7 +170,7 @@ def join_meeting_approve(obj_id: int, db: Session = Depends(get_db)):
     check_obj = crud.get_object_or_404(db=db, model=MeetingUser, obj_id=obj_id)
 
     try:
-        meeting = crud.meeting.join_request_approve(db=db, obj_id=obj_id)
+        join_request = crud.meeting.join_request_approve(db=db, obj_id=obj_id)
     except HTTPException as e:
         raise e
     except Exception as e:
@@ -178,11 +182,11 @@ def join_meeting_approve(obj_id: int, db: Session = Depends(get_db)):
         db=db, user_id=check_obj.user_id, meeting_id=check_obj.meeting_id
     )
 
-    return status.HTTP_201_CREATED
+    return join_request
 
 
 @router.post("/meeting/join/reject")
-def join_meeting_approve(obj_id: int, db: Session = Depends(get_db)):
+def join_meeting_reject(obj_id: int, db: Session = Depends(get_db)):
     check_obj = crud.get_object_or_404(db=db, model=MeetingUser, obj_id=obj_id)
     """
     모임 참가 요청 거절
@@ -274,7 +278,7 @@ def get_meeting_detail(meeting_id: int, db: Session = Depends(get_db)):
     return meeting
 
 
-@router.delete("/meeting/{meeting_id}")
+@router.delete("/meeting/{meeting_id}", status_code=204)
 def delete_meeting(meeting_id: int, db: Session = Depends(get_db)):
     check_obj = crud.get_object_or_404(db=db, model=Meeting, obj_id=meeting_id)
     crud.meeting.remove(db=db, id=meeting_id)

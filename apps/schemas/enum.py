@@ -6,7 +6,7 @@ class genderEum(str, Enum):
     FEMALE = "female"
 
 
-class LanguageLevel(str, Enum):
+class LanguageLevelEnum(str, Enum):
     BEGINNER = 5
     BASIC = 4
     INTERMEDIATE = 3
@@ -70,4 +70,4 @@ class LogTypeEnum(str, Enum):
 
 
 def level_to_enum(level_str):
-    return LanguageLevel[level_str].value
+    return LanguageLevelEnum[level_str].value
