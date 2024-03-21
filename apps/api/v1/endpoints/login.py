@@ -1,6 +1,6 @@
 from typing import Any, List, Optional, Dict
 from random import randint
-from datetime import timedelta
+from datetime import timedelta, datetime
 import re, traceback
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -112,9 +112,11 @@ def login_for_access_token(login_obj: UserLogin, db: Session = Depends(get_db)):
             raise HTTPException(status_code=400, detail="User Not Found")
     else:
         raise HTTPException(status_code=400, detail="Incorrect credentials")
-    
+
     if not user.is_active:
-        raise HTTPException(status_code=400, detail="Account in the process of withdrawal")
+        raise HTTPException(
+            status_code=400, detail="Account in the process of withdrawal"
+        )
 
     # 비밀번호 검증
     ## 일반 로그인
@@ -413,7 +415,7 @@ async def certificate_email(
 
 
 @router.post("/change-password/certificate/check")
-async def certificate_check(
+async def certificate_check_change_pw(
     cert_check: EmailCertificationCheck, db: Session = Depends(get_db)
 ):
     """
@@ -430,6 +432,7 @@ async def certificate_check(
         db, email=cert_check.email, certification=str(cert_check.certification)
     )
     if user_cert:
+
         access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
         token_data = {"sub": cert_check.email, "auth_method": "email"}
         access_token = create_access_token(
@@ -485,7 +488,7 @@ async def certificate_email(
 
 
 @router.post("/certificate/check")
-async def certificate_check(
+async def certificate_check_log(
     cert_check: EmailCertificationCheck, db: Session = Depends(get_db)
 ):
     """
@@ -501,8 +504,8 @@ async def certificate_check(
     user_cert = crud.user.get_email_certification(
         db, email=cert_check.email, certification=cert_check.certification
     )
+
     if user_cert:
-        # db.delete(user_cert)
-        # db.commit()
         return {"result": "success", "email": cert_check.email}
-    return {"result": "fail"}
+    else:
+        return {"result": "fail", "message": "Invalid or expired certification code"}
