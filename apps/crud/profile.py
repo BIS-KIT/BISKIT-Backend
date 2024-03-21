@@ -1,5 +1,5 @@
 from typing import Any, Dict, Optional, Union, List
-import os, random, string, boto3, re
+import time, random, string, boto3, requests
 from botocore.exceptions import NoCredentialsError
 
 from sqlalchemy import func, desc, asc, extract
@@ -570,6 +570,35 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
         ):
             raise HTTPException(status_code=403, detail="Need to student-card verifiy")
         return True
+
+    def get_random_nick_name(self, db: Session, os_lang: str):
+        kr_nick_name, en_nick_name = None
+        if os_lang == "kr":
+            while True:
+                response = requests.get(settings.NICKNAME_API)
+
+                # API 요청이 성공했는지 확인
+                if response.status_code != 200:
+                    # 잠시 후에 다시 시도
+                    time.sleep(3)  # 3초 대기
+                    continue
+
+                data = response.json()
+                kr_nick_name = data.get("words")[0]
+
+                check_exists = self.get_with_nick_name(db=db, nick_name=kr_nick_name)
+
+                # 중복되지 않은 닉네임이면 break
+                if check_exists is None:
+                    break
+
+                # 중복된 경우, 잠시 대기 후 다시 시도
+                time.sleep(2)  # 2초 대기
+        elif os_lang == "en":
+            s3_client = get_aws_client()
+            en_nick_name = data.get("en_nick_name")
+
+        return {"kr_nick_name": kr_nick_name, "en_nick_name": en_nick_name}
 
 
 profile = CRUDProfile(Profile)

@@ -4,7 +4,7 @@ import smtplib
 from jinja2 import Environment, FileSystemLoader
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from sqlalchemy.orm import Session, joinedload
 from passlib.context import CryptContext
@@ -213,18 +213,29 @@ class CRUDUser(CRUDBase[User, user_schmea.UserCreate, user_schmea.UserUpdate]):
             return obj
 
     def remove_email_certification(
-        self, db: Session, *, db_obj: user_schmea.EmailCertificationCheck
+        self,
+        db: Session,
+        *,
+        db_obj: user_schmea.EmailCertificationCheck = None,
+        obj_id: int = None,
     ):
-        obj = (
-            db.query(EmailCertification)
-            .filter(
-                EmailCertification.email == db_obj.email,
-                EmailCertification.certification == db_obj.certification,
+        if obj_id:
+            obj = (
+                db.query(EmailCertification)
+                .filter(EmailCertification.id == obj_id)
+                .first()
             )
-            .first()
-        )
-        db.delete(obj)
-        db.commit()
+        else:
+            obj = (
+                db.query(EmailCertification)
+                .filter(
+                    EmailCertification.email == db_obj.email,
+                    EmailCertification.certification == db_obj.certification,
+                )
+                .first()
+            )
+            db.delete(obj)
+            db.commit()
         return obj
 
     def create_email_certification(
@@ -250,7 +261,7 @@ class CRUDUser(CRUDBase[User, user_schmea.UserCreate, user_schmea.UserUpdate]):
         self, db: Session, *, email: str, certification: str
     ) -> Optional[user_schmea.EmailCertificationCheck]:
         """
-        Retrieve an email certification entry by email and certification.
+        email_certification 검증(유효기간 지난 객체 삭제)
 
         Args:
             db: Database session instance.
@@ -258,9 +269,11 @@ class CRUDUser(CRUDBase[User, user_schmea.UserCreate, user_schmea.UserUpdate]):
             certification: Certification code.
 
         Returns:
-            EmailCertificationCheck instance if found, else None.
+            EmailCertificationCheck instance if found and not expired, else None.
         """
-        return (
+
+        current_time = datetime.now()
+        cert = (
             db.query(EmailCertification)
             .filter(
                 EmailCertification.email == email,
@@ -268,6 +281,14 @@ class CRUDUser(CRUDBase[User, user_schmea.UserCreate, user_schmea.UserUpdate]):
             )
             .first()
         )
+
+        if cert:
+            if cert.created_time + timedelta(minutes=5) >= current_time:
+                return cert
+            else:
+                self.remove_email_certification(db=db, obj_id=cert.id)
+                return None
+        return None
 
     def get_by_email(self, db: Session, *, email: str) -> Optional[User]:
         """

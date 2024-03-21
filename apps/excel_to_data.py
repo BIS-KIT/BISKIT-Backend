@@ -131,7 +131,7 @@ def create_fix_topics_tags():
         "푸드": "Food",
         "언어교환": "Language Exchange",
         "액티비티": "Activity",
-        "스포츠": "Sprots",
+        "스포츠": "Sports",
         "스터디": "Study",
         "문화/예술": "Culture/Art",
         "취미": "Hobby",

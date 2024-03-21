@@ -186,6 +186,17 @@ class MeetingDetailResponse(MeetingResponse):
 
     @computed_field
     @property
+    def users_languages(self) -> List[LanguageBase]:
+        user_languages = []
+        available_languages = [meeting_user.user.profile.available_language_list for meeting_user in self.meeting_users]
+        for languages in available_languages:
+             for language in languages:
+                if language not in user_languages and language in self.languages:
+                    user_languages.append(language)
+        return user_languages
+
+    @computed_field
+    @property
     def participants(self) -> List[UserResponse]:
         return [self.creator] + [
             instance.user

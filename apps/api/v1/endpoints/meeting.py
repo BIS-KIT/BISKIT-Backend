@@ -136,6 +136,12 @@ def join_meeting_request(obj_in: MeetingUserCreate, db: Session = Depends(get_db
     )
     check_user = crud.get_object_or_404(db=db, model=User, obj_id=obj_in.user_id)
 
+    check_meeting_user = crud.meeting.check_meeting_request_status(
+        db=db, meeting_id=obj_in.meeting_id, user_id=obj_in.user_id
+    )
+    if check_meeting_user:
+        return status.HTTP_409_CONFLICT
+
     try:
         meeting = crud.meeting.join_request(db=db, obj_in=obj_in)
     except HTTPException as e:

@@ -59,8 +59,8 @@ class AvailableLanguage(ModelBase):
 
 
 class Introduction(ModelBase):
-    keyword = Column(String)
-    context = Column(Text)
+    keyword = Column(String, nullable=True)
+    context = Column(Text, nullable=True)
 
     profile_id = Column(Integer, ForeignKey("profile.id", ondelete="CASCADE"))
     profile = relationship("Profile", back_populates="introductions")

@@ -2,7 +2,8 @@ from typing import Any, Dict, Optional, Union, List
 from datetime import datetime, timedelta
 
 from sqlalchemy import desc, asc, func, extract, and_, or_, not_
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.exc import SQLAlchemyError
 from fastapi import HTTPException
 
 from crud.base import CRUDBase
@@ -42,7 +43,7 @@ def check_time_conditions(time_filters: List[TimeFilterEnum]):
     day_of_week_conditions = []
     time_of_day_conditions = []
 
-    today = datetime.today()
+    today = datetime.combine(datetime.today(), datetime.min.time())
 
     # 날짜 관련 필터
     if TimeFilterEnum.TODAY in time_filters:
@@ -258,14 +259,21 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
         search_filter = or_(
             Meeting.name.like(f"%{search_word}%"),
             Meeting.description.like(f"%{search_word}%"),
+            # MeetingLanguage를 통해 연결된 Language의 kr_name 또는 en_name 필드 검색
             Meeting.meeting_languages.any(
-                or_(
-                    Language.kr_name.like(f"%{search_word}%"),
-                    Language.en_name.like(f"%{search_word}%"),
+                MeetingLanguage.language.has(
+                    or_(
+                        Language.kr_name.like(f"%{search_word}%"),
+                        Language.en_name.like(f"%{search_word}%"),
+                    )
                 )
             ),
         )
-        return query.filter(search_filter)
+
+        return_query = query.filter(search_filter).options(
+            joinedload(Meeting.meeting_languages).joinedload(MeetingLanguage.language)
+        )
+        return return_query
 
     def filter_by_nationality(self, query, nationality_name: str):
         if nationality_name == CreatorNationalityEnum.KOREAN.value:
@@ -343,6 +351,10 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
         if search_word:
             query = self.filter_by_search_word(query=query, search_word=search_word)
 
+        # order by 전에 count
+        total_count_query = query.distinct()
+        total_count = total_count_query.count()
+
         if order_by == MeetingOrderingEnum.CREATED_TIME:
             query = query.order_by(desc(Meeting.created_time))
         elif order_by == MeetingOrderingEnum.MEETING_TIME:
@@ -356,11 +368,18 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
             time_difference_seconds = extract(
                 "epoch", Meeting.meeting_time - func.now()
             )
-            query = query.order_by(time_difference_seconds)
+
+            # 참여 인원 적은 순
+            participants_difference = func.abs(
+                Meeting.max_participants - Meeting.current_participants
+            )
+
+            query = query.order_by(
+                participants_difference.asc(), time_difference_seconds.asc()
+            )
         else:
             query = query.order_by(desc(Meeting.created_time))
 
-        total_count = query.count()
         if is_count_only:
             return [], total_count
 
@@ -379,30 +398,46 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
         return query.offset(skip).limit(limit).all(), total_count
 
     def join_request_approve(self, db: Session, obj_id: int):
-        join_request = db.query(MeetingUser).filter(MeetingUser.id == obj_id).first()
+        try:
+            db.begin()
+            join_request = (
+                db.query(MeetingUser)
+                .filter(
+                    MeetingUser.id == obj_id,
+                    MeetingUser.status == ReultStatusEnum.PENDING,
+                )
+                .first()
+            )
 
-        if not join_request:
-            raise HTTPException(status_code=400, detail="Join Request not found")
+            if not join_request:
+                raise HTTPException(status_code=400, detail="Join Request not found")
 
-        join_request.status = ReultStatusEnum.APPROVE.value
+            join_request.status = ReultStatusEnum.APPROVE.value
 
-        user_nationalities = crud.user.get_nationality_by_user_id(
-            db=db, user_id=join_request.user_id
-        )
+            user_nationalities = crud.user.get_nationality_by_user_id(
+                db=db, user_id=join_request.user_id
+            )
 
-        meeting = (
-            db.query(Meeting).filter(Meeting.id == join_request.meeting_id).first()
-        )
+            meeting = (
+                db.query(Meeting).filter(Meeting.id == join_request.meeting_id).first()
+            )
 
-        codes = [un.nationality.code for un in user_nationalities]
-        meeting.current_participants = meeting.current_participants + 1
-        if codes:
-            if "kr" in codes:
-                meeting.korean_count = meeting.korean_count + 1
-            else:
-                meeting.foreign_count = meeting.foreign_count + 1
-        db.commit()
-        return join_request
+            if meeting.current_participants >= meeting.max_participants:
+                raise HTTPException(status_code=404, detail="It's full of people.")
+
+            codes = [un.nationality.code for un in user_nationalities]
+            meeting.current_participants = meeting.current_participants + 1
+            if codes:
+                if "kr" in codes:
+                    meeting.korean_count = meeting.korean_count + 1
+                else:
+                    meeting.foreign_count = meeting.foreign_count + 1
+            db.commit()
+        except SQLAlchemyError as e:
+            db.rollback()
+            raise HTTPException(status_code=409, detail=str(e))
+        return
+
 
     def join_request_reject(self, db: Session, obj_id: int):
         join_request = db.query(MeetingUser).filter(MeetingUser.id == obj_id).delete()

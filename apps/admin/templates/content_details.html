@@ -1,0 +1,147 @@
+<style>
+  /* 테이블 헤더 스타일 */
+  .table thead th {
+    background-color: #f8f9fa;
+    /* 헤더 배경색 */
+    color: #333;
+    /* 텍스트 색상 */
+    font-weight: bold;
+    /* 글꼴 굵기 */
+  }
+
+  /* 테이블 행 및 셀 스타일 */
+  .table tbody tr {
+    border-bottom: 1px solid #dee2e6;
+    /* 행 하단 테두리 */
+  }
+
+  .table tbody tr:hover {
+    background-color: #eaeaea;
+    /* 호버 배경색 */
+  }
+
+  .table tbody td {
+    padding: 0.75rem;
+    /* 셀 패딩 */
+    text-align: left;
+    /* 텍스트 정렬 */
+    vertical-align: middle;
+    /* 수직 정렬 */
+  }
+
+  .table {
+    border-collapse: collapse;
+    /* 셀 테두리가 서로 붙도록 설정 */
+  }
+
+  .table td {
+    border: 1px solid #ddd;
+    /* 테두리 색상 및 두께 설정 */
+    padding: 8px;
+    /* 셀 내부의 패딩 */
+  }
+
+  /* 테이블 헤더 스타일 */
+  .table thead th {
+    background-color: #007bff;
+    /* 예: 푸른색 배경 */
+    color: white;
+    /* 헤더의 텍스트 색상 */
+  }
+
+  /* 테이블 본문 행 스타일 */
+  .table tbody tr {
+    background-color: #f8f9fa;
+    /* 예: 연한 회색 배경 */
+  }
+
+  .center-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    /* 뷰포트 높이의 100% */
+  }
+
+  .content {
+    width: 100%;
+    /* 필요한 경우 콘텐츠의 너비 조정 */
+    max-width: 800px;
+    /* 최대 너비 설정 */
+  }
+
+  .btn {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    /* 상하 좌우 패딩 */
+    border: 1px solid transparent;
+    /* 테두리 */
+    border-radius: 0.25rem;
+    /* 둥근 모서리 */
+    font-size: 1rem;
+    /* 글꼴 크기 */
+    line-height: 1.5;
+    /* 줄 높이 */
+    text-align: center;
+    /* 텍스트 중앙 정렬 */
+    text-decoration: none;
+    /* 텍스트 밑줄 제거 */
+    cursor: pointer;
+    /* 마우스 오버시 커서 변경 */
+  }
+
+  .btn-primary {
+    background-color: #007bff;
+    /* 배경색 */
+    color: white;
+    /* 글자 색상 */
+  }
+
+  .btn-primary:hover {
+    background-color: #0056b3;
+    /* 호버시 배경색 변경 */
+  }
+
+  .button-container {
+    display: flex;
+    justify-content: flex-end;
+    /* 오른쪽 정렬 */
+    padding: 1rem;
+    /* 패딩, 필요에 따라 조정 */
+  }
+</style>
+<div class="center-container">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+      </div>
+      <div class="card-body border-bottom py-3">
+        <div class="table-responsive">
+          <table class="table card-table table-vcenter text-nowrap table-hover table-bordered">
+            <thead>
+              <tr>
+                <th class="w-1">Column</th>
+                <th class="w-1">Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for key, value in obj.items() %}
+              <tr>
+                <td>{{ key }}</td>
+                <td>{{ value }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="card-footer container">
+          <div class="button-container">
+            <div class="col-md-1">
+              <a href="/admin/report/list" class="btn btn-primary">Go Back</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
