@@ -1,11 +1,8 @@
 import base64, json
 from dotenv import load_dotenv
-from typing import Annotated
 
-from fastapi import FastAPI, Depends, HTTPException, Request
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, Depends
 from fastapi.staticfiles import StaticFiles
-from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from starlette.middleware.cors import CORSMiddleware
 from firebase_admin import credentials, initialize_app
 from fastapi.openapi.docs import get_swagger_ui_html
@@ -15,9 +12,9 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 from core.config import settings
 from core.security import get_admin
+from core.redis_driver import redis_driver
 from admin.base import register_all, templates_dir, AdminAuth
 from api.v1.router import api_router as v1_router
-from log import logger
 from scheduler_module import meeting_active_check, user_remove_after_seven
 
 
@@ -64,17 +61,23 @@ async def get_documentation(username: str = Depends(get_admin)):
 
 
 @app.on_event("startup")
-def start_scheduler():
+async def start_event():
     # 스케줄러 시작 및 작업 추가
     scheduler.add_job(meeting_active_check, "interval", minutes=1)
     scheduler.add_job(user_remove_after_seven, "interval", minutes=1)
     scheduler.start()
 
+    # redis connect
+    await redis_driver.connect()
+
 
 @app.on_event("shutdown")
-def shutdown_scheduler():
+async def shutdown_event():
     # 스케줄러 종료
     scheduler.shutdown()
+
+    # redis disconnect
+    await redis_driver.disconnect()
 
 
 # Set all CORS enabled origins

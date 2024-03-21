@@ -35,6 +35,8 @@ class Setting(BaseSettings):
 
     FIRESTORE_URL: str
 
+    REDIS_HOST: str
+
     @property
     def cors_origins_list(self) -> List[str]:
         return self.CORS_ORIGINS.split(",")

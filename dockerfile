@@ -12,14 +12,11 @@ COPY ./requirements /apps/requirements
 WORKDIR /apps
 
 # Install dependencies
-RUN python -m venv /py && \
-    . /py/bin/activate && \ 
-    /py/bin/pip install --upgrade pip && \
-    apt-get clean -y && \
-    apt-get clean -y && \
-    apt-get update -y && \
+RUN apt-get update -y && \
     apt-get install -y pkg-config libmariadb-dev-compat libmariadb-dev build-essential libpq-dev python3-dev && \
-    /py/bin/pip install -r /apps/requirements/requirements.txt
+    pip install --upgrade pip && \
+    pip install -r /apps/requirements/requirements.txt && \
+    apt-get clean -y
 
 # Expose port
-EXPOSE 8000
+EXPOSE 80
