@@ -398,46 +398,41 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
         return query.offset(skip).limit(limit).all(), total_count
 
     def join_request_approve(self, db: Session, obj_id: int):
-        try:
-            db.begin()
-            join_request = (
-                db.query(MeetingUser)
-                .filter(
-                    MeetingUser.id == obj_id,
-                    MeetingUser.status == ReultStatusEnum.PENDING,
-                )
-                .first()
+
+        join_request = (
+            db.query(MeetingUser)
+            .filter(
+                MeetingUser.id == obj_id,
+                MeetingUser.status == ReultStatusEnum.PENDING,
             )
+            .first()
+        )
 
-            if not join_request:
-                raise HTTPException(status_code=400, detail="Join Request not found")
+        if not join_request:
+            raise HTTPException(status_code=400, detail="Join Request not found")
 
-            join_request.status = ReultStatusEnum.APPROVE.value
+        join_request.status = ReultStatusEnum.APPROVE.value
 
-            user_nationalities = crud.user.get_nationality_by_user_id(
-                db=db, user_id=join_request.user_id
-            )
+        user_nationalities = crud.user.get_nationality_by_user_id(
+            db=db, user_id=join_request.user_id
+        )
 
-            meeting = (
-                db.query(Meeting).filter(Meeting.id == join_request.meeting_id).first()
-            )
+        meeting = (
+            db.query(Meeting).filter(Meeting.id == join_request.meeting_id).first()
+        )
 
-            if meeting.current_participants >= meeting.max_participants:
-                raise HTTPException(status_code=404, detail="It's full of people.")
+        if meeting.current_participants >= meeting.max_participants:
+            raise HTTPException(status_code=404, detail="It's full of people.")
 
-            codes = [un.nationality.code for un in user_nationalities]
-            meeting.current_participants = meeting.current_participants + 1
-            if codes:
-                if "kr" in codes:
-                    meeting.korean_count = meeting.korean_count + 1
-                else:
-                    meeting.foreign_count = meeting.foreign_count + 1
-            db.commit()
-        except SQLAlchemyError as e:
-            db.rollback()
-            raise HTTPException(status_code=409, detail=str(e))
+        codes = [un.nationality.code for un in user_nationalities]
+        meeting.current_participants = meeting.current_participants + 1
+        if codes:
+            if "kr" in codes:
+                meeting.korean_count = meeting.korean_count + 1
+            else:
+                meeting.foreign_count = meeting.foreign_count + 1
+
         return
-
 
     def join_request_reject(self, db: Session, obj_id: int):
         join_request = db.query(MeetingUser).filter(MeetingUser.id == obj_id).delete()
