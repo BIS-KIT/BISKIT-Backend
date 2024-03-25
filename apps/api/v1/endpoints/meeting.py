@@ -1,9 +1,10 @@
-from typing import Any, List, Optional, Dict
+from typing import Any, List, Optional, Dict, Annotated
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 import crud
+from core.security import oauth2_scheme
 from database.session import get_db
 from schemas.meeting import (
     MeetingResponse,
@@ -33,7 +34,11 @@ router = APIRouter()
 
 
 @router.post("/meeting", response_model=MeetingResponse)
-def create_meeting(obj_in: MeetingCreate, db: Session = Depends(get_db)):
+def create_meeting(
+    obj_in: MeetingCreate,
+    db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
+):
     """
     새로운 모임 생성
 
@@ -70,7 +75,11 @@ def create_meeting(obj_in: MeetingCreate, db: Session = Depends(get_db)):
 
 @router.get("/meetings/{meeting_id}/requests", response_model=MeetingUserListResponse)
 def get_meeting_requests(
-    meeting_id: int, db: Session = Depends(get_db), skip: int = 0, limit: int = 10
+    meeting_id: int,
+    db: Session = Depends(get_db),
+    skip: int = 0,
+    limit: int = 10,
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
 ):
     """
     모임 참가 신청 리스트
@@ -84,7 +93,12 @@ def get_meeting_requests(
 
 
 @router.post("/meeting/{meeting_id}/user/{user_id}/exit")
-def exit_meeting(user_id: int, meeting_id: int, db: Session = Depends(get_db)):
+def exit_meeting(
+    user_id: int,
+    meeting_id: int,
+    db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
+):
     """
     모임 나가기
     """
@@ -110,7 +124,10 @@ def exit_meeting(user_id: int, meeting_id: int, db: Session = Depends(get_db)):
     "/meeting/{meeting_id}/user/{user_id}", response_model=Optional[MeetingUserResponse]
 )
 def check_meeting_request_status(
-    user_id: int, meeting_id: int, db: Session = Depends(get_db)
+    user_id: int,
+    meeting_id: int,
+    db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
 ):
     """
     meeting에서 user의 참가 상태 확인
@@ -125,7 +142,11 @@ def check_meeting_request_status(
 
 
 @router.post("/meeting/join/request")
-def join_meeting_request(obj_in: MeetingUserCreate, db: Session = Depends(get_db)):
+def join_meeting_request(
+    obj_in: MeetingUserCreate,
+    db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
+):
     """
     모임 참가 요청
     (user_id는 차후 token에서 추출할것)
@@ -163,7 +184,11 @@ def join_meeting_request(obj_in: MeetingUserCreate, db: Session = Depends(get_db
     status_code=201,
     response_model=Optional[MeetingUserResponse],
 )
-def join_meeting_approve(obj_id: int, db: Session = Depends(get_db)):
+def join_meeting_approve(
+    obj_id: int,
+    db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
+):
     """
     모임 참가 요청 승인
     """
@@ -186,7 +211,11 @@ def join_meeting_approve(obj_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/meeting/join/reject")
-def join_meeting_reject(obj_id: int, db: Session = Depends(get_db)):
+def join_meeting_reject(
+    obj_id: int,
+    db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
+):
     check_obj = crud.get_object_or_404(db=db, model=MeetingUser, obj_id=obj_id)
     """
     모임 참가 요청 거절
@@ -209,7 +238,11 @@ def join_meeting_reject(obj_id: int, db: Session = Depends(get_db)):
 
 @router.get("/meeting/{user_id}/universty", response_model=MeetingListResponse)
 def get_meetings_by_user_university(
-    user_id: int, skip: int = 0, limit: int = 10, db: Session = Depends(get_db)
+    user_id: int,
+    skip: int = 0,
+    limit: int = 10,
+    db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
 ):
     """
     특정 유저의 학교에서 모집중인 모임 조회
@@ -229,7 +262,11 @@ def get_meetings_by_user_university(
 
 
 @router.get("/meeting/{meeting_id}", response_model=MeetingDetailResponse)
-def get_meeting_detail(meeting_id: int, db: Session = Depends(get_db)):
+def get_meeting_detail(
+    meeting_id: int,
+    db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
+):
     """
     특정 모임의 상세 정보를 조회합니다.
 
@@ -279,7 +316,11 @@ def get_meeting_detail(meeting_id: int, db: Session = Depends(get_db)):
 
 
 @router.delete("/meeting/{meeting_id}", status_code=204)
-def delete_meeting(meeting_id: int, db: Session = Depends(get_db)):
+def delete_meeting(
+    meeting_id: int,
+    db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
+):
     check_obj = crud.get_object_or_404(db=db, model=Meeting, obj_id=meeting_id)
     crud.meeting.remove(db=db, id=meeting_id)
     return status.HTTP_204_NO_CONTENT
@@ -287,7 +328,10 @@ def delete_meeting(meeting_id: int, db: Session = Depends(get_db)):
 
 @router.put("/meeting/{meeting_id}", response_model=MeetingDetailResponse)
 def update_meeting(
-    meeting_id: int, obj_in: MeetingUpdate, db: Session = Depends(get_db)
+    meeting_id: int,
+    obj_in: MeetingUpdate,
+    db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
 ):
     check_obj = crud.get_object_or_404(db=db, model=Meeting, obj_id=meeting_id)
     updated_meeting = crud.meeting.update_meeting(
@@ -309,6 +353,7 @@ def get_meeting(
     is_count_only: bool = False,
     creator_nationality: CreatorNationalityEnum = CreatorNationalityEnum.ALL.value,
     search_word: str = None,
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
 ):
     """
     모임 목록을 조회합니다.
@@ -392,6 +437,7 @@ def get_meeting_all_review(
     db: Session = Depends(get_db),
     skip: int = 0,
     limit: int = 10,
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
 ):
     """
     User의 모든 Review
@@ -409,6 +455,7 @@ def create_review(
     meeting_id: int,
     obj_in: ReviewIn,
     db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
 ):
     """
     Meeting에 리뷰 작성
@@ -436,6 +483,7 @@ def update_review(
     review_id: int,
     obj_in: ReviewUpdateIn,
     db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
 ):
     """
     Review 수정
@@ -456,7 +504,11 @@ def update_review(
 
 
 @router.delete("/review/{review_id}")
-def delete_review(review_id: int, db: Session = Depends(get_db)):
+def delete_review(
+    review_id: int,
+    db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
+):
     check_obj = crud.get_object_or_404(db=db, model=Review, obj_id=review_id)
     try:
         delete_obj = crud.review.remove(db=db, id=review_id)
