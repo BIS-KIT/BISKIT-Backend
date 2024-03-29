@@ -1,9 +1,10 @@
-from typing import Any, List, Optional, Dict
+from typing import Any, List, Optional, Dict, Annotated
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 import crud
+from core.security import oauth2_scheme
 from database.session import get_db
 from schemas import alarm as alarm_schemas
 from models import user as user_models
@@ -14,7 +15,11 @@ router = APIRouter()
 
 @router.get("/alarms/{user_id}", response_model=alarm_schemas.AlarmListResponse)
 def get_all_alarms_by_user(
-    user_id: int, db: Session = Depends(get_db), skip: int = 0, limit: int = 10
+    user_id: int,
+    db: Session = Depends(get_db),
+    skip: int = 0,
+    limit: int = 10,
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
 ):
     """
     user_id의 알람 목록
@@ -28,7 +33,11 @@ def get_all_alarms_by_user(
 
 
 @router.put("/alarm/{alarm_id}", response_model=alarm_schemas.AlarmReponse)
-def read_alarm(alarm_id: int, db: Session = Depends(get_db)):
+def read_alarm(
+    alarm_id: int,
+    db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
+):
     """
     알람 읽음 처리
     """
