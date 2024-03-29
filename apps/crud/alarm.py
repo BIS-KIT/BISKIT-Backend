@@ -18,48 +18,50 @@ from log import log_error
 def send_fcm_notification(
     title: str,
     body: str,
-    fcm_tokens: List[str],
-    user_id: int = None,
+    user_tokens: Dict[int, str],
     db: Session = None,
     data: Dict[str, str] = None,
 ):
     """
     FCM을 통해 푸시 알림을 전송하는 함수
+
     :param title: 알림의 제목
     :param body: 알림의 내용
-    :param fcm_token: 대상 장치의 FCM 토큰
+    :param user_tokens: 대상 장치의 FCM 토큰과 사용자 ID를 담은 딕셔너리
+    :param data: 알림과 함께 보낼 추가 데이터
     """
-    try:
-        messages = [
-            messaging.Message(
+    for user_id, fcm_token in user_tokens.items():
+        try:
+
+            # 알람보내기
+            messages = messaging.Message(
                 notification=messaging.Notification(title=title, body=body),
                 data=data,
-                token=token,
+                token=fcm_token,
             )
-            for token in fcm_tokens
-        ]
-        response = messaging.send_each(messages)
-        if db and user_id:
-            try:
-                obj_in = alarm_schema.AlarmCreate(
-                    title=title, content=body, user_id=user_id
-                )
-                created_alarm = alarm.create(db=db, obj_in=obj_in)
-            except SQLAlchemyError as e:
-                # 데이터베이스 오류 처리
-                db.rollback()  # 롤백
-                log_error(e, type=LogTypeEnum.ALARM.value)
-                # 필요에 따라 추가적인 오류 처리
-                pass
+            response = messaging.send(messages)
 
-        return response
-    except InvalidArgumentError as e:
-        # FCM 토큰 관련 오류 처리
-        log_error(e, type=LogTypeEnum.ALARM.value)
-        pass
-    except Exception as e:
-        log_error(e, type=LogTypeEnum.ALARM.value)
-        pass
+            # 알람 객체 생성
+            obj_in = alarm_schema.AlarmCreate(
+                title=title, content=body, user_id=user_id
+            )
+            created_alarm = alarm.create(db=db, obj_in=obj_in)
+
+        except InvalidArgumentError as e:
+            # FCM 토큰 관련 오류 처리
+            log_error(e, type=LogTypeEnum.ALARM.value)
+            continue
+
+        except SQLAlchemyError as e:
+            # DB 관련 오류 처리
+            log_error(e, type=LogTypeEnum.ALARM.value)
+            continue
+
+        except Exception as e:
+            log_error(e, type=LogTypeEnum.ALARM.value)
+            continue
+
+    return response
 
 
 class Alarm(
@@ -74,17 +76,20 @@ class Alarm(
         return alarm_obj
 
     def create_meeting_request(self, db: Session, user_id: int, meeting_id: int):
+        """
+        모임 참가 신청 알람 to 모임 생성자
+        """
         meeting = crud.meeting.get(db=db, id=meeting_id)
         requester = crud.user.get(db=db, id=user_id)
+        creator_id = meeting.creator_id
 
         meeting_name = meeting.name
-        target_fcm_token = crud.user.get_user_fcm_token(
-            db=db, user_id=meeting.creator_id
-        )
+        target_fcm_token = crud.user.get_user_fcm_token(db=db, user_id=creator_id)
         requester_nick_name = requester.nick_name
         title = "모임 신청"
         body = f"{requester_nick_name}님이 {meeting_name} 모임에 신청했어요."
 
+        user_token = {user_id: target_fcm_token}
         icon_url = settings.S3_URL + "/default_icon/Thumbnail_Icon_Notify.svg"
         data = {
             "meeting_id": str(meeting_id),
@@ -96,24 +101,26 @@ class Alarm(
             db=db,
             title=title,
             body=body,
-            fcm_tokens=[target_fcm_token],
-            user_id=meeting.creator_id,
+            user_tokens=user_token,
             data=data,
         )
 
     def exit_meeting(self, db: Session, user_id: int, meeting_id: int):
+        """
+        모임 탈퇴 알람 to 모임 생성자
+        """
         meeting = crud.meeting.get(db=db, id=meeting_id)
         requester = crud.user.get(db=db, id=user_id)
+        creator_id = meeting.creator_id
 
         meeting_name = meeting.name
-        target_fcm_token = crud.user.get_user_fcm_token(
-            db=db, user_id=meeting.creator_id
-        )
+        target_fcm_token = crud.user.get_user_fcm_token(db=db, user_id=creator_id)
         requester_nick_name = requester.nick_name
 
         title = "모임 탈퇴"
         body = f"{requester_nick_name}님이 {meeting_name} 모임에서 나갔어요."
 
+        user_token = {creator_id: target_fcm_token}
         icon_url = settings.S3_URL + "/default_icon/Thumbnail_Icon_Notify.svg"
         data = {
             "meeting_id": str(meeting_id),
@@ -125,12 +132,14 @@ class Alarm(
             db=db,
             title=title,
             body=body,
-            fcm_tokens=[target_fcm_token],
-            user_id=meeting.creator_id,
+            user_tokens=user_token,
             data=data,
         )
 
     def meeting_request_approve(self, db: Session, user_id: int, meeting_id: int):
+        """
+        모임 승인 알람 to 모임 신청자
+        """
         meeting = crud.meeting.get(db=db, id=meeting_id)
 
         meeting_name = meeting.name
@@ -139,6 +148,7 @@ class Alarm(
         title = "모임 승인"
         body = f"{meeting_name} 모임에 승인되었어요."
 
+        user_token = {user_id: target_fcm_token}
         icon_url = settings.S3_URL + "/default_icon/Thumbnail_Icon_Notify.svg"
         data = {
             "meeting_id": str(meeting_id),
@@ -150,8 +160,7 @@ class Alarm(
             db=db,
             title=title,
             body=body,
-            fcm_tokens=[target_fcm_token],
-            user_id=user_id,
+            user_tokens=user_token,
             data=data,
         )
 
@@ -164,6 +173,7 @@ class Alarm(
         title = "모임 거절"
         body = f"{meeting_name} 모임에 거절되었어요."
 
+        user_token = {user_id: target_fcm_token}
         icon_url = settings.S3_URL + "/default_icon/Thumbnail_Icon_Notify.svg"
         data = {
             "meeting_id": str(meeting_id),
@@ -175,14 +185,15 @@ class Alarm(
             db=db,
             title=title,
             body=body,
-            fcm_tokens=[target_fcm_token],
-            user_id=user_id,
+            user_tokens=user_token,
             data=data,
         )
 
     def notice_alarm(self, db: Session, title: str, content: str, notice_id: int):
         # TODO : 모든 user에게 alarm 객체 만들어야함
         users = crud.user.get_all_users(db=db)
+
+        user_tokens = {user.id: user.fcm_token for user in users}
         icon_url = settings.S3_URL + "/default_icon/Thumbnail_notice_Icon.svg"
         data = {
             "notice_id": str(notice_id),
@@ -192,16 +203,13 @@ class Alarm(
         }
 
         try:
-            for user in users:
-                # 각 사용자의 FCM 토큰을 사용하여 알림을 전송합니다.
-                send_fcm_notification(
-                    title=title,
-                    body=content,
-                    fcm_tokens=[user.fcm_token],
-                    user_id=user.id,
-                    db=db,
-                    data=data,
-                )
+            send_fcm_notification(
+                title=title,
+                body=content,
+                user_tokens=user_tokens,
+                db=db,
+                data=data,
+            )
         except Exception as e:
             log_error(e)
             return False
@@ -216,6 +224,7 @@ class Alarm(
             f"서비스 이용규정 위반으로 경고가 {len(get_all_report)}회 누적되었습니다."
         )
 
+        user_tokens = {target_id: target_fcm_token}
         icon_url = settings.S3_URL + "/default_icon/Thumbnail_reprot_icon.svg"
         data = {
             "reporter_id": str(target_id),
@@ -227,8 +236,7 @@ class Alarm(
             db=db,
             title=title,
             body=body,
-            fcm_tokens=[target_fcm_token],
-            user_id=target_id,
+            user_tokens=user_tokens,
             data=data,
         )
 
