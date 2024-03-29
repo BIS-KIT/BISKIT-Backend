@@ -1,4 +1,4 @@
-from typing import Any, List, Optional, Dict
+from typing import Any, List, Optional, Dict, Annotated
 import re, traceback
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -7,6 +7,7 @@ from jose import jwt, JWTError, ExpiredSignatureError
 from sqlalchemy.exc import IntegrityError
 
 import crud
+from core.security import oauth2_scheme
 from log import log_error
 from schemas.user import (
     UserResponse,
@@ -33,7 +34,10 @@ router = APIRouter()
 
 
 @router.get("/users/me", response_model=UserResponse)
-async def read_current_user(current_user=Depends(get_current_user)):
+async def read_current_user(
+    current_user=Depends(get_current_user),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
+):
     """
     현재 사용자의 정보를 반환합니다.
 
@@ -47,7 +51,12 @@ async def read_current_user(current_user=Depends(get_current_user)):
 
 
 @router.get("/users", response_model=UserListResponse)
-def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+def read_users(
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
+):
     """
     사용자 목록을 반환합니다.
 
@@ -67,7 +76,11 @@ def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
 
 
 @router.get("/users/{user_id}", response_model=UserResponse)
-def read_user(user_id: int, db: Session = Depends(get_db)):
+def read_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
+):
     """
     특정 사용자의 정보를 조회합니다.
 
@@ -86,7 +99,12 @@ def read_user(user_id: int, db: Session = Depends(get_db)):
 
 
 @router.delete("/user/{user_id}")
-def delete_user(user_id: int, is_remove: bool = False, db: Session = Depends(get_db)):
+def delete_user(
+    user_id: int,
+    is_remove: bool = False,
+    db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
+):
     """
     특정 사용자를 삭제합니다.
     (7일간 재가입 막기 위해, 7일 후 삭제)
@@ -108,7 +126,9 @@ def delete_user(user_id: int, is_remove: bool = False, db: Session = Depends(get
 
 @router.post("/deletion-requests", response_model=DeletionRequestResponse)
 def save_deletion_requests(
-    reason: DeletionRequestCreate, db: Session = Depends(get_db)
+    reason: DeletionRequestCreate,
+    db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
 ):
     obj = crud.deletion_requests.create(db=db, obj_in=reason)
     return obj
@@ -125,6 +145,7 @@ def update_user(
     user_in: UserUpdate,
     user_id: int,
     db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
 ):
     """
     Update user details using email address as identifier.
@@ -187,6 +208,7 @@ def update_user(
 def get_user_consent(
     user_id: int,
     db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
 ):
     """
     특정 사용자의 동의 정보를 반환합니다.
@@ -212,6 +234,7 @@ def get_user_consent(
 def delete_user_consent(
     user_id: int,
     db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
 ):
     """
     특정 사용자의 동의 정보를 삭제합니다.
@@ -239,6 +262,7 @@ def delete_user_consent(
 def get_user_university(
     user_id: int,
     db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
 ):
     """
     특정 사용자의 대학 정보를 반환합니다.
@@ -264,6 +288,7 @@ def get_user_university(
 def delete_user_university(
     user_id: int,
     db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
 ):
     """
     특정 사용자의 대학 정보를 삭제합니다.
@@ -292,6 +317,7 @@ def update_user_university(
     user_id: int,
     user_univeristy: UserUniversityUpdateIn,
     db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
 ):
     """
     특정 사용자의 대학 정보를 업데이트합니다.
@@ -318,6 +344,7 @@ def update_user_university(
 def get_user_nationality(
     user_id: int,
     db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
 ):
     """
     특정 사용자의 국적 정보를 반환합니다.
@@ -343,6 +370,7 @@ def get_user_nationality(
 def delete_user_nationality(
     user_id: int,
     db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
 ):
     """
     특정 사용자의 국적 정보를 삭제합니다.
@@ -372,6 +400,7 @@ def delete_user_nationality(
 def get_report_by_user(
     user_id: int,
     db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
 ):
     """
     유저가 받은 신고 중 관리자가 승인한 신고 내역(경고내역)
