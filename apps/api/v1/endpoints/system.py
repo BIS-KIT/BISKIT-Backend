@@ -1,9 +1,10 @@
-from typing import List, Optional
+from typing import List, Optional, Annotated
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 import crud
+from core.security import oauth2_scheme
 from database.session import get_db
 from schemas import system as system_schema
 from models import system as system_model
@@ -14,13 +15,22 @@ router = APIRouter()
 
 
 @router.get("/systems")
-def read_systems(db: Session = Depends(get_db), skip: int = 0, limit: int = 10):
+def read_systems(
+    db: Session = Depends(get_db),
+    skip: int = 0,
+    limit: int = 10,
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
+):
     systems, total_count = crud.system.get_multi(db=db, skip=skip, limit=limit)
     return systems, total_count
 
 
 @router.get("/system/{user_id}", response_model=system_schema.SystemReponse)
-def get_systems(user_id: int, db: Session = Depends(get_db)):
+def get_systems(
+    user_id: int,
+    db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
+):
     check_obj = crud.get_object_or_404(db=db, model=user_model.User, obj_id=user_id)
     system = crud.system.get_by_user_id(db=db, user_id=user_id)
     return system
@@ -28,7 +38,10 @@ def get_systems(user_id: int, db: Session = Depends(get_db)):
 
 @router.put("/system/{system_id}", response_model=system_schema.SystemReponse)
 def update_system(
-    system_id: int, obj_in: system_schema.SystemUpdate, db: Session = Depends(get_db)
+    system_id: int,
+    obj_in: system_schema.SystemUpdate,
+    db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
 ):
     check_obj = crud.get_object_or_404(
         db=db, model=system_model.System, obj_id=system_id
@@ -38,7 +51,12 @@ def update_system(
 
 
 @router.get("/reports", response_model=system_schema.ReportListResponse)
-def read_reports(db: Session = Depends(get_db), skip: int = 0, limit: int = 10):
+def read_reports(
+    db: Session = Depends(get_db),
+    skip: int = 0,
+    limit: int = 10,
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
+):
     """
     전체 신고 확인
     """
@@ -47,7 +65,11 @@ def read_reports(db: Session = Depends(get_db), skip: int = 0, limit: int = 10):
 
 
 @router.get("/report/{report_id}")
-def get_report(report_id: int, db: Session = Depends(get_db)):
+def get_report(
+    report_id: int,
+    db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
+):
     check_obj = crud.get_object_or_404(
         db=db, model=system_model.Report, obj_id=report_id
     )
@@ -56,7 +78,11 @@ def get_report(report_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/report", response_model=system_schema.ReportResponse)
-def create_reports(obj_in: system_schema.ReportCreate, db: Session = Depends(get_db)):
+def create_reports(
+    obj_in: system_schema.ReportCreate,
+    db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
+):
     """
     신고하기
 
@@ -76,7 +102,11 @@ def create_reports(obj_in: system_schema.ReportCreate, db: Session = Depends(get
 
 @router.get("/ban/{user_id}", response_model=system_schema.BanListReponse)
 def read_ban_by_user_id(
-    user_id: int, skip: int = 0, limit: int = 10, db: Session = Depends(get_db)
+    user_id: int,
+    skip: int = 0,
+    limit: int = 10,
+    db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
 ):
     """
     user의 차단 목록
@@ -90,7 +120,10 @@ def read_ban_by_user_id(
 
 @router.get("/bans/{user_id}", response_model=List[system_schema.BanResponse])
 def check_user_ban(
-    user_id: int, target_ids: List[int] = Query(None), db: Session = Depends(get_db)
+    user_id: int,
+    target_ids: List[int] = Query(None),
+    db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
 ):
     """
     User의 Target 차단 상태 확인
@@ -111,7 +144,11 @@ def check_user_ban(
 
 
 @router.post("/ban", response_model=system_schema.BanResponse)
-def create_ban(obj_in: system_schema.BanCreate, db: Session = Depends(get_db)):
+def create_ban(
+    obj_in: system_schema.BanCreate,
+    db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
+):
     """
     target_id 사용자 차단(유저 프로필-탭-차단하기)
     """
@@ -126,7 +163,11 @@ def create_ban(obj_in: system_schema.BanCreate, db: Session = Depends(get_db)):
 
 
 @router.delete("/ban")
-def unban_with_ban_obj(ban_ids: List[int], db: Session = Depends(get_db)):
+def unban_with_ban_obj(
+    ban_ids: List[int],
+    db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
+):
     """
     차단 해제(설정-차단해제)
 
@@ -140,7 +181,12 @@ def unban_with_ban_obj(ban_ids: List[int], db: Session = Depends(get_db)):
 
 
 @router.delete("/unban")
-def unban_with_user_id(reporter_id: int, target_id: int, db: Session = Depends(get_db)):
+def unban_with_user_id(
+    reporter_id: int,
+    target_id: int,
+    db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
+):
     """
     (유저 프로필-탭-차단해제)
     """
@@ -156,13 +202,22 @@ def unban_with_user_id(reporter_id: int, target_id: int, db: Session = Depends(g
 
 
 @router.get("/notices", response_model=system_schema.NoticeListResponse)
-def read_notices(db: Session = Depends(get_db), skip: int = 0, limit: int = 10):
+def read_notices(
+    db: Session = Depends(get_db),
+    skip: int = 0,
+    limit: int = 10,
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
+):
     notices, total_count = crud.notice.get_multi(db=db, skip=skip, limit=limit)
     return {"notices": notices, "total_count": total_count}
 
 
 @router.post("/notice", response_model=system_schema.NoticeResponse)
-def create_notice(obj_in: system_schema.NoticeCreate, db: Session = Depends(get_db)):
+def create_notice(
+    obj_in: system_schema.NoticeCreate,
+    db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
+):
     check_obj = crud.get_object_or_404(
         db=db, model=user_model.User, obj_id=obj_in.user_id
     )
@@ -185,6 +240,7 @@ def create_notice(
     user_id: int,
     obj_in: system_schema.NoticeUpdate,
     db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
 ):
     check_obj = crud.get_object_or_404(db=db, model=user_model.User, obj_id=user_id)
     if not check_obj.is_admin:
@@ -200,7 +256,12 @@ def create_notice(
 
 
 @router.delete("/notice/{notice_id}")
-def remove_notice(user_id: int, notice_id: int, db: Session = Depends(get_db)):
+def remove_notice(
+    user_id: int,
+    notice_id: int,
+    db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
+):
     check_obj = crud.get_object_or_404(db=db, model=user_model.User, obj_id=user_id)
     if not check_obj.is_admin:
         raise HTTPException(
@@ -215,13 +276,22 @@ def remove_notice(user_id: int, notice_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/contacts", response_model=system_schema.ContactListResponse)
-def read_contacts(db: Session = Depends(get_db), skip: int = 0, limit: int = 10):
+def read_contacts(
+    db: Session = Depends(get_db),
+    skip: int = 0,
+    limit: int = 10,
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
+):
     contacts, total_count = crud.contact.get_multi(db=db, skip=skip, limit=limit)
     return {"contacts": contacts, "total_count": total_count}
 
 
 @router.post("/contact", response_model=system_schema.ContactResponse)
-def create_contact(obj_in: system_schema.ContactCreate, db: Session = Depends(get_db)):
+def create_contact(
+    obj_in: system_schema.ContactCreate,
+    db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
+):
     check_user = crud.get_object_or_404(
         db=db, model=user_model.User, obj_id=obj_in.user_id
     )

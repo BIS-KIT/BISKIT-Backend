@@ -9,6 +9,7 @@ from fastapi.security import (
     HTTPBasic,
     HTTPBasicCredentials,
     HTTPBearer,
+    OAuth2PasswordBearer,
     HTTPAuthorizationCredentials,
 )
 from sqlalchemy.orm import Session
@@ -21,6 +22,7 @@ from core.config import settings
 
 security = HTTPBasic()
 bearer_security = HTTPBearer()
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
