@@ -111,7 +111,7 @@ class Alarm(
         )
         requester_nick_name = requester.nick_name
 
-        title = "모임 취소"
+        title = "모임 탈퇴"
         body = f"{requester_nick_name}님이 {meeting_name} 모임에서 나갔어요."
 
         icon_url = settings.S3_URL + "/default_icon/Thumbnail_Icon_Notify.svg"
@@ -218,6 +218,7 @@ class Alarm(
 
         icon_url = settings.S3_URL + "/default_icon/Thumbnail_reprot_icon.svg"
         data = {
+            "reporter_id": str(target_id),
             "icon_url": str(icon_url),
             "is_main_alarm": "False",
             "is_sub_alarm": "True",
