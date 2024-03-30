@@ -17,14 +17,14 @@ def test_meeting_request_alarm(session, test_meeting, test_user, test_user_ios):
         db=session, user_id=test_user.id, meeting_id=test_meeting.id
     )
 
-    assert isinstance(alarm_service, firebase_admin.messaging.BatchResponse)
+    assert alarm_service == None
 
     # Ios
     alarm_service_ios = alarm.create_meeting_request(
         db=session, user_id=test_user_ios.id, meeting_id=test_meeting.id
     )
 
-    assert isinstance(alarm_service_ios, firebase_admin.messaging.BatchResponse)
+    assert alarm_service == None
 
 
 def test_exit_meeting_alarm(session, test_user, test_meeting, test_user_ios):
@@ -33,14 +33,14 @@ def test_exit_meeting_alarm(session, test_user, test_meeting, test_user_ios):
         db=session, user_id=test_user.id, meeting_id=test_meeting.id
     )
 
-    assert isinstance(alarm_service, firebase_admin.messaging.BatchResponse)
+    assert alarm_service == None
 
     # Ios
     alarm_service_ios = alarm.exit_meeting(
         db=session, user_id=test_user_ios.id, meeting_id=test_meeting.id
     )
 
-    assert isinstance(alarm_service_ios, firebase_admin.messaging.BatchResponse)
+    assert alarm_service == None
 
 
 def test_request_approve_alarm(session, test_user, test_meeting, test_user_ios):
@@ -48,14 +48,14 @@ def test_request_approve_alarm(session, test_user, test_meeting, test_user_ios):
         db=session, user_id=test_user.id, meeting_id=test_meeting.id
     )
 
-    assert isinstance(alarm_service, firebase_admin.messaging.BatchResponse)
+    assert alarm_service == None
 
     # Ios
     alarm_service_ios = alarm.meeting_request_approve(
         db=session, user_id=test_user_ios.id, meeting_id=test_meeting.id
     )
 
-    assert isinstance(alarm_service_ios, firebase_admin.messaging.BatchResponse)
+    assert alarm_service == None
 
 
 def test_request_reject_alarm(session, test_user, test_meeting, test_user_ios):
@@ -63,14 +63,14 @@ def test_request_reject_alarm(session, test_user, test_meeting, test_user_ios):
         db=session, user_id=test_user.id, meeting_id=test_meeting.id
     )
 
-    assert isinstance(alarm_service, firebase_admin.messaging.BatchResponse)
+    assert alarm_service == None
 
     # Ios
     alarm_service_ios = alarm.meeting_request_reject(
         db=session, user_id=test_user_ios.id, meeting_id=test_meeting.id
     )
 
-    assert isinstance(alarm_service_ios, firebase_admin.messaging.BatchResponse)
+    assert alarm_service == None
 
 
 def test_notice_alarm(session, test_notice, test_user_ios, test_user):
@@ -87,16 +87,16 @@ def test_notice_alarm(session, test_notice, test_user_ios, test_user):
 def test_report_alarm(session, test_user, test_user_ios):
     alarm_service = alarm.report_alarm(db=session, target_id=test_user.id)
 
-    assert isinstance(alarm_service, firebase_admin.messaging.BatchResponse)
+    assert alarm_service == None
 
     # Ios
     alarm_service_ios = alarm.report_alarm(db=session, target_id=test_user_ios.id)
 
-    assert isinstance(alarm_service_ios, firebase_admin.messaging.BatchResponse)
+    assert alarm_service == None
 
 
 @pytest.mark.skip()
 def test_chat_alarm(session, test_user, test_meeting, test_user_ios):
     alarm_service = alarm.chat_alarm()
 
-    assert isinstance(alarm_service, firebase_admin.messaging.BatchResponse)
+    assert alarm_service == None

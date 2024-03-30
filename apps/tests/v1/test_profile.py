@@ -155,7 +155,7 @@ def test_update_profile(client, test_profile):
 
 
 def test_get_user_meetings_with_order_by(
-    session, client, test_user, test_topic, test_tag, test_language
+    session, client, test_user, test_topic, test_tag, test_language, test_university
 ):
     user_fixture = test_user
 
@@ -167,6 +167,7 @@ def test_get_user_meetings_with_order_by(
         test_tag=test_tag,
         test_language=test_language,
         meeting_time=now + timedelta(days=2),
+        university_id=test_university.id,
     )
 
     test_meeting2 = create_test_meeting(
@@ -176,6 +177,7 @@ def test_get_user_meetings_with_order_by(
         test_tag=test_tag,
         test_language=test_language,
         meeting_time=now + timedelta(days=1),
+        university_id=test_university.id,
     )
 
     test_meeting3 = create_test_meeting(
@@ -185,6 +187,7 @@ def test_get_user_meetings_with_order_by(
         test_tag=test_tag,
         test_language=test_language,
         meeting_time=now,
+        university_id=test_university.id,
     )
 
     response = client.get(
@@ -229,6 +232,7 @@ def test_get_user_meetings_with_status(
         test_tag=test_tag,
         test_language=test_language,
         meeting_time=now,
+        university_id=test_university.id,
     )
 
     approve_test_meeting = create_test_meeting(
@@ -238,12 +242,14 @@ def test_get_user_meetings_with_status(
         test_tag=test_tag,
         test_language=test_language,
         meeting_time=now,
+        university_id=test_university.id,
     )
     # test status filter
     status_test_user = create_test_user(
         session=session,
         test_nationality=test_nationality,
         test_university=test_university,
+        test_language=test_language,
     )
     pending_meeting_user = create_test_meeting_user(
         session=session,
