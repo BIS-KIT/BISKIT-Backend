@@ -1,5 +1,62 @@
 version: '3'
 services:
   backends:
+    container_name: backends
+    build:
+      context: .
+    ports:
+      - 80:80
+    volumes:
+      - ./apps:/apps
+      - ./requirements:/apps/requirements
+    stdin_open: true
+    tty: true
+    environment:
+      - TZ=Asia/Seoul
+    env_file:
+      - ".env"
+    depends_on:
+      - maindb
     command: >
       /bin/bash -c "alembic revision --autogenerate && alembic upgrade head && python -m uvicorn main:app --host 0.0.0.0 --port 80"
+
+  maindb:
+    container_name: maindb
+    image: postgres:16rc1
+    restart: always
+    volumes:
+      - app-db-data:/var/lib/postgresql/data
+      - ./init-user.sh:/docker-entrypoint-initdb.d/init-user.sh
+    env_file:
+      - ".env"
+    environment:
+      - TZ=Asia/Seoul
+      - POSTGRES_PASSWORD=${DB_ROOT_PASSWORD}
+      - POSTGRES_USER=postgres
+      - BISKIT_USER=${BISKIT_USER}
+      - BISKIT_USER_PW=${BISKIT_USER_PW}
+      - POSTGRES_DB=${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+
+  nginx:
+    container_name: nginx
+    build: ./nginx
+    ports:
+      - "8000:8000"
+    depends_on:
+      - backends
+    restart: always
+
+  redis:
+    container_name: redis
+    image: redis:6.2.6
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
+volumes:
+  app-db-data:
+  redis-data:
