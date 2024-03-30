@@ -61,7 +61,7 @@ def send_fcm_notification(
             log_error(e, type=LogTypeEnum.ALARM.value)
             continue
 
-    return response
+    return None
 
 
 class Alarm(
@@ -102,6 +102,31 @@ class Alarm(
             title=title,
             body=body,
             user_tokens=user_token,
+            data=data,
+        )
+
+    def cancle_meeting(self, db: Session, user_id: int, meeting_id: int):
+        """
+        모임 취소 및 삭제 알림 to 모임 신청자
+        """
+        meeting = crud.meeting.get(db=db, id=meeting_id)
+        all_usrs_dict = crud.user.read_all_chat_users(db=db, chat_id=meeting.chat_id)
+
+        title = "모임 취소"
+        body = f"{meeting.name} 모임이 취소되었어요."
+        icon_url = settings.S3_URL + "/default_icon/Thumbnail_Icon_Notify.svg"
+
+        data = {
+            "icon_url": str(icon_url),
+            "is_main_alarm": "True",
+            "is_sub_alarm": "False",
+        }
+
+        return send_fcm_notification(
+            db=db,
+            title=title,
+            body=body,
+            user_tokens=all_usrs_dict,
             data=data,
         )
 
@@ -190,7 +215,6 @@ class Alarm(
         )
 
     def notice_alarm(self, db: Session, title: str, content: str, notice_id: int):
-        # TODO : 모든 user에게 alarm 객체 만들어야함
         users = crud.user.get_all_users(db=db)
 
         user_tokens = {user.id: user.fcm_token for user in users}
