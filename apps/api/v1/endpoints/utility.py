@@ -81,7 +81,6 @@ def get_universities(
     db: Session = Depends(get_db),
     skip: int = 0,
     limit: Optional[int] = None,
-    token: Annotated[str, Depends(oauth2_scheme)] = None,
 ):
     if search:
         query = db.query(University).filter(
