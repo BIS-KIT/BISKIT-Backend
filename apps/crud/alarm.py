@@ -318,7 +318,7 @@ class Alarm(
         query = (
             db.query(alarm_model.Alarm)
             .filter(alarm_model.Alarm.user_id == user_id)
-            .order_by(alarm_model.Alarm.is_read, alarm_model.Alarm.id)
+            .order_by(alarm_model.Alarm.is_read, alarm_model.Alarm.created_time.desc())
         )
         total_count = query.count()
         return query.offset(skip).limit(limit).all(), total_count
