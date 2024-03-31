@@ -323,6 +323,7 @@ def delete_meeting(
 ):
     check_obj = crud.get_object_or_404(db=db, model=Meeting, obj_id=meeting_id)
     crud.meeting.remove(db=db, id=meeting_id)
+    alarm = crud.alarm.cancle_meeting(db=db, meeting_id=meeting_id)
     return status.HTTP_204_NO_CONTENT
 
 

@@ -105,7 +105,7 @@ class Alarm(
             data=data,
         )
 
-    def cancle_meeting(self, db: Session, user_id: int, meeting_id: int):
+    def cancle_meeting(self, db: Session, meeting_id: int):
         """
         모임 취소 및 삭제 알림 to 모임 신청자
         """
