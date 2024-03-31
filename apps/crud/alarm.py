@@ -105,15 +105,14 @@ class Alarm(
             data=data,
         )
 
-    def cancle_meeting(self, db: Session, meeting_id: int):
+    def cancle_meeting(
+        self, db: Session, meeting_name: str, user_tokens: Dict[int, str]
+    ):
         """
         모임 취소 및 삭제 알림 to 모임 신청자
         """
-        meeting = crud.meeting.get(db=db, id=meeting_id)
-        all_usrs_dict = crud.user.read_all_chat_users(db=db, chat_id=meeting.chat_id)
-
         title = "모임 취소"
-        body = f"{meeting.name} 모임이 취소되었어요."
+        body = f"{meeting_name} 모임이 취소되었어요."
         icon_url = settings.S3_URL + "/default_icon/Thumbnail_Icon_Notify.svg"
 
         data = {
@@ -126,7 +125,7 @@ class Alarm(
             db=db,
             title=title,
             body=body,
-            user_tokens=all_usrs_dict,
+            user_tokens=user_tokens,
             data=data,
         )
 

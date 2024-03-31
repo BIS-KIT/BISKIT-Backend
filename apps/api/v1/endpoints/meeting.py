@@ -322,8 +322,14 @@ def delete_meeting(
     token: Annotated[str, Depends(oauth2_scheme)] = None,
 ):
     check_obj = crud.get_object_or_404(db=db, model=Meeting, obj_id=meeting_id)
+
+    meeting_name = check_obj.name
+    chat_id = check_obj.chat_id
+
+    all_users_list = crud.user.read_all_chat_users(db=db, chat_id=chat_id)
+
     crud.meeting.remove(db=db, id=meeting_id)
-    alarm = crud.alarm.cancle_meeting(db=db, meeting_id=meeting_id)
+    alarm = crud.alarm.cancle_meeting(db=db, meeting_name=meeting_name, user_tokens=all_users_list)
     return status.HTTP_204_NO_CONTENT
 
 
