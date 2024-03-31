@@ -47,3 +47,18 @@ def read_alarm(
 
     alarm_obj = crud.alarm.read_alarm(db=db, alarm_id=alarm_id)
     return alarm_obj
+
+
+@router.delete("/alarms/{user_id}")
+def remove_read_alarm(
+    user_id: int,
+    db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
+):
+    """
+    읽은 알림 삭제하기
+    """
+    check_user = crud.get_object_or_404(db=db, model=user_models.User, obj_id=user_id)
+
+    delete_alarm = crud.alarm.delete_alarms(db=db, user_id=user_id)
+    return status.HTTP_204_NO_CONTENT

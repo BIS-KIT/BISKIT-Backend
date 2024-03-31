@@ -323,5 +323,14 @@ class Alarm(
         total_count = query.count()
         return query.offset(skip).limit(limit).all(), total_count
 
+    def delete_alarms(self, db: Session, user_id: int):
+        query = (
+            db.query(alarm_model.Alarm)
+            .filter(alarm_model.Alarm.user_id == user_id)
+            .delete()
+        )
+        db.commit()
+        return None
+
 
 alarm = Alarm(alarm_model.Alarm)
