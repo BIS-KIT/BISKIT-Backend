@@ -1,10 +1,11 @@
-from typing import Any, List, Optional, Dict
+from typing import Any, List, Optional, Dict, Annotated
 
 from fastapi import APIRouter, Body, Depends, UploadFile, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, asc, desc
 
 import crud
+from core.security import oauth2_scheme
 from log import log_error
 from database.session import get_db
 from schemas.utility import (
@@ -16,7 +17,7 @@ from schemas.utility import (
 )
 from schemas.enum import ImageSourceEnum
 from models.utility import Language, University, Nationality, OsLanguage
-
+from core.redis_driver import redis_driver
 
 router = APIRouter()
 
@@ -28,6 +29,7 @@ def get_languages(
     db: Session = Depends(get_db),
     skip: int = 0,
     limit: Optional[int] = None,
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
 ):
     """
     데이터베이스에서 언어 목록을 검색하여 반환합니다.
@@ -79,6 +81,7 @@ def get_universities(
     db: Session = Depends(get_db),
     skip: int = 0,
     limit: Optional[int] = None,
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
 ):
     if search:
         query = db.query(University).filter(
@@ -107,6 +110,7 @@ def get_countries(
     db: Session = Depends(get_db),
     skip: int = 0,
     limit: Optional[int] = None,
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
 ):
     if search:
         query = db.query(Nationality).filter(
@@ -135,7 +139,10 @@ def get_countries(
 
 @router.get("/tags", response_model=List[TagResponse])
 def read_tags(
-    is_custom: bool = None, is_home: bool = False, db: Session = Depends(get_db)
+    is_custom: bool = None,
+    is_home: bool = False,
+    db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
 ):
     """
     is_costem == None : 모든 tag
@@ -150,7 +157,11 @@ def read_tags(
 
 
 @router.get("/topics", response_model=List[TopicResponse])
-def read_topics(is_custom: bool = None, db: Session = Depends(get_db)):
+def read_topics(
+    is_custom: bool = None,
+    db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
+):
     """
     is_costem == None : 모든 tag
     is_costem == True : 사용자가 생성한 tag
@@ -162,7 +173,10 @@ def read_topics(is_custom: bool = None, db: Session = Depends(get_db)):
 
 @router.post("/upload/image")
 def upload_image_to_s3(
-    image_source: ImageSourceEnum, photo: UploadFile, db: Session = Depends(get_db)
+    image_source: ImageSourceEnum,
+    photo: UploadFile,
+    db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
 ):
     """
     s3 upload
@@ -196,10 +210,29 @@ def upload_image_to_s3(
 
 
 @router.get("/icon/setting")
-def set_icon(db: Session = Depends(get_db)):
+def set_icon(
+    db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
+):
     crud.utility.set_default_icon(db=db)
 
 
 @router.get("/icon/png")
-def set_png(db: Session = Depends(get_db)):
+def set_png(
+    db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
+):
     crud.utility.png_to_svg(db=db)
+
+
+@router.get("/check-cache/{key}")
+async def get_value(key: str):
+    """
+    Cache에 저장된 값 확인
+    """
+    if not redis_driver.redis_client:
+        raise HTTPException(status_code=503, detail="Redis connection not initialized")
+    value = await redis_driver.redis_client.get(key, encoding="utf-8")
+    if value is None:
+        raise HTTPException(status_code=404, detail="Key not found")
+    return {"key": key, "value": value}

@@ -1,5 +1,5 @@
 import httpx, shutil, re
-from typing import Any, List, Optional, Dict
+from typing import Any, List, Optional, Dict, Annotated
 import random
 import asyncio
 
@@ -21,6 +21,7 @@ from pydantic.networks import EmailStr
 from sqlalchemy.orm import Session
 
 import crud
+from core.security import oauth2_scheme
 from database.session import get_db
 from core.config import settings
 from schemas.profile import (
@@ -41,7 +42,9 @@ router = APIRouter()
 
 @router.get("/profile/photos")
 def get_profile_photos(
-    user_ids: List[str] = Query(None), db: Session = Depends(get_db)
+    user_ids: List[str] = Query(None),
+    db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
 ):
     """
     user_ids 받아서 해당 user의 photo, nick-name return
@@ -73,7 +76,10 @@ def get_profile_photos(
 
 @router.post("/profile/photo")
 def update_profile_photo(
-    is_profile: bool, photo: UploadFile, db: Session = Depends(get_db)
+    is_profile: bool,
+    photo: UploadFile,
+    db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
 ):
     """
     photo upload API
@@ -97,7 +103,11 @@ def update_profile_photo(
 
 
 @router.get("/profile/nick-name")
-async def check_nick_name(nick_name: str, db: Session = Depends(get_db)):
+async def check_nick_name(
+    nick_name: str,
+    db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
+):
     """
     닉네임 사용 가능 여부 확인 API
 
@@ -145,7 +155,11 @@ def get_random_image():
 
 
 @router.get("/profile/random-nickname")
-async def get_random_nickname(os_lang: str = "kr", db: Session = Depends(get_db)):
+async def get_random_nickname(
+    os_lang: str = "kr",
+    db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
+):
     kr_nick_name, en_nick_name = None, None
     if os_lang == "kr":
         async with httpx.AsyncClient() as client:
@@ -184,6 +198,7 @@ def student_varification(
     student_card: str,
     user_id: int,
     db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
 ):
     """
     학생증 인증 정보를 제출합니다.
@@ -219,9 +234,10 @@ def student_varification(
 
 
 @router.get("/student-card/{user_id}", response_model=StudentVerificationBase)
-def student_varification(
+def read_student_varification(
     user_id: int,
     db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
 ):
     """
     특정 사용자의 학생증 인증 정보를 조회합니다.
@@ -248,7 +264,10 @@ def student_varification(
 
 
 @router.get("/student-cards", response_model=List[StudentVerificationBase])
-def read_student_cards(db: Session = Depends(get_db)):
+def read_student_cards(
+    db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
+):
     """
     학생증 인증을 대기 중인 목록을 반환합니다.
 
@@ -263,7 +282,11 @@ def read_student_cards(db: Session = Depends(get_db)):
 
 
 @router.delete("/profile/user/{user_id}")
-def delete_profile_by_user(user_id: int, db: Session = Depends(get_db)):
+def delete_profile_by_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
+):
     """
     사용자 ID를 기반으로 프로필 삭제 API
     """
@@ -277,7 +300,11 @@ def delete_profile_by_user(user_id: int, db: Session = Depends(get_db)):
 
 
 @router.delete("/profile/{user_id}/photo")
-async def delete_profile_photo(user_id: int, db: Session = Depends(get_db)):
+async def delete_profile_photo(
+    user_id: int,
+    db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
+):
     """
     사용자 프로필 사진 삭제 API.
 
@@ -298,7 +325,9 @@ async def delete_profile_photo(user_id: int, db: Session = Depends(get_db)):
 
 @router.get("/profile/{user_id}", response_model=ProfileResponse)
 def get_profile_by_user_id(
-    user_id: int = Path(..., title="The ID of the user"), db: Session = Depends(get_db)
+    user_id: int = Path(..., title="The ID of the user"),
+    db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
 ):
     """
     user_id를 이용하여 프로필 정보를 가져옵니다.
@@ -317,7 +346,11 @@ def get_profile_by_user_id(
 
 
 @router.delete("/profile/{profile_id}")
-def delete_profile(profile_id: int, db: Session = Depends(get_db)):
+def delete_profile(
+    profile_id: int,
+    db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
+):
     """
     프로필 삭제 API
 
@@ -343,6 +376,7 @@ def create_profile(
     profile: ProfileRegister,
     user_id: int = Query(...),
     db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
 ):
     """
     Profile 생성 API
@@ -385,11 +419,16 @@ def create_profile(
     return new_profile
 
 
-@router.put("/profile/{profile_id}", status_code=status.HTTP_200_OK)
+@router.put(
+    "/profile/{profile_id}",
+    response_model=ProfileResponse,
+    status_code=status.HTTP_200_OK,
+)
 def update_profile(
     profile_id: int,
     profile_in: ProfileUpdate,
     db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
 ):
     """
     사용자 프로필 업데이트 API
@@ -426,7 +465,7 @@ def update_profile(
         new_profile = crud.profile.update(
             db=db, db_obj=existing_profile, obj_in=profile_in
         )
-        return {"status": "Profile updated successfully"}
+        return new_profile
     except Exception as e:
         log_error(e)
         raise HTTPException(status_code=500, detail="Error updating profile")
@@ -440,6 +479,7 @@ def get_user_meetings(
     db: Session = Depends(get_db),
     skip: int = 0,
     limit: int = 10,
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
 ):
     """
     User 모임 리스트

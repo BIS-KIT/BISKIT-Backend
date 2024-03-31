@@ -1,12 +1,12 @@
 from datetime import date
-from pydantic import EmailStr, BaseModel, computed_field, Field
+from pydantic import ConfigDict, BaseModel, computed_field, Field
 
 from typing import Optional, List, Union
 from fastapi import UploadFile
 
 from schemas.base import CoreSchema
 from schemas.utility import LanguageBase, UniversityBase
-from schemas.enum import ReultStatusEnum, LanguageLevel
+from schemas.enum import ReultStatusEnum, LanguageLevelEnum
 
 
 class StudentVerificationBase(CoreSchema):
@@ -14,8 +14,7 @@ class StudentVerificationBase(CoreSchema):
     student_card: Optional[Union[str, UploadFile]] = None
     verification_status: Optional[str] = ReultStatusEnum.UNVERIFIED.value
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class StudentVerificationReponse(BaseModel):
@@ -23,8 +22,7 @@ class StudentVerificationReponse(BaseModel):
     student_card: Optional[Union[str, UploadFile]] = None
     verification_status: str = ReultStatusEnum.UNVERIFIED.value
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class StudentVerificationCreate(BaseModel):
@@ -51,8 +49,7 @@ class ProfileBase(CoreSchema):
 
 # 프로필 생성을 위한 스키마
 class ProfileCreate(ProfileBase):
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ProfilePhoto(BaseModel):
@@ -71,7 +68,7 @@ class AvailableLanguageCreate(BaseModel):
     profile_id: Optional[int] = None
 
     class Meta:
-        orm_mode = True
+        from_attributes = True
 
 
 class AvailableLanguageIn(BaseModel):
@@ -85,8 +82,7 @@ class AvailableLanguageUpdate(BaseModel):
 
 
 class AvailableLanguageResponse(AvailableLanguageBase):
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class IntroductionBase(CoreSchema):
@@ -96,8 +92,7 @@ class IntroductionBase(CoreSchema):
 
 
 class IntroductionResponse(IntroductionBase):
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class IntroductionCreate(BaseModel):
@@ -120,16 +115,14 @@ class ProfileCreateLanguage(BaseModel):
     level: Optional[str]
     language_id: Optional[int]
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class IntroductCreateLanguage(BaseModel):
     keyword: Optional[str] = None
     context: Optional[str] = None
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ProfileUniversityBase(BaseModel):
@@ -137,7 +130,7 @@ class ProfileUniversityBase(BaseModel):
     education_status: Optional[str] = None
 
     class Meta:
-        orm_mode = True
+        from_attributes = True
 
 
 class ProfileUniversityUpdate(ProfileUniversityBase):
@@ -148,7 +141,7 @@ class ProfileUniversityResponse(ProfileUniversityBase):
     university: Optional[UniversityBase] = None
 
     class Meta:
-        orm_mode = True
+        from_attributes = True
 
 
 class ProfileResponse(BaseModel):
@@ -165,9 +158,7 @@ class ProfileResponse(BaseModel):
     student_verification: Optional[StudentVerificationReponse] = None
     user_university: Optional[ProfileUniversityResponse] = None
 
-    class Config:
-        orm_mode = True
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
     @computed_field
     @property
@@ -175,7 +166,7 @@ class ProfileResponse(BaseModel):
         if self.available_language_list:
             return_obj = sorted(
                 self.available_language_list,
-                key=lambda lang: LanguageLevel[lang.level].value,
+                key=lambda lang: LanguageLevelEnum[lang.level].value,
                 reverse=False,  # 내림차순 정렬을 원할 경우 True로 설정
             )
             return return_obj
