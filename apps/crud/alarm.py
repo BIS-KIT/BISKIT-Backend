@@ -326,7 +326,9 @@ class Alarm(
     def delete_alarms(self, db: Session, user_id: int):
         query = (
             db.query(alarm_model.Alarm)
-            .filter(alarm_model.Alarm.user_id == user_id)
+            .filter(
+                alarm_model.Alarm.user_id == user_id, alarm_model.Alarm.is_read == True
+            )
             .delete()
         )
         db.commit()
