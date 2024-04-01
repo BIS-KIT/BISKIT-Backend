@@ -299,14 +299,14 @@ class Alarm(
         #     if user_id not in connecting_users
         # }
 
-        remaining_users_fcm = [
-            fcm_token
+        remaining_users_fcm = {
+            user_id: fcm_token
             for user_id, fcm_token in chat_users_dict.items()
             if user_id not in connecting_users
-        ]
+        }
 
         send_fcm_notification(
-            title=meeting_name, body=content, fcm_tokens=remaining_users_fcm, data=data
+            title=meeting_name, body=content, user_tokens=remaining_users_fcm, data=data
         )
 
         # TODO : 각 유저의 차단 유저 제외

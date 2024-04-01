@@ -175,7 +175,6 @@ def join_meeting_request(
     alarm = crud.alarm.create_meeting_request(
         db=db, user_id=obj_in.user_id, meeting_id=obj_in.meeting_id
     )
-    print(222, alarm)
     return status.HTTP_201_CREATED
 
 
@@ -329,7 +328,9 @@ def delete_meeting(
     all_users_list = crud.user.read_all_chat_users(db=db, chat_id=chat_id)
 
     crud.meeting.remove(db=db, id=meeting_id)
-    alarm = crud.alarm.cancle_meeting(db=db, meeting_name=meeting_name, user_tokens=all_users_list)
+    alarm = crud.alarm.cancle_meeting(
+        db=db, meeting_name=meeting_name, user_tokens=all_users_list
+    )
     return status.HTTP_204_NO_CONTENT
 
 
@@ -545,4 +546,11 @@ def read_chat_alarm(obj_in: ChatAlarm, db: Session = Depends(get_db)):
     """
 
     # chat_alarm 함수를 호출하여 데이터 가져오기
-    return crud.alarm.chat_alarm(db=db, chat_id=obj_in.chat_id, content=obj_in.content)
+    try:
+        result = crud.alarm.chat_alarm(
+            db=db, chat_id=obj_in.chat_id, content=obj_in.content
+        )
+    except Exception as e:
+        log_error(e)
+        raise e
+    return status.HTTP_201_CREATED
