@@ -16,6 +16,7 @@ from core.redis_driver import redis_driver
 from admin.base import register_all, templates_dir, AdminAuth
 from api.v1.router import api_router as v1_router
 from scheduler_module import meeting_active_check, user_remove_after_seven
+from init_data import run_init_data
 
 
 with open("encoded_key.txt", "r") as file:
@@ -66,6 +67,8 @@ async def start_event():
     scheduler.add_job(meeting_active_check, "interval", minutes=1)
     scheduler.add_job(user_remove_after_seven, "interval", minutes=1)
     scheduler.start()
+
+    run_init_data()
 
     # redis connect
     await redis_driver.connect()
