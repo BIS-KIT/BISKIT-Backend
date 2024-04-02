@@ -1,9 +1,9 @@
-from typing import Any, List, Optional, Dict
+from typing import Any, List, Optional, Dict, Annotated
 from random import randint
 from datetime import timedelta, datetime
 import re, traceback
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Form
 from sqlalchemy.orm import Session
 from jose import jwt, JWTError, ExpiredSignatureError
 from sqlalchemy.exc import IntegrityError
@@ -76,6 +76,46 @@ def register_user(
 
     return_token_dict = create_tokens_for_user(user=new_user)
     return return_token_dict
+
+
+@router.post("/token", response_model=Dict[str, Any])
+def login_for_openapi(
+    username: Annotated[str, Form()],
+    password: Annotated[str, Form()],
+    db: Session = Depends(get_db),
+):
+    if username:
+        user = crud.user.get_by_email(db=db, email=username)
+        if not user:
+            raise HTTPException(status_code=400, detail="User Not Found")
+    else:
+        raise HTTPException(status_code=400, detail="Incorrect credentials")
+
+    if not user.is_active:
+        raise HTTPException(
+            status_code=400, detail="Account in the process of withdrawal"
+        )
+
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    if user.email:
+        token_data = {"sub": user.email, "auth_method": "email"}
+    else:
+        token_data = {
+            "sub": user.sns_id,
+            "sns_type": user.sns_type,
+            "auth_method": "sns",
+        }
+
+    access_token = create_access_token(
+        data=token_data, expires_delta=access_token_expires
+    )
+    refresh_token = create_refresh_token(data=token_data)
+
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "refresh_token": refresh_token,
+    }
 
 
 @router.post("/login", response_model=Dict[str, Any])

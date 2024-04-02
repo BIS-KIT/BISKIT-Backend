@@ -432,6 +432,7 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
             else:
                 meeting.foreign_count = meeting.foreign_count + 1
 
+        db.commit()
         return join_request
 
     def join_request_reject(self, db: Session, obj_id: int):

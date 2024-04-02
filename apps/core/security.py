@@ -22,7 +22,7 @@ from core.config import settings
 
 security = HTTPBasic()
 bearer_security = HTTPBearer()
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="v1/token")
 
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None):

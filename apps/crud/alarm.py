@@ -105,15 +105,14 @@ class Alarm(
             data=data,
         )
 
-    def cancle_meeting(self, db: Session, meeting_id: int):
+    def cancle_meeting(
+        self, db: Session, meeting_name: str, user_tokens: Dict[int, str]
+    ):
         """
         모임 취소 및 삭제 알림 to 모임 신청자
         """
-        meeting = crud.meeting.get(db=db, id=meeting_id)
-        all_usrs_dict = crud.user.read_all_chat_users(db=db, chat_id=meeting.chat_id)
-
         title = "모임 취소"
-        body = f"{meeting.name} 모임이 취소되었어요."
+        body = f"{meeting_name} 모임이 취소되었어요."
         icon_url = settings.S3_URL + "/default_icon/Thumbnail_Icon_Notify.svg"
 
         data = {
@@ -126,7 +125,7 @@ class Alarm(
             db=db,
             title=title,
             body=body,
-            user_tokens=all_usrs_dict,
+            user_tokens=user_tokens,
             data=data,
         )
 
@@ -300,14 +299,14 @@ class Alarm(
         #     if user_id not in connecting_users
         # }
 
-        remaining_users_fcm = [
-            fcm_token
+        remaining_users_fcm = {
+            user_id: fcm_token
             for user_id, fcm_token in chat_users_dict.items()
             if user_id not in connecting_users
-        ]
+        }
 
         send_fcm_notification(
-            title=meeting_name, body=content, fcm_tokens=remaining_users_fcm, data=data
+            title=meeting_name, body=content, user_tokens=remaining_users_fcm, data=data
         )
 
         # TODO : 각 유저의 차단 유저 제외
@@ -319,10 +318,21 @@ class Alarm(
         query = (
             db.query(alarm_model.Alarm)
             .filter(alarm_model.Alarm.user_id == user_id)
-            .order_by(alarm_model.Alarm.is_read, alarm_model.Alarm.id)
+            .order_by(alarm_model.Alarm.is_read, alarm_model.Alarm.created_time.desc())
         )
         total_count = query.count()
         return query.offset(skip).limit(limit).all(), total_count
+
+    def delete_alarms(self, db: Session, user_id: int):
+        query = (
+            db.query(alarm_model.Alarm)
+            .filter(
+                alarm_model.Alarm.user_id == user_id, alarm_model.Alarm.is_read == True
+            )
+            .delete()
+        )
+        db.commit()
+        return None
 
 
 alarm = Alarm(alarm_model.Alarm)
