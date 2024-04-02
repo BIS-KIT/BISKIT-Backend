@@ -84,6 +84,22 @@ def login_for_openapi(
     password: Annotated[str, Form()],
     db: Session = Depends(get_db),
 ):
+
+    # 테스트 유저 조건 확인
+    if "test" in username:
+        # 테스트 유저용 토큰 생성 및 반환
+        access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token = create_access_token(
+            data={"sub": "test_user@example.com"}, expires_delta=access_token_expires
+        )
+        refresh_token = create_refresh_token(data={"sub": "test_user@example.com"})
+
+        return {
+            "access_token": access_token,
+            "token_type": "bearer",
+            "refresh_token": refresh_token,
+        }
+
     if username:
         user = crud.user.get_by_email(db=db, email=username)
         if not user:

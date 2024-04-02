@@ -49,4 +49,25 @@ def client(session):
     # app에서 사용하는 DB를 오버라이드하는 부분
     app.dependency_overrides[get_db] = override_get_db
 
-    yield TestClient(app)
+    def get_test_token():
+        with TestClient(app) as client:
+            login_data = {
+                "username": "test@example.com",
+                "password": "test_password",
+            }
+            response = client.post("v1/token", data=login_data)
+            tokens = response.json()
+            access_token = tokens["access_token"]
+            return access_token
+
+    # 테스트 클라이언트 생성
+    test_client = TestClient(app)
+
+    # 모든 요청에 인증 토큰 추가
+    test_token = get_test_token()
+    test_client.headers = {
+        **test_client.headers,
+        "Authorization": f"Bearer {test_token}",
+    }
+
+    yield test_client

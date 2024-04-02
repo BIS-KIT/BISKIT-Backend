@@ -208,14 +208,6 @@ def upload_image_to_s3(
     return {"image_url": image_url}
 
 
-@router.get("/icon/setting")
-def set_icon(
-    db: Session = Depends(get_db),
-    token: Annotated[str, Depends(oauth2_scheme)] = None,
-):
-    crud.utility.set_default_icon(db=db)
-
-
 @router.get("/icon/png")
 def set_png(
     db: Session = Depends(get_db),
