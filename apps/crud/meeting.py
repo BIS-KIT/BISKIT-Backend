@@ -1,12 +1,15 @@
+import json
 from typing import Any, Dict, Optional, Union, List
 from datetime import datetime, timedelta
 
 from sqlalchemy import desc, asc, func, extract, and_, or_, not_
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.inspection import inspect
 from fastapi import HTTPException
 
 from crud.base import CRUDBase
+from core.redis_driver import redis_driver
 from log import log_error
 import crud
 from models.meeting import (
@@ -333,6 +336,24 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
     ) -> List[Meeting]:
         query = db.query(Meeting).filter(Meeting.is_active == is_active)
 
+        cache_key = redis_driver.generate_cache_key(
+            order_by,
+            skip,
+            limit,
+            creator_nationality,
+            user_id,
+            is_active,
+            tags_ids,
+            topics_ids,
+            time_filters,
+            is_count_only,
+            search_word,
+        )
+
+        if redis_driver.is_cached(key=cache_key):
+            cached_data = redis_driver.get_value(key=cache_key)
+            return cached_data, len(cached_data)
+
         if user_id:
             query = self.filter_by_ban(db, query, user_id)
 
@@ -383,7 +404,26 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
         if is_count_only:
             return [], total_count
 
-        return query.offset(skip).limit(limit).all(), total_count
+        def model_to_dict(model_instance):
+            return {
+                c.key: (
+                    getattr(model_instance, c.key).strftime("%Y-%m-%d %H:%M:%S")
+                    if isinstance(getattr(model_instance, c.key), datetime)
+                    else getattr(model_instance, c.key)
+                )
+                for c in inspect(model_instance).mapper.column_attrs
+            }
+
+        # TODO : 현재 meeting_users 필드가 문제인데, 이것을 직렬화 해줄지 or 굳이 필요한지 고민필요
+        meeting_list = query.offset(skip).limit(limit).all()
+        meeting_list_dict = [model_to_dict(meeting) for meeting in meeting_list]
+
+        redis_driver.set_value(
+            key=cache_key,
+            value=json.dumps(meeting_list_dict),
+        )
+
+        return meeting_list, total_count
 
     def get_requests(
         self, db: Session, meeting_id: int, skip: int, limit: int
