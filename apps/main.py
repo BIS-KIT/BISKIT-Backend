@@ -68,19 +68,16 @@ async def start_event():
     scheduler.add_job(user_remove_after_seven, "interval", minutes=1)
     scheduler.start()
 
-    run_init_data()
+    # run_init_data()
 
     # redis connect
-    await redis_driver.connect()
+    redis_driver.connect()
 
 
 @app.on_event("shutdown")
 async def shutdown_event():
     # 스케줄러 종료
     scheduler.shutdown()
-
-    # redis disconnect
-    await redis_driver.disconnect()
 
 
 # Set all CORS enabled origins
