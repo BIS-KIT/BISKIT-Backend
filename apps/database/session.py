@@ -14,7 +14,6 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 
-@contextmanager
 def get_db() -> Generator:
     """
     호출되면 DB 연결하고 작업 완료되면 close
