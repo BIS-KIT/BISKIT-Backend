@@ -24,7 +24,7 @@ alarm_handler = RotatingFileHandler(
     backupCount=1,
 )
 
-logger = logging.getLogger("biskit")
+logger = logging.getLogger("uvicorn")
 scheduler_logger = logging.getLogger("scheduler")
 alarm_logger = logging.getLogger("alarm")
 
