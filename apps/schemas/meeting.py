@@ -148,12 +148,15 @@ class MeetingSummaryResponse(CoreSchema, MeetingBase, MeetingCountBase):
 
     university_id: Optional[int]
 
-    meeting_tags: Optional[List[MeetingTagBase]] = Field(exclude=True)
+    meeting_tags: Optional[List[MeetingTagBase]] = Field(None, exclude=True)
 
     @computed_field
     @property
     def tags(self) -> List[TagResponse]:
-        return [meeting_tag.tag for meeting_tag in self.meeting_tags]
+        if self.meeting_tags:
+            return [meeting_tag.tag for meeting_tag in self.meeting_tags]
+        else:
+            return []
 
     model_config = ConfigDict(from_attributes=True)
 
