@@ -1,4 +1,12 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Boolean
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    ForeignKey,
+    DateTime,
+    Boolean,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.hybrid import hybrid_property
 
@@ -65,6 +73,11 @@ class MeetingUser(ModelBase):
         "User", backref=backref("meeting_users", cascade="all, delete-orphan")
     )
     meeting = relationship("Meeting", back_populates="meeting_users")
+
+    # 복합 유니크 인덱스 추가(need tuple)
+    __table_args__ = (
+        UniqueConstraint("user_id", "meeting_id", name="meeting_user_uc"),
+    )
 
 
 class MeetingLanguage(ModelBase):
