@@ -24,13 +24,15 @@ alarm_handler = RotatingFileHandler(
     backupCount=1,
 )
 
+
 sql_handler = RotatingFileHandler(
     f"{current_directory}/logging/sql_log",
     maxBytes=1024 * 1024 * 10,
     backupCount=1,
 )
 
-logger = logging.getLogger("biskit")
+
+logger = logging.getLogger("uvicorn")
 scheduler_logger = logging.getLogger("scheduler")
 alarm_logger = logging.getLogger("alarm")
 sql_logger = logging.getLogger("sqlalchemy.engine")
