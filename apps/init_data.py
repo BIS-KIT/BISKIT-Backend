@@ -1,7 +1,7 @@
 import pandas as pd
 from sqlalchemy.orm import Session
 from models.utility import Language, Nationality, University, Topic, Tag
-from database.session import get_db
+from database.session import SessionLocal
 from core.config import settings
 
 # B4:C147 범위 추출 (0부터 시작하는 인덱스를 기준으로)
@@ -24,81 +24,86 @@ university_scope = pd.read_excel("DataSet.xlsx", sheet_name=2, header=None).iloc
 
 def get_nationality():
     subset = national_scope
-    with get_db() as db:
-        try:
-            for _, row in subset.iterrows():
-                kr_name = str(row[subset.columns[0]])
-                en_name = str(row[subset.columns[1]])
-                code = str(row[subset.columns[2]]).lower()
-                # 해당 국적이 이미 DB에 있는지 확인
-                existing_nationality = (
-                    db.query(Nationality).filter_by(kr_name=kr_name).first()
-                )
+    db = SessionLocal()
 
-                # 없으면 새로 추가
-                if not existing_nationality:
-                    nationality = Nationality(
-                        kr_name=kr_name, en_name=en_name, code=code
-                    )
-                    db.add(nationality)
+    try:
+        for _, row in subset.iterrows():
+            kr_name = str(row[subset.columns[0]])
+            en_name = str(row[subset.columns[1]])
+            code = str(row[subset.columns[2]]).lower()
+            # 해당 국적이 이미 DB에 있는지 확인
+            existing_nationality = (
+                db.query(Nationality).filter_by(kr_name=kr_name).first()
+            )
 
-            db.commit()
-        except Exception as e:
-            print(f"Error: {e}")  # 오류 메시지 출력
-            db.rollback()
+            # 없으면 새로 추가
+            if not existing_nationality:
+                nationality = Nationality(kr_name=kr_name, en_name=en_name, code=code)
+                db.add(nationality)
+
+        db.commit()
+    except Exception as e:
+        print(f"Error: {e}")  # 오류 메시지 출력
+        db.rollback()
+    finally:
+        db.close()
 
 
 def get_language():
     subset = language_scope
-    with get_db() as db:
-        try:
-            for _, row in subset.iterrows():
-                kr_name = row[subset.columns[0]]
-                en_name = row[subset.columns[1]]
+    db = SessionLocal()
 
-                # 해당 언어가 이미 DB에 있는지 확인
-                existing_language = (
-                    db.query(Language).filter_by(kr_name=kr_name).first()
-                )
+    try:
+        for _, row in subset.iterrows():
+            kr_name = row[subset.columns[0]]
+            en_name = row[subset.columns[1]]
 
-                # 없으면 새로 추가
-                if not existing_language:
-                    language = Language(kr_name=kr_name, en_name=en_name)
-                    db.add(language)
+            # 해당 언어가 이미 DB에 있는지 확인
+            existing_language = db.query(Language).filter_by(kr_name=kr_name).first()
 
-            db.commit()
-        except Exception as e:
-            print(f"Error: {e}")  # 오류 메시지 출력
-            db.rollback()
+            # 없으면 새로 추가
+            if not existing_language:
+                language = Language(kr_name=kr_name, en_name=en_name)
+                db.add(language)
+
+        db.commit()
+    except Exception as e:
+        print(f"Error: {e}")  # 오류 메시지 출력
+        db.rollback()
+    finally:
+        db.close()
 
 
 def get_university():
     subset = university_scope
-    with get_db() as db:
-        try:
-            for _, row in subset.iterrows():
-                kr_name = str(row[subset.columns[3]]) or None
-                en_name = str(row[subset.columns[4]]) or None
-                campus_type = str(row[subset.columns[5]]) or None
-                location = str(row[subset.columns[6]]) or None
+    db = SessionLocal()
 
-                existing_university = (
-                    db.query(University).filter(University.kr_name == kr_name).first()
+    try:
+        for _, row in subset.iterrows():
+            kr_name = str(row[subset.columns[3]]) or None
+            en_name = str(row[subset.columns[4]]) or None
+            campus_type = str(row[subset.columns[5]]) or None
+            location = str(row[subset.columns[6]]) or None
+
+            existing_university = (
+                db.query(University).filter(University.kr_name == kr_name).first()
+            )
+
+            if not existing_university:
+                university_obj = University(
+                    kr_name=kr_name,
+                    en_name=en_name,
+                    campus_type=campus_type,
+                    location=location,
                 )
+                db.add(university_obj)
 
-                if not existing_university:
-                    university_obj = University(
-                        kr_name=kr_name,
-                        en_name=en_name,
-                        campus_type=campus_type,
-                        location=location,
-                    )
-                    db.add(university_obj)
-
-            db.commit()
-        except Exception as e:
-            print(f"Error: {e}")
-            db.rollback()
+        db.commit()
+    except Exception as e:
+        print(f"Error: {e}")
+        db.rollback()
+    finally:
+        db.close()
 
 
 def create_fix_topics_tags():
@@ -127,29 +132,31 @@ def create_fix_topics_tags():
         },
     }
 
-    with get_db() as db:
-        try:
-            for kr, (en, icon_image) in init_data["topics"].items():
-                topic = db.query(Topic).filter(Topic.kr_name == kr).first()
-                if not topic:
-                    topic = Topic(
-                        kr_name=kr,
-                        en_name=en,
-                        is_custom=False,
-                        icon_url=base_url + icon_image,
-                    )
-                    db.add(topic)
+    db = SessionLocal()
+    try:
+        for kr, (en, icon_image) in init_data["topics"].items():
+            topic = db.query(Topic).filter(Topic.kr_name == kr).first()
+            if not topic:
+                topic = Topic(
+                    kr_name=kr,
+                    en_name=en,
+                    is_custom=False,
+                    icon_url=base_url + icon_image,
+                )
+                db.add(topic)
 
-            for kr, (en, icon) in init_data["tags"].items():
-                if not db.query(Tag).filter(Tag.kr_name == kr).first():
-                    tag = Tag(kr_name=kr, en_name=en, is_custom=False, icon=icon)
-                    db.add(tag)
+        for kr, (en, icon) in init_data["tags"].items():
+            if not db.query(Tag).filter(Tag.kr_name == kr).first():
+                tag = Tag(kr_name=kr, en_name=en, is_custom=False, icon=icon)
+                db.add(tag)
 
-            db.commit()
+        db.commit()
 
-        except Exception as e:
-            print(f"Error: {e}")
-            db.rollback()
+    except Exception as e:
+        print(f"Error: {e}")
+        db.rollback()
+    finally:
+        db.close()
 
     return {"message": "Items created or updated successfully"}
 

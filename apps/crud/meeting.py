@@ -1,12 +1,15 @@
+import json
 from typing import Any, Dict, Optional, Union, List
 from datetime import datetime, timedelta
 
 from sqlalchemy import desc, asc, func, extract, and_, or_, not_
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.inspection import inspect
 from fastapi import HTTPException
 
 from crud.base import CRUDBase
+from core.redis_driver import redis_driver
 from log import log_error
 import crud
 from models.meeting import (
@@ -22,13 +25,12 @@ from models.user import User, UserNationality
 from schemas.meeting import (
     MeetingCreate,
     MeetingUpdate,
-    MeetingItemCreate,
     MeetingUserCreate,
     MeetingIn,
     ReviewCreate,
     ReviewUpdate,
-    ReviwPhotoCreate,
     MeetingUpdateIn,
+    MeetingSummaryResponse,
 )
 from schemas.enum import (
     MeetingOrderingEnum,
@@ -236,17 +238,13 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
         return update_meeting
 
     def filter_by_tags(self, query, tags_ids: Optional[List[int]]):
-        return query.join(MeetingTag).join(Tag).filter(Tag.id.in_(tags_ids))
+        return query.filter(Tag.id.in_(tags_ids))
 
     def filter_by_topics(self, query, db: Session, topics_ids: Optional[List[int]]):
         etc_tag = db.query(Topic).filter(Topic.kr_name == "기타").first()
         if etc_tag and etc_tag.id in topics_ids:
-            return (
-                query.join(MeetingTopic)
-                .join(Topic)
-                .filter(or_(Topic.is_custom == True, Topic.id.in_(topics_ids)))
-            )
-        return query.join(MeetingTopic).join(Topic).filter(Topic.id.in_(topics_ids))
+            return query.filter(or_(Topic.is_custom == True, Topic.id.in_(topics_ids)))
+        return query.filter(Topic.id.in_(topics_ids))
 
     def filter_by_time(self, query, time_filters: Optional[List[TimeFilterEnum]]):
         if time_filters:
@@ -256,23 +254,28 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
             return query
 
     def filter_by_search_word(self, query, search_word: str):
-        search_filter = or_(
-            Meeting.name.like(f"%{search_word}%"),
-            Meeting.description.like(f"%{search_word}%"),
-            # MeetingLanguage를 통해 연결된 Language의 kr_name 또는 en_name 필드 검색
-            Meeting.meeting_languages.any(
+        # 검색어를 풀텍스트 쿼리 형식으로 변환
+        search_query = func.to_tsquery(f"{search_word}:*")
+
+        # 텍스트 데이터를 검색 가능한 구조로 변환
+        name_vector = func.to_tsvector("simple", Meeting.name)
+        description_vector = func.to_tsvector("simple", Meeting.description)
+        language_kr_vector = func.to_tsvector("simple", Language.kr_name)
+        language_en_vector = func.to_tsvector("simple", Language.en_name)
+
+        # 텍스트 검색 벡터와 쿼리를 비교
+        search_filter = (
+            name_vector.op("@@")(search_query)
+            | description_vector.op("@@")(search_query)
+            | Meeting.meeting_languages.any(
                 MeetingLanguage.language.has(
-                    or_(
-                        Language.kr_name.like(f"%{search_word}%"),
-                        Language.en_name.like(f"%{search_word}%"),
-                    )
+                    language_kr_vector.op("@@")(search_query)
+                    | language_en_vector.op("@@")(search_query)
                 )
-            ),
+            )
         )
 
-        return_query = query.filter(search_filter).options(
-            joinedload(Meeting.meeting_languages).joinedload(MeetingLanguage.language)
-        )
+        return_query = query.filter(search_filter)
         return return_query
 
     def filter_by_nationality(self, query, nationality_name: str):
@@ -299,11 +302,15 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
 
         target_list = crud.ban.get_target_ids(db=db, user_id=user_id)
 
-        # Meeting.university_id가 university_id와 같고, creator_id가 target_list에 속하지 않는 데이터 필터링
-        return query.filter(
-            Meeting.university_id == university_id,
-            not_(Meeting.creator_id.in_(target_list)),
-        )
+        if target_list:
+            query = query.filter(
+                Meeting.university_id == university_id,
+                not_(Meeting.creator_id.in_(target_list)),
+            )
+        else:
+            query = query.filter(Meeting.university_id == university_id)
+
+        return query
 
     def get_meetings_by_university(
         self, db: Session, user_id: int, skip: int, limit: int
@@ -333,6 +340,25 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
     ) -> List[Meeting]:
         query = db.query(Meeting).filter(Meeting.is_active == is_active)
 
+        cache_key = redis_driver.generate_cache_key(
+            order_by,
+            skip,
+            limit,
+            creator_nationality,
+            user_id,
+            is_active,
+            tags_ids,
+            topics_ids,
+            time_filters,
+            is_count_only,
+            search_word,
+        )
+
+        if redis_driver.is_cached(key=cache_key):
+            cached_data = redis_driver.get_value(key=cache_key)
+            return_query = query.filter(Meeting.id.in_(cached_data)).all()
+            return return_query, len(return_query)
+
         if user_id:
             query = self.filter_by_ban(db, query, user_id)
 
@@ -343,9 +369,11 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
             query = self.filter_by_time(query, time_filters)
 
         if tags_ids:
+            query = query.join(MeetingTag).join(Tag)
             query = self.filter_by_tags(query, tags_ids)
 
         if topics_ids:
+            query = query.join(MeetingTopic).join(Topic)
             query = self.filter_by_topics(query=query, topics_ids=topics_ids, db=db)
 
         if search_word:
@@ -383,7 +411,26 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
         if is_count_only:
             return [], total_count
 
-        return query.offset(skip).limit(limit).all(), total_count
+        # n+1 해결 위한 eager loading
+        meeting_list = (
+            query.options(
+                joinedload(Meeting.meeting_tags).joinedload(MeetingTag.tag),
+                joinedload(Meeting.meeting_topics).joinedload(MeetingTopic.topic),
+                joinedload(Meeting.creator).joinedload(User.profile),
+            )
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
+
+        meeting_ids = [meeting.id for meeting in meeting_list]
+
+        redis_driver.set_value(
+            key=cache_key,
+            value=json.dumps(meeting_ids),
+        )
+
+        return meeting_list, total_count
 
     def get_requests(
         self, db: Session, meeting_id: int, skip: int, limit: int

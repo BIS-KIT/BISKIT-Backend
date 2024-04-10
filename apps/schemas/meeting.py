@@ -141,9 +141,29 @@ class MeetingResponse(CoreSchema, MeetingBase, MeetingCountBase):
     model_config = ConfigDict(from_attributes=True)
 
 
+class MeetingSummaryResponse(CoreSchema, MeetingBase, MeetingCountBase):
+    created_time: Optional[datetime] = None
+    creator: Optional[UserSimpleResponse] = None
+    chat_id: Optional[str] = None
+
+    university_id: Optional[int]
+
+    meeting_tags: Optional[List[MeetingTagBase]] = Field(None, exclude=True)
+
+    @computed_field
+    @property
+    def tags(self) -> List[TagResponse]:
+        if self.meeting_tags:
+            return [meeting_tag.tag for meeting_tag in self.meeting_tags]
+        else:
+            return []
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class MeetingListResponse(BaseModel):
     total_count: int
-    meetings: Optional[List[MeetingResponse]] = []
+    meetings: Optional[List[MeetingSummaryResponse]] = []
 
 
 class MeetingUserLanguage(CoreSchema):
@@ -188,9 +208,12 @@ class MeetingDetailResponse(MeetingResponse):
     @property
     def users_languages(self) -> List[LanguageBase]:
         user_languages = []
-        available_languages = [meeting_user.user.profile.available_language_list for meeting_user in self.meeting_users]
+        available_languages = [
+            meeting_user.user.profile.available_language_list
+            for meeting_user in self.meeting_users
+        ]
         for languages in available_languages:
-             for language in languages:
+            for language in languages:
                 if language not in user_languages and language in self.languages:
                     user_languages.append(language)
         return user_languages

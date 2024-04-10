@@ -1,9 +1,12 @@
-import base64, json
+import base64, json, time
 from dotenv import load_dotenv
+
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.middleware.cors import CORSMiddleware
+from starlette.requests import Request
 
 from fastapi import FastAPI, Depends
 from fastapi.staticfiles import StaticFiles
-from starlette.middleware.cors import CORSMiddleware
 from firebase_admin import credentials, initialize_app
 from fastapi.openapi.docs import get_swagger_ui_html
 from sqladmin import Admin
@@ -56,6 +59,21 @@ register_all(admin)
 app.include_router(v1_router, prefix="/v1")
 
 
+class RequestTimeMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        start_time = time.time()
+        response = await call_next(request)
+        process_time = time.time() - start_time
+        print(
+            f"Request: {request.method} {request.url.path} - Completed in {process_time:.4f} secs"
+        )
+        return response
+
+
+# 미들웨어 추가
+app.add_middleware(RequestTimeMiddleware)
+
+
 @app.get("/docs", include_in_schema=False)
 async def get_documentation(username: str = Depends(get_admin)):
     return get_swagger_ui_html(openapi_url="/openapi.json", title="docs")
@@ -68,19 +86,16 @@ async def start_event():
     scheduler.add_job(user_remove_after_seven, "interval", minutes=1)
     scheduler.start()
 
-    run_init_data()
+    # run_init_data()
 
     # redis connect
-    await redis_driver.connect()
+    redis_driver.connect()
 
 
 @app.on_event("shutdown")
 async def shutdown_event():
     # 스케줄러 종료
     scheduler.shutdown()
-
-    # redis disconnect
-    await redis_driver.disconnect()
 
 
 # Set all CORS enabled origins
