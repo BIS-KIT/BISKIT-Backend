@@ -602,6 +602,21 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
         meeting = db.query(Meeting).filter(Meeting.chat_id == chad_id).first()
         return meeting
 
+    def get_meeting_with_hour(self, db: Session, current_time: datetime.time) -> List:
+        one_hour_later = current_time + timedelta(hours=1)
+
+        meetings = (
+            db.query(Meeting)
+            .filter(
+                Meeting.meeting_time >= one_hour_later,
+                Meeting.meeting_time < one_hour_later + timedelta(minutes=1),
+            )
+            .all()
+        )
+
+        meeting_id_list = [meeting.id for meeting in meetings]
+        return meeting_id_list
+
 
 class CRUDReview(CRUDBase[Review, ReviewCreate, ReviewUpdate]):
     def get_multi(

@@ -74,6 +74,57 @@ class Alarm(
         alarm_obj.is_read = True
         db.commit()
         return alarm_obj
+    
+    def meeting_time_alarm(self, db:Session, meeting_id:int):
+        meeting = crud.meeting.get(db=db, id=meeting_id)
+        all_users_list = crud.user.read_all_chat_users(db=db, chat_id=meeting.chat_id)
+
+        title = "모임 시작"
+        body = f"1시간 후에 {meeting.name} 모임이 시작되요"
+
+        data = {"is_main_alarm": "False", "is_sub_alarm": "True"}
+
+        return send_fcm_notification(
+            db=db,
+            title=title,
+            body=body,
+            user_tokens=all_users_list,
+            data=data,
+        )
+
+    def approve_student_verification(self, db: Session, user_id: int):
+        target_fcm_token = crud.user.get_user_fcm_token(db=db, user_id=user_id)
+
+        title = "학교인증 완료"
+        body = "학교인증 완료! 우리 학교의 모임을 둘러보세요"
+
+        user_token = {user_id: target_fcm_token}
+
+        data = {"is_main_alarm": "True", "is_sub_alarm": "False"}
+        return send_fcm_notification(
+            db=db,
+            title=title,
+            body=body,
+            user_tokens=user_token,
+            data=data,
+        )
+
+    def reject_student_verification(self, db: Session, user_id: int):
+        target_fcm_token = crud.user.get_user_fcm_token(db=db, user_id=user_id)
+
+        title = "학교인증 거절"
+        body = "학교인증에 실패하였습니다. 학교 인증을 다시 진행해주세요"
+
+        user_token = {user_id: target_fcm_token}
+
+        data = {"is_main_alarm": "True", "is_sub_alarm": "False"}
+        return send_fcm_notification(
+            db=db,
+            title=title,
+            body=body,
+            user_tokens=user_token,
+            data=data,
+        )
 
     def create_meeting_request(self, db: Session, user_id: int, meeting_id: int):
         """
@@ -111,8 +162,8 @@ class Alarm(
         """
         모임 취소 및 삭제 알림 to 모임 신청자
         """
-        title = "모임 취소"
-        body = f"{meeting_name} 모임이 취소되었어요."
+        title = "모임 삭제"
+        body = f"{meeting_name} 모임이 삭제되었어요."
         icon_url = settings.S3_URL + "/default_icon/Thumbnail_Icon_Notify.svg"
 
         data = {

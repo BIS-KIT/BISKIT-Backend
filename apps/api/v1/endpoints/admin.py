@@ -22,7 +22,7 @@ def approve_varification(
     특정 사용자의 학생증 인증을 승인하거나 거절합니다.
 
     **인자:**
-    - user_id (int): 사용자 ID.
+    - id (int): 사용자 ID.
     - db (Session): 데이터베이스 세션.
     - action (str) : Approve or Rejected
 
@@ -33,20 +33,25 @@ def approve_varification(
     if verification is None:
         raise HTTPException(status_code=404, detail="StudentVerification not found")
 
-    if action == "approve":
-        obj_in = StudentVerificationUpdate(
-            verification_status=ReultStatusEnum.APPROVE.value
-        )
-    elif action == "rejected":
-        obj_in = StudentVerificationUpdate(
-            verification_status=ReultStatusEnum.REJECTED.value
-        )
-    else:
-        raise HTTPException(status_code=400, detail="Invalid action")
+    verification_status = (
+        ReultStatusEnum.APPROVE.value
+        if action == "approve"
+        else ReultStatusEnum.REJECTED.value
+    )
+    obj_in = StudentVerificationUpdate(verification_status=verification_status)
 
     update_verification = crud.profile.update_verification(
         db=db, db_obj=verification, obj_in=obj_in
     )
+
+    if action == "approve":
+        crud.alarm.approve_student_verification(
+            db=db, user_id=verification.profile.user_id
+        )
+    else:
+        crud.alarm.reject_student_verification(
+            db=db, user_id=verification.profile.user_id
+        )
 
     return RedirectResponse(url="/admin/student-verification/list", status_code=303)
 

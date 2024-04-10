@@ -41,3 +41,17 @@ def user_remove_after_seven():
     db.commit()
     scheduler_logger.warning(f"{deleted_count} user(s) deleted")
     return
+
+
+def meeting_time_alarm():
+    db = SessionLocal()
+
+    current_time = datetime.now()
+    meeting_id_list = crud.meeting.get_meeting_with_hour(
+        db=db, current_time=current_time
+    )
+
+    for id in meeting_id_list:
+        crud.alarm.meeting_time_alarm(db=db, meeting_id=id)
+
+    return None
