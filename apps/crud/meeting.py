@@ -178,6 +178,10 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
 
         new_meeting = super().create(db=db, obj_in=MeetingIn(**data))
         self.create_meeting_items(db, new_meeting.id, tag_ids, topic_ids, language_ids)
+
+        # meeting 생성되면 meeting 관련 캐시 무효
+        cache_key_list = redis_driver.find_by_name_space(name_space="meetings")
+        redis_driver.delete_keys(key_list=cache_key_list)
         return new_meeting
 
     def create_meeting_items(
@@ -339,19 +343,19 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
         search_word: str = None,
     ) -> List[Meeting]:
         query = db.query(Meeting).filter(Meeting.is_active == is_active)
-
         cache_key = redis_driver.generate_cache_key(
-            order_by,
-            skip,
-            limit,
-            creator_nationality,
-            user_id,
-            is_active,
-            tags_ids,
-            topics_ids,
-            time_filters,
-            is_count_only,
-            search_word,
+            name_space="meetings",
+            order_by=order_by,
+            skip=skip,
+            limit=limit,
+            creator_nationality=creator_nationality,
+            user_id=user_id,
+            is_active=is_active,
+            tags_ids=tags_ids,
+            topics_ids=topics_ids,
+            time_filters=time_filters,
+            is_count_only=is_count_only,
+            search_word=search_word,
         )
 
         if redis_driver.is_cached(key=cache_key):
