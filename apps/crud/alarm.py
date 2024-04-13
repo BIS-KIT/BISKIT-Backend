@@ -30,9 +30,9 @@ def send_fcm_notification(
     :param user_tokens: 대상 장치의 FCM 토큰과 사용자 ID를 담은 딕셔너리
     :param data: 알림과 함께 보낼 추가 데이터
     """
+
     for user_id, fcm_token in user_tokens.items():
         try:
-
             # 알람보내기
             messages = messaging.Message(
                 notification=messaging.Notification(title=title, body=body),
@@ -40,12 +40,19 @@ def send_fcm_notification(
                 token=fcm_token,
             )
             response = messaging.send(messages)
-
             # 알람 객체 생성
-            obj_in = alarm_schema.AlarmCreate(
-                title=title, content=body, user_id=user_id
-            )
-            created_alarm = alarm.create(db=db, obj_in=obj_in)
+            obj_name = data["obj_name"] if "obj_name" in data else None
+            obj_id = data["obj_id"] if "obj_id" in data else None
+            if obj_name is not "Chat":
+                obj_in = alarm_schema.AlarmCreate(
+                    title=title,
+                    content=body,
+                    user_id=user_id,
+                    obj_name=obj_name,
+                    obj_id=obj_id,
+                )
+
+                created_alarm = alarm.create(db=db, obj_in=obj_in)
 
         except InvalidArgumentError as e:
             # FCM 토큰 관련 오류 처리
@@ -74,8 +81,8 @@ class Alarm(
         alarm_obj.is_read = True
         db.commit()
         return alarm_obj
-    
-    def meeting_time_alarm(self, db:Session, meeting_id:int):
+
+    def meeting_time_alarm(self, db: Session, meeting_id: int):
         meeting = crud.meeting.get(db=db, id=meeting_id)
         all_users_list = crud.user.read_all_chat_users(db=db, chat_id=meeting.chat_id)
 
@@ -94,13 +101,15 @@ class Alarm(
 
     def approve_student_verification(self, db: Session, user_id: int):
         target_fcm_token = crud.user.get_user_fcm_token(db=db, user_id=user_id)
-
         title = "학교인증 완료"
         body = "학교인증 완료! 우리 학교의 모임을 둘러보세요"
 
         user_token = {user_id: target_fcm_token}
 
-        data = {"is_main_alarm": "True", "is_sub_alarm": "False"}
+        data = {
+            "is_main_alarm": "True",
+            "is_sub_alarm": "False",
+        }
         return send_fcm_notification(
             db=db,
             title=title,
@@ -140,10 +149,11 @@ class Alarm(
         title = "모임 신청"
         body = f"{requester_nick_name}님이 {meeting_name} 모임에 신청했어요."
 
-        user_token = {user_id: target_fcm_token}
+        user_token = {meeting.creator_id: target_fcm_token}
         icon_url = settings.S3_URL + "/default_icon/Thumbnail_Icon_Notify.svg"
         data = {
-            "meeting_id": str(meeting_id),
+            "obj_name": "Meeting",
+            "obj_id": str(meeting_id),
             "icon_url": str(icon_url),
             "is_main_alarm": "True",
             "is_sub_alarm": "False",
@@ -198,7 +208,8 @@ class Alarm(
         user_token = {creator_id: target_fcm_token}
         icon_url = settings.S3_URL + "/default_icon/Thumbnail_Icon_Notify.svg"
         data = {
-            "meeting_id": str(meeting_id),
+            "obj_name": "Meeting",
+            "obj_id": str(meeting_id),
             "icon_url": str(icon_url),
             "is_main_alarm": "True",
             "is_sub_alarm": "False",
@@ -226,7 +237,8 @@ class Alarm(
         user_token = {user_id: target_fcm_token}
         icon_url = settings.S3_URL + "/default_icon/Thumbnail_Icon_Notify.svg"
         data = {
-            "meeting_id": str(meeting_id),
+            "obj_name": "Meeting",
+            "obj_id": str(meeting_id),
             "icon_url": str(icon_url),
             "is_main_alarm": "True",
             "is_sub_alarm": "False",
@@ -251,7 +263,8 @@ class Alarm(
         user_token = {user_id: target_fcm_token}
         icon_url = settings.S3_URL + "/default_icon/Thumbnail_Icon_Notify.svg"
         data = {
-            "meeting_id": str(meeting_id),
+            "obj_name": "Meeting",
+            "obj_id": str(meeting_id),
             "icon_url": str(icon_url),
             "is_main_alarm": "True",
             "is_sub_alarm": "False",
@@ -270,7 +283,8 @@ class Alarm(
         user_tokens = {user.id: user.fcm_token for user in users}
         icon_url = settings.S3_URL + "/default_icon/Thumbnail_notice_Icon.svg"
         data = {
-            "notice_id": str(notice_id),
+            "obj_name": "Notice",
+            "obj_id": str(notice_id),
             "icon_url": str(icon_url),
             "is_main_alarm": "False",
             "is_sub_alarm": "True",
@@ -301,7 +315,8 @@ class Alarm(
         user_tokens = {target_id: target_fcm_token}
         icon_url = settings.S3_URL + "/default_icon/Thumbnail_reprot_icon.svg"
         data = {
-            "reporter_id": str(target_id),
+            "obj_name": "Report",
+            "obj_id": str(target_id),
             "icon_url": str(icon_url),
             "is_main_alarm": "False",
             "is_sub_alarm": "True",
@@ -330,7 +345,8 @@ class Alarm(
         meeting_name = meeting.name
 
         data = {
-            "chat_id": str(chat_id),
+            "obj_name": "Chat",
+            "obj_id": str(chat_id),
             "is_main_alarm": "True",
             "is_sub_alarm": "False",
         }
