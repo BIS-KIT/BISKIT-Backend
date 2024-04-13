@@ -9,5 +9,8 @@ class Alarm(ModelBase):
     content = Column(String, nullable=True)
     is_read = Column(String, default=False)
 
+    obj_name = Column(String, nullable=True)
+    obj_id = Column(Integer, nullable=True)
+
     user_id = Column(Integer, ForeignKey("user.id"))
     user = relationship("User", backref=backref("alarms", cascade="all, delete-orphan"))
