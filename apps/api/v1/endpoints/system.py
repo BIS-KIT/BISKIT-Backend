@@ -212,6 +212,16 @@ def read_notices(
     return {"notices": notices, "total_count": total_count}
 
 
+@router.get("/notice/{notice_id}", response_model=system_schema.NoticeResponse)
+def read_notices(
+    notice_id: int,
+    db: Session = Depends(get_db),
+    token: Annotated[str, Depends(oauth2_scheme)] = None,
+):
+    notice = crud.notice.get(db=db, id=notice_id)
+    return notice
+
+
 @router.post("/notice", response_model=system_schema.NoticeResponse)
 def create_notice(
     obj_in: system_schema.NoticeCreate,
