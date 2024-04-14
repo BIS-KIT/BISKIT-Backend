@@ -361,6 +361,9 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
         if redis_driver.is_cached(key=cache_key):
             cached_data = redis_driver.get_value(key=cache_key)
             return_query = query.filter(Meeting.id.in_(cached_data)).all()
+
+            return_query.sort(key=lambda x: cached_data.index(x.id))
+
             return return_query, len(return_query)
 
         if user_id:
@@ -428,6 +431,7 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
         )
 
         meeting_ids = [meeting.id for meeting in meeting_list]
+        print(121212, meeting_ids)
 
         redis_driver.set_value(
             key=cache_key,
