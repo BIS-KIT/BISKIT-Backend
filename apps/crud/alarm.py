@@ -89,7 +89,7 @@ class Alarm(
         title = "모임 시작"
         body = f"1시간 후에 {meeting.name} 모임이 시작되요"
 
-        data = {"is_main_alarm": "False", "is_sub_alarm": "True"}
+        data = {"obj_name": "Meeting","obj_id": str(meeting_id),"is_main_alarm": "False", "is_sub_alarm": "True"}
 
         return send_fcm_notification(
             db=db,
