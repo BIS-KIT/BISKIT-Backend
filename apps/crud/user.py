@@ -22,8 +22,14 @@ from models.user import (
     UserNationality,
     AccountDeletionRequest,
 )
-from models.meeting import Meeting, MeetingUser
-from models.profile import UserUniversity
+from models.meeting import Meeting, MeetingUser, Review
+from models.profile import (
+    UserUniversity,
+    Profile,
+    StudentVerification,
+    Introduction,
+    AvailableLanguage,
+)
 from schemas import user as user_schmea
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -424,9 +430,38 @@ class CRUDUser(CRUDBase[User, user_schmea.UserCreate, user_schmea.UserUpdate]):
         return user_nationalities
 
     def deactive_user(self, db: Session, user_id: int):
+        """
+        회원 삭제 및 탈퇴 시 User, Meeting 제외 삭제
+        """
         user = db.query(User).filter(User.id == user_id).first()
         user.is_active = False
         user.deactive_time = datetime.now()
+
+        meeting_user = (
+            db.query(MeetingUser).filter(MeetingUser.user_id == user_id).delete()
+        )
+        reviews = db.query(Review).filter(Review.creator_id == user_id).delete()
+
+        profile = db.query(Profile).filter(Profile.user_id == user_id).first()
+        user_university = (
+            db.query(UserUniversity).filter(UserUniversity.user_id == user_id).delete()
+        )
+        student_verification = (
+            db.query(StudentVerification)
+            .filter(StudentVerification.profile_id == profile.id)
+            .delete()
+        )
+        introduction = (
+            db.query(Introduction)
+            .filter(Introduction.profile_id == profile.id)
+            .delete()
+        )
+        available_language = (
+            db.query(AvailableLanguage)
+            .filter(AvailableLanguage.profile_id == profile.id)
+            .delete()
+        )
+
         db.commit()
         return user
 

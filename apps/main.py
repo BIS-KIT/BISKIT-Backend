@@ -87,7 +87,8 @@ async def get_documentation(username: str = Depends(get_admin)):
 async def start_event():
     # 스케줄러 시작 및 작업 추가
     scheduler.add_job(meeting_active_check, "interval", minutes=5)
-    scheduler.add_job(user_remove_after_seven, "interval", hours=6)
+    # 일단 삭제 하지 않고 비활성화 상태로둠
+    # scheduler.add_job(user_remove_after_seven, "interval", hours=6)
     scheduler.add_job(meeting_time_alarm, "interval", minutes=1)
     scheduler.start()
 
