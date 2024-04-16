@@ -8,10 +8,6 @@ from schemas.enum import LogTypeEnum
 current_script_path = os.path.abspath(__file__)
 current_directory = os.path.dirname(current_script_path)
 
-handler = RotatingFileHandler(
-    f"{current_directory}/logging/log", maxBytes=1024 * 1024 * 10, backupCount=1
-)
-
 
 def setup_logger(
     level,
@@ -28,7 +24,7 @@ def setup_logger(
     handler.setFormatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
     logger.addHandler(handler)
-    return handler
+    return logger
 
 
 uvicorn_logger = setup_logger(logger_name="uvicorn", level=logging.WARNING)

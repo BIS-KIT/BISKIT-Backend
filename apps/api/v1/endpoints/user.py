@@ -197,7 +197,6 @@ def update_user(
             )
 
     except Exception as e:
-        print(e, traceback.format_exc())
         log_error(e)
         raise HTTPException(status_code=500)
 
