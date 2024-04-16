@@ -442,25 +442,7 @@ class CRUDUser(CRUDBase[User, user_schmea.UserCreate, user_schmea.UserUpdate]):
         )
         reviews = db.query(Review).filter(Review.creator_id == user_id).delete()
 
-        profile = db.query(Profile).filter(Profile.user_id == user_id).first()
-        user_university = (
-            db.query(UserUniversity).filter(UserUniversity.user_id == user_id).delete()
-        )
-        student_verification = (
-            db.query(StudentVerification)
-            .filter(StudentVerification.profile_id == profile.id)
-            .delete()
-        )
-        introduction = (
-            db.query(Introduction)
-            .filter(Introduction.profile_id == profile.id)
-            .delete()
-        )
-        available_language = (
-            db.query(AvailableLanguage)
-            .filter(AvailableLanguage.profile_id == profile.id)
-            .delete()
-        )
+        profile = db.query(Profile).filter(Profile.user_id == user_id).delete()
 
         db.commit()
         return user
