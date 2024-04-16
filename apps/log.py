@@ -21,17 +21,18 @@ def setup_logger(
         maxBytes=1024 * 1024 * 10,
         backupCount=1,
     )
-    handler.setFormatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    formatter = logging.Formatter(
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
+    handler.setFormatter(formatter)
 
     logger.addHandler(handler)
     return logger
 
 
 uvicorn_logger = setup_logger(logger_name="uvicorn", level=logging.WARNING)
-http_logger = setup_logger(logger_name="http_logger", level=logging.INFO)
 scheduler_logger = setup_logger(logger_name="scheduler", level=logging.WARNING)
 alarm_logger = setup_logger(logger_name="alarm", level=logging.WARNING)
-sql_logger = setup_logger(logger_name="sqlalchemy.engine", level=logging.INFO)
 error_log = setup_logger(logger_name="error", level=logging.ERROR)
 
 
