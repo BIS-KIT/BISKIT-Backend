@@ -43,7 +43,7 @@ def send_fcm_notification(
             # 알람 객체 생성
             obj_name = data["obj_name"] if "obj_name" in data else None
             obj_id = data["obj_id"] if "obj_id" in data else None
-            if obj_name is not "Chat":
+            if obj_name != "Chat":
                 obj_in = alarm_schema.AlarmCreate(
                     title=title,
                     content=body,
@@ -89,7 +89,12 @@ class Alarm(
         title = "모임 시작"
         body = f"1시간 후에 {meeting.name} 모임이 시작되요"
 
-        data = {"obj_name": "Meeting","obj_id": str(meeting_id),"is_main_alarm": "False", "is_sub_alarm": "True"}
+        data = {
+            "obj_name": "Meeting",
+            "obj_id": str(meeting_id),
+            "is_main_alarm": "False",
+            "is_sub_alarm": "True",
+        }
 
         return send_fcm_notification(
             db=db,

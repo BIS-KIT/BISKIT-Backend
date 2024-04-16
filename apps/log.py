@@ -8,56 +8,37 @@ from schemas.enum import LogTypeEnum
 current_script_path = os.path.abspath(__file__)
 current_directory = os.path.dirname(current_script_path)
 
-handler = RotatingFileHandler(
-    f"{current_directory}/logging/log", maxBytes=1024 * 1024 * 10, backupCount=1
-)
 
-scheduler_handler = RotatingFileHandler(
-    f"{current_directory}/logging/scheduler_log",
-    maxBytes=1024 * 1024 * 10,
-    backupCount=1,
-)
+def setup_logger(
+    level,
+    logger_name: str,
+):
+    logger = logging.getLogger(logger_name)
+    logger.setLevel(level)
 
-alarm_handler = RotatingFileHandler(
-    f"{current_directory}/logging/alarm_log",
-    maxBytes=1024 * 1024 * 10,
-    backupCount=1,
-)
+    handler = RotatingFileHandler(
+        f"{current_directory}/logging/{logger_name}_log",
+        maxBytes=1024 * 1024 * 10,
+        backupCount=1,
+    )
+    handler.setFormatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
-
-sql_handler = RotatingFileHandler(
-    f"{current_directory}/logging/sql_log",
-    maxBytes=1024 * 1024 * 10,
-    backupCount=1,
-)
+    logger.addHandler(handler)
+    return logger
 
 
-logger = logging.getLogger("uvicorn")
-scheduler_logger = logging.getLogger("scheduler")
-alarm_logger = logging.getLogger("alarm")
-sql_logger = logging.getLogger("sqlalchemy.engine")
-
-logger.setLevel(logging.WARNING)
-scheduler_logger.setLevel(logging.WARNING)
-alarm_logger.setLevel(logging.WARNING)
-sql_logger.setLevel(logging.INFO)
-
-
-formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-handler.setFormatter(formatter)
-scheduler_handler.setFormatter(formatter)
-
-
-logger.addHandler(handler)
-scheduler_logger.addHandler(scheduler_handler)
-alarm_logger.addHandler(alarm_handler)
-sql_logger.addHandler(sql_handler)
+uvicorn_logger = setup_logger(logger_name="uvicorn", level=logging.WARNING)
+http_logger = setup_logger(logger_name="http_logger", level=logging.INFO)
+scheduler_logger = setup_logger(logger_name="scheduler", level=logging.WARNING)
+alarm_logger = setup_logger(logger_name="alarm", level=logging.WARNING)
+sql_logger = setup_logger(logger_name="sqlalchemy.engine", level=logging.INFO)
+error_log = setup_logger(logger_name="error", level=logging.ERROR)
 
 
 def log_error(exception: Exception, type: str = LogTypeEnum.DEFAULT.value):
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     if type == LogTypeEnum.DEFAULT.value:
-        logger.error(f"{exception} \n {traceback.format_exc()}")
+        error_log.error(f"{exception} \n {traceback.format_exc()}")
     elif type == LogTypeEnum.SCHEDULER.value:
         scheduler_logger.warning(f"{exception} \n {traceback.format_exc()}")
     elif type == LogTypeEnum.ALARM.value:

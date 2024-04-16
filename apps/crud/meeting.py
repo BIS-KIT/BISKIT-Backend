@@ -431,7 +431,6 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
         )
 
         meeting_ids = [meeting.id for meeting in meeting_list]
-        print(121212, meeting_ids)
 
         redis_driver.set_value(
             key=cache_key,

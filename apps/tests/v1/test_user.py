@@ -18,7 +18,7 @@ def test_read_current_user(client, test_token, test_user):
     assert data["email"] == test_email
 
 
-def test_delete_user(client, test_user):
+def test_delete_user(client, test_user, test_profile):
     user_id = test_user.id
     response = client.delete(f"v1/user/{user_id}")
 

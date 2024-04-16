@@ -424,8 +424,16 @@ def check_mail_exists(email: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=409, detail="This is not Email Form.")
 
     check_email = crud.user.get_by_email(db=db, email=email)
+
     if check_email:
-        raise HTTPException(status_code=409, detail="Email already registered.")
+        if check_email.is_active == False:
+            raise HTTPException(
+                status_code=409,
+                detail="Account is deactivated.",
+            )
+        else:
+            raise HTTPException(status_code=409, detail="Email already registered.")
+
     return {"status": "Email is available."}
 
 
