@@ -545,7 +545,7 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
         all_meetings = created_meetings.union(participated_query)
         # order_by 매개변수에 따른 정렬 로직 적용
         if order_by == MeetingOrderingEnum.CREATED_TIME:
-            all_meetings = all_meetings.order_by(desc(Meeting.created_time))
+            all_meetings = all_meetings.order_by(asc(Meeting.created_time))
         elif order_by == MeetingOrderingEnum.DEADLINE_SOON:
             # 현재 시간 이후의 모임만 선택
             all_meetings = all_meetings.filter(Meeting.meeting_time > func.now())

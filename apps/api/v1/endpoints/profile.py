@@ -474,7 +474,7 @@ def update_profile(
 @router.get("/profile/{user_id}/meetings", response_model=MeetingListResponse)
 def get_user_meetings(
     user_id: int,
-    order_by: MeetingOrderingEnum = MeetingOrderingEnum.CREATED_TIME,
+    order_by: MeetingOrderingEnum = None,
     status: MyMeetingEnum = MyMeetingEnum.APPROVE.value,
     db: Session = Depends(get_db),
     skip: int = 0,
