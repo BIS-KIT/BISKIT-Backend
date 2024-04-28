@@ -186,7 +186,7 @@ async def get_random_nickname(
             # 중복된 경우, 잠시 대기 후 다시 시도
             await asyncio.sleep(2)  # 2초 대기
 
-    return {"kr_nick_name": kr_nick_name, "en_nick_name": en_nick_name}
+    return {"kr_nick_name": kr_nick_name, "en_nick_name": kr_nick_name}
 
 
 @router.post("/student-card", response_model=StudentVerificationBase)
