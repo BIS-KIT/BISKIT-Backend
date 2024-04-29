@@ -6,11 +6,13 @@ from sqlalchemy import (
     DateTime,
     Boolean,
     UniqueConstraint,
+    event,
 )
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy.orm import relationship, backref, Session
 from sqlalchemy.ext.hybrid import hybrid_property
 
 from models.base import ModelBase
+from schemas.enum import ReultStatusEnum
 
 
 class Meeting(ModelBase):
@@ -131,3 +133,28 @@ class Review(ModelBase):
 
 #     review_id = Column(Integer, ForeignKey("review.id"))
 #     review = relationship("Review", back_populates="review_photos")
+
+
+@event.listens_for(MeetingUser, "after_update")
+def increase_participants(mapper, connection, target):
+
+    if target.status == ReultStatusEnum.APPROVE:
+        parti_user_nationality = target.user.user_nationality
+        nation_codes = [un.nationality.code for un in parti_user_nationality]
+        target.meeting.current_participants = target.meeting.current_participants + 1
+        if "kr" in nation_codes:
+            target.meeting.korean_count = target.meeting.korean_count + 1
+        else:
+            target.meeting.foreign_count = target.meeting.foreign_count + 1
+
+
+@event.listens_for(MeetingUser, "after_delete")
+def decrease_participants(mapper, connection, target):
+
+    parti_user_nationality = target.user.user_nationality
+    nation_codes = [un.nationality.code for un in parti_user_nationality]
+    target.meeting.current_participants = target.meeting.current_participants - 1
+    if "kr" in nation_codes:
+        target.meeting.korean_count = target.meeting.korean_count - 1
+    else:
+        target.meeting.foreign_count = target.meeting.foreign_count - 1
