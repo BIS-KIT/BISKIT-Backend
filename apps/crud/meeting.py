@@ -467,10 +467,6 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
 
         join_request.status = ReultStatusEnum.APPROVE.value
 
-        user_nationalities = crud.user.get_nationality_by_user_id(
-            db=db, user_id=join_request.user_id
-        )
-
         meeting = (
             db.query(Meeting).filter(Meeting.id == join_request.meeting_id).first()
         )
@@ -478,15 +474,6 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
         if meeting.current_participants >= meeting.max_participants:
             raise HTTPException(status_code=404, detail="It's full of people.")
 
-        codes = [un.nationality.code for un in user_nationalities]
-        meeting.current_participants = meeting.current_participants + 1
-        if codes:
-            if "kr" in codes:
-                meeting.korean_count = meeting.korean_count + 1
-            else:
-                meeting.foreign_count = meeting.foreign_count + 1
-
-        db.commit()
         return join_request
 
     def join_request_reject(self, db: Session, obj_id: int):
@@ -577,27 +564,7 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
 
         # 모임 참가자 목록에서 제거
         db.delete(meeting_user)
-
-        # 모임 정보 업데이트
-        meeting = db.query(Meeting).filter(Meeting.id == meeting_id).first()
-        if meeting:
-            meeting.current_participants = meeting.current_participants - 1
-
-            # 국적에 따른 참가자 수 조정
-            user_nationalities = crud.user.get_nationality_by_user_id(
-                db=db, user_id=user_id
-            )
-            codes = [un.nationality.code for un in user_nationalities]
-            if codes:
-                if "kr" in codes:
-                    meeting.korean_count = meeting.korean_count - 1
-                else:
-                    meeting.foreign_count = meeting.foreign_count - 1
-
-            db.commit()
-        else:
-            db.rollback()
-            raise HTTPException(status_code=400, detail="Meeting not found")
+        db.commit()
 
         return {"detail": "Successfully left the meeting"}
 
