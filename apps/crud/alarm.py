@@ -195,7 +195,7 @@ class Alarm(
             data=data,
         )
 
-    def exit_meeting(self, db: Session, user_id: int, meeting_id: int):
+    def exit_meeting(self, db: Session, user_id: int, meeting_id: int, is_fire: bool):
         """
         모임 탈퇴 알람 to 모임 생성자
         """
@@ -204,13 +204,19 @@ class Alarm(
         creator_id = meeting.creator_id
 
         meeting_name = meeting.name
-        target_fcm_token = crud.user.get_user_fcm_token(db=db, user_id=creator_id)
         requester_nick_name = requester.nick_name
 
         title = "모임 탈퇴"
-        body = f"{requester_nick_name}님이 {meeting_name} 모임에서 나갔어요."
+        if is_fire:
+            target_fcm_token = crud.user.get_user_fcm_token(db=db, user_id=user_id)
 
-        user_token = {creator_id: target_fcm_token}
+            body = f"{meeting_name} 모엠에서 강제 퇴장 당하셨습니다."
+            user_token = {user_id: target_fcm_token}
+        else:
+            target_fcm_token = crud.user.get_user_fcm_token(db=db, user_id=creator_id)
+            body = f"{requester_nick_name}님이 {meeting_name} 모임에서 나갔어요."
+            user_token = {creator_id: target_fcm_token}
+
         icon_url = settings.S3_URL + "/default_icon/Thumbnail_Icon_Notify.svg"
         data = {
             "obj_name": "Meeting",
