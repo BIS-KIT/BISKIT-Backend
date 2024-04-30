@@ -1,11 +1,10 @@
 import json
 from typing import Any, Dict, Optional, Union, List
 from datetime import datetime, timedelta
+from firebase_admin import firestore
 
 from sqlalchemy import desc, asc, func, extract, and_, or_, not_
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.inspection import inspect
 from fastapi import HTTPException
 
 from crud.base import CRUDBase
@@ -233,13 +232,27 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
                 new_topic = crud.utility.create_topic(db=db, name=name)
                 topic_ids.append(new_topic.id)
 
-        update_meeting = super().update(
-            db=db, db_obj=meeting, obj_in=MeetingUpdateIn(**data)
-        )
-        self.create_meeting_items(
-            db, update_meeting.id, tag_ids, topic_ids, language_ids
-        )
+        try:
+            update_meeting = super().update(
+                db=db, db_obj=meeting, obj_in=MeetingUpdateIn(**data)
+            )
+            self.create_meeting_items(
+                db, update_meeting.id, tag_ids, topic_ids, language_ids
+            )
+            if "name" in data:
+                self.change_chat_room_name(name=data["name"], chat_id=meeting.chat_id)
+
+        except:
+            raise
+
         return update_meeting
+
+    def change_chat_room_name(self, name: str, chat_id: str):
+        firebase_db = firestore.client()
+        doc = firebase_db.collection("ChatRoom").document(chat_id)
+
+        doc.update({"title": name})
+        return
 
     def filter_by_tags(self, query, tags_ids: Optional[List[int]]):
         return query.filter(Tag.id.in_(tags_ids))
