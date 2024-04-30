@@ -11,6 +11,34 @@ def test_read_alarm(session, test_alarm):
     assert alarm_service.is_read == "true"
 
 
+def test_reject_student_verification(session, test_user, test_user_ios):
+    # Android
+    alarm_service = alarm.reject_student_verification(db=session, user_id=test_user.id)
+
+    assert alarm_service == None
+
+    # Ios
+    alarm_service_ios = alarm.reject_student_verification(
+        db=session, user_id=test_user_ios.id
+    )
+
+    assert alarm_service == None
+
+
+def test_approve_student_verification(session, test_user, test_user_ios):
+    # Android
+    alarm_service = alarm.approve_student_verification(db=session, user_id=test_user.id)
+
+    assert alarm_service == None
+
+    # Ios
+    alarm_service_ios = alarm.approve_student_verification(
+        db=session, user_id=test_user_ios.id
+    )
+
+    assert alarm_service == None
+
+
 def test_meeting_request_alarm(session, test_meeting, test_user, test_user_ios):
     # Android
     alarm_service = alarm.create_meeting_request(
@@ -30,14 +58,14 @@ def test_meeting_request_alarm(session, test_meeting, test_user, test_user_ios):
 def test_exit_meeting_alarm(session, test_user, test_meeting, test_user_ios):
 
     alarm_service = alarm.exit_meeting(
-        db=session, user_id=test_user.id, meeting_id=test_meeting.id
+        db=session, user_id=test_user.id, meeting_id=test_meeting.id, is_fire=False
     )
 
     assert alarm_service == None
 
     # Ios
     alarm_service_ios = alarm.exit_meeting(
-        db=session, user_id=test_user_ios.id, meeting_id=test_meeting.id
+        db=session, user_id=test_user_ios.id, meeting_id=test_meeting.id, is_fire=False
     )
 
     assert alarm_service == None

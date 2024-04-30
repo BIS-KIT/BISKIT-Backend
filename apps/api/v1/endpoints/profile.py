@@ -161,36 +161,32 @@ async def get_random_nickname(
     token: Annotated[str, Depends(oauth2_scheme)] = None,
 ):
     kr_nick_name, en_nick_name = None, None
-    if os_lang == "kr":
-        async with httpx.AsyncClient() as client:
-            while True:
-                response = await client.get(settings.NICKNAME_API)
+    async with httpx.AsyncClient() as client:
+        while True:
+            response = await client.get(settings.NICKNAME_API)
 
-                # API 요청이 성공했는지 확인
-                if response.status_code != 200:
-                    # 잠시 후에 다시 시도
-                    await asyncio.sleep(3)  # 3초 대기
-                    continue
+            # API 요청이 성공했는지 확인
+            if response.status_code != 200:
+                # 잠시 후에 다시 시도
+                await asyncio.sleep(3)  # 3초 대기
+                continue
 
-                data = response.json()
+            data = response.json()
 
-                kr_nick_name = data.get("words")[0]
+            kr_nick_name = data.get("words")[0]
 
-                check_exists = crud.profile.get_with_nick_name(
-                    db=db, nick_name=kr_nick_name
-                )
+            check_exists = crud.profile.get_with_nick_name(
+                db=db, nick_name=kr_nick_name
+            )
 
-                # 중복되지 않은 닉네임이면 break
-                if check_exists is None:
-                    break
+            # 중복되지 않은 닉네임이면 break
+            if check_exists is None:
+                break
 
-                # 중복된 경우, 잠시 대기 후 다시 시도
-                await asyncio.sleep(2)  # 2초 대기
-    elif os_lang == "en":
-        # TODO : random english nickname
-        en_nick_name = data.get("en_nick_name")
+            # 중복된 경우, 잠시 대기 후 다시 시도
+            await asyncio.sleep(2)  # 2초 대기
 
-    return {"kr_nick_name": kr_nick_name, "en_nick_name": en_nick_name}
+    return {"kr_nick_name": kr_nick_name, "en_nick_name": kr_nick_name}
 
 
 @router.post("/student-card", response_model=StudentVerificationBase)
@@ -474,7 +470,7 @@ def update_profile(
 @router.get("/profile/{user_id}/meetings", response_model=MeetingListResponse)
 def get_user_meetings(
     user_id: int,
-    order_by: MeetingOrderingEnum = MeetingOrderingEnum.CREATED_TIME,
+    order_by: MeetingOrderingEnum = None,
     status: MyMeetingEnum = MyMeetingEnum.APPROVE.value,
     db: Session = Depends(get_db),
     skip: int = 0,

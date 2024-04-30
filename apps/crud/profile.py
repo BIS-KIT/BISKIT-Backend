@@ -124,12 +124,22 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
         return super().update(db, db_obj=db_obj, obj_in=obj_in)
 
     def create_verification(self, db: Session, obj_in: StudentVerificationCreate):
+        """
+        학생증 재인증시 기존 객체 삭제 후 재생성
+        """
         if not obj_in.profile_id:
             raise ValueError("There is no profile_id")
 
         profile = db.query(Profile).filter(Profile.id == obj_in.profile_id)
         if not profile:
             raise ValueError("There is no Profile")
+
+        check_student_verify = db.query(StudentVerification).filter(
+            StudentVerification.profile_id == obj_in.profile_id
+        )
+        if check_student_verify:
+            check_student_verify.delete()
+
         db_obj = StudentVerification(**obj_in.model_dump())
         db.add(db_obj)
         db.commit()
@@ -535,9 +545,7 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
         all_meetings = created_meetings.union(participated_query)
         # order_by 매개변수에 따른 정렬 로직 적용
         if order_by == MeetingOrderingEnum.CREATED_TIME:
-            all_meetings = all_meetings.order_by(desc(Meeting.created_time))
-        elif order_by == MeetingOrderingEnum.MEETING_TIME:
-            all_meetings = all_meetings.order_by(asc(Meeting.meeting_time))
+            all_meetings = all_meetings.order_by(asc(Meeting.created_time))
         elif order_by == MeetingOrderingEnum.DEADLINE_SOON:
             # 현재 시간 이후의 모임만 선택
             all_meetings = all_meetings.filter(Meeting.meeting_time > func.now())
@@ -547,7 +555,7 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
             )
             all_meetings = all_meetings.order_by(time_difference_seconds)
         else:
-            all_meetings = all_meetings.order_by(desc(Meeting.created_time))
+            all_meetings = all_meetings.order_by(asc(Meeting.meeting_time))
 
         total_count = all_meetings.count()
 

@@ -106,11 +106,11 @@ def delete_user(
     token: Annotated[str, Depends(oauth2_scheme)] = None,
 ):
     """
-    특정 사용자를 삭제합니다.
-    (7일간 재가입 막기 위해, 7일 후 삭제)
+    특정 사용자를 비활성화 & 회원 탈퇴
     **파라미터**
 
-    * `user_id`: 삭제하려는 사용자의 ID
+    * `user_id`: 비활성화 사용자의 ID
+    * `is_remove`: True면 실제 삭제
 
     **반환값**
 
@@ -197,7 +197,6 @@ def update_user(
             )
 
     except Exception as e:
-        print(e, traceback.format_exc())
         log_error(e)
         raise HTTPException(status_code=500)
 

@@ -165,4 +165,6 @@ apps/alembic/versions/*
 media/
 *log
 .vscode/
+.git/
 
+apps/logging/

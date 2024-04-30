@@ -47,6 +47,8 @@ services:
     depends_on:
       - backends
     restart: always
+    volumes:
+      - ./nginx/log:/var/log/nginx
 
   redis:
     container_name: redis

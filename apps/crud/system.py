@@ -67,7 +67,16 @@ class CRUDNotice(
         system_models.Notice, system_schemas.NoticeCreate, system_schemas.NoticeUpdate
     ]
 ):
-    pass
+    def get_multi(self, db: Session, *, skip: int = 0, limit: int = 100) -> List:
+        total_count = db.query(self.model).count()
+        return (
+            db.query(self.model)
+            .order_by(self.model.created_time.desc())
+            .offset(skip)
+            .limit(limit)
+            .all(),
+            total_count,
+        )
 
 
 class CRUDBan(

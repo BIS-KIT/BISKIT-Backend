@@ -9,12 +9,13 @@ from contextlib import contextmanager
 DATABASE_URL = f"postgresql+psycopg2://postgres:{settings.DB_ROOT_PASSWORD}@maindb:5432/{settings.POSTGRES_DB}"
 
 # SQLAlchemy 설정
-engine = create_engine(DATABASE_URL)
+engine = create_engine(
+    DATABASE_URL, pool_size=20, max_overflow=40, connect_args={"connect_timeout": 30}
+)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 
-@contextmanager
 def get_db() -> Generator:
     """
     호출되면 DB 연결하고 작업 완료되면 close

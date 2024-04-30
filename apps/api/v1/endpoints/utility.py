@@ -217,13 +217,31 @@ def set_png(
 
 
 @router.get("/check-cache/{key}")
-async def get_value(key: str):
+def get_value(key: str):
     """
     Cache에 저장된 값 확인
     """
     if not redis_driver.redis_client:
         raise HTTPException(status_code=503, detail="Redis connection not initialized")
-    value = await redis_driver.redis_client.get(key, encoding="utf-8")
+    try:
+        value = redis_driver.get_value(key)
+    except Exception as e:
+        # JSON 디코딩 실패를 포함한 모든 예외를 처리합니다.
+        raise HTTPException(status_code=500, detail=str(e))
     if value is None:
         raise HTTPException(status_code=404, detail="Key not found")
     return {"key": key, "value": value}
+
+
+@router.delete("/clear-cache")
+def clear_cache():
+    """
+    모든 Cache 삭제
+    """
+    if not redis_driver.redis_client:
+        raise HTTPException(status_code=503, detail="Redis connection not initialized")
+    try:
+        redis_driver.redis_client.flushdb()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    return {"detail": "Cache cleared"}

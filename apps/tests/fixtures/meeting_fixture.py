@@ -22,7 +22,7 @@ def test_meeting(
         current_participants=0,
         korean_count=0,
         foreign_count=1,
-        chat_id="testChatId",
+        chat_id="pZrYX2j7XVt48iNRk4x8",
         place_url="http://example.com",
         x_coord="127.001",
         y_coord="37.001",

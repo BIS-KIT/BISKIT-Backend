@@ -10,6 +10,8 @@ class AlarmBase(BaseModel):
     title: str
     content: str
     is_read: Optional[bool] = False
+    obj_name: Optional[str]
+    obj_id: Optional[int]
 
 
 class AlarmCreate(AlarmBase):
