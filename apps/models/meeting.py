@@ -13,6 +13,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 
 from models.base import ModelBase
 from schemas.enum import ReultStatusEnum
+from database.session import SessionLocal
 
 
 class Meeting(ModelBase):
@@ -138,23 +139,42 @@ class Review(ModelBase):
 @event.listens_for(MeetingUser, "after_update")
 def increase_participants(mapper, connection, target):
 
+    session = SessionLocal()
+
     if target.status == ReultStatusEnum.APPROVE:
-        parti_user_nationality = target.user.user_nationality
-        nation_codes = [un.nationality.code for un in parti_user_nationality]
-        target.meeting.current_participants = target.meeting.current_participants + 1
-        if "kr" in nation_codes:
-            target.meeting.korean_count = target.meeting.korean_count + 1
-        else:
-            target.meeting.foreign_count = target.meeting.foreign_count + 1
+        try:
+            parti_user_nationality = target.user.user_nationality
+            nation_codes = [un.nationality.code for un in parti_user_nationality]
+
+            meeting = session.query(Meeting).get(target.meeting_id)
+            meeting.current_participants = meeting.current_participants + 1
+            if "kr" in nation_codes:
+                meeting.korean_count = meeting.korean_count + 1
+            else:
+                meeting.foreign_count = meeting.foreign_count + 1
+            session.commit()
+        except:
+            session.rollback()
+        finally:
+            session.close()
 
 
 @event.listens_for(MeetingUser, "after_delete")
 def decrease_participants(mapper, connection, target):
 
+    session = SessionLocal()
+
     parti_user_nationality = target.user.user_nationality
     nation_codes = [un.nationality.code for un in parti_user_nationality]
-    target.meeting.current_participants = target.meeting.current_participants - 1
-    if "kr" in nation_codes:
-        target.meeting.korean_count = target.meeting.korean_count - 1
-    else:
-        target.meeting.foreign_count = target.meeting.foreign_count - 1
+    meeting = session.query(Meeting).get(target.meeting_id)
+    try:
+        meeting.current_participants = meeting.current_participants - 1
+        if "kr" in nation_codes:
+            meeting.korean_count = meeting.korean_count - 1
+        else:
+            meeting.foreign_count = meeting.foreign_count - 1
+        session.commit()
+    except:
+        session.rollback()
+    finally:
+        session.close()
