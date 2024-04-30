@@ -96,6 +96,7 @@ def get_meeting_requests(
 def exit_meeting(
     user_id: int,
     meeting_id: int,
+    is_fire: bool = False,
     db: Session = Depends(get_db),
     token: Annotated[str, Depends(oauth2_scheme)] = None,
 ):
@@ -115,7 +116,9 @@ def exit_meeting(
         log_error(e)
         raise HTTPException(status_code=500)
 
-    alarm = crud.alarm.exit_meeting(db=db, user_id=user_id, meeting_id=meeting_id)
+    alarm = crud.alarm.exit_meeting(
+        db=db, user_id=user_id, meeting_id=meeting_id, is_fire=is_fire
+    )
 
     return meeting_exit
 
