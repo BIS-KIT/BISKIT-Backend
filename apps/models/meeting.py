@@ -6,11 +6,14 @@ from sqlalchemy import (
     DateTime,
     Boolean,
     UniqueConstraint,
+    event,
 )
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy.orm import relationship, backref, Session
 from sqlalchemy.ext.hybrid import hybrid_property
 
 from models.base import ModelBase
+from schemas.enum import ReultStatusEnum
+from database.session import SessionLocal
 
 
 class Meeting(ModelBase):
@@ -131,3 +134,47 @@ class Review(ModelBase):
 
 #     review_id = Column(Integer, ForeignKey("review.id"))
 #     review = relationship("Review", back_populates="review_photos")
+
+
+@event.listens_for(MeetingUser, "after_update")
+def increase_participants(mapper, connection, target):
+
+    session = SessionLocal()
+
+    if target.status == ReultStatusEnum.APPROVE:
+        try:
+            parti_user_nationality = target.user.user_nationality
+            nation_codes = [un.nationality.code for un in parti_user_nationality]
+
+            meeting = session.query(Meeting).get(target.meeting_id)
+            meeting.current_participants = meeting.current_participants + 1
+            if "kr" in nation_codes:
+                meeting.korean_count = meeting.korean_count + 1
+            else:
+                meeting.foreign_count = meeting.foreign_count + 1
+            session.commit()
+        except:
+            session.rollback()
+        finally:
+            session.close()
+
+
+@event.listens_for(MeetingUser, "after_delete")
+def decrease_participants(mapper, connection, target):
+
+    session = SessionLocal()
+
+    parti_user_nationality = target.user.user_nationality
+    nation_codes = [un.nationality.code for un in parti_user_nationality]
+    meeting = session.query(Meeting).get(target.meeting_id)
+    try:
+        meeting.current_participants = meeting.current_participants - 1
+        if "kr" in nation_codes:
+            meeting.korean_count = meeting.korean_count - 1
+        else:
+            meeting.foreign_count = meeting.foreign_count - 1
+        session.commit()
+    except:
+        session.rollback()
+    finally:
+        session.close()
