@@ -121,10 +121,10 @@ def create_fix_topics_tags():
             "기타": ("etc", "ic_talk_fill_48.svg"),
         },
         "tags": {
-            "영어 못해도 괜찮아요": ("It's okay if you can't speak English", "💬"),
+            "영어 못해도 괜찮아요": ("Welcome English begginers", "💬"),
             "혼자와도 괜찮아요": ("It's okay to come alone", None),
             "늦참가능": ("Late Arrival Permitted", "⏳"),
-            "한국어 못해도 괜찮아요": ("It's okay if you can't speak Korean", "💬"),
+            "한국어 못해도 괜찮아요": ("Welcome Korean begginers", "💬"),
             "비건": ("Vegan", "🌱"),
             "뒷풀이": ("After Party", "🍺"),
             "여자만": ("Only for women", "👩"),
