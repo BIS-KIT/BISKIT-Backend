@@ -6,7 +6,7 @@ from contextlib import contextmanager
 
 # 환경 변수나 설정에서 정보 가져오기
 # 이 예제에서는 .env 파일에서 가져왔다고 가정
-DATABASE_URL = f"postgresql+psycopg2://postgres:{settings.DB_ROOT_PASSWORD}@maindb:5432/{settings.POSTGRES_DB}"
+DATABASE_URL = f"postgresql+psycopg2://postgres:{settings.DB_ROOT_PASSWORD}@{settings.POSTGRES_HOST}:5432/{settings.POSTGRES_DB}"
 
 # SQLAlchemy 설정
 engine = create_engine(

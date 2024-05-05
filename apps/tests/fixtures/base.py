@@ -12,7 +12,7 @@ from database.session import Base, get_db
 from models.base import ModelBase
 
 
-DATABASE_URL = f"postgresql+psycopg2://postgres:{settings.DB_ROOT_PASSWORD}@maindb:5432/{settings.TEST_DB}"
+DATABASE_URL = f"postgresql+psycopg2://postgres:{settings.DB_ROOT_PASSWORD}@{settings.POSTGRES_HOST}:5432/{settings.TEST_DB}"
 
 engine = create_engine(
     DATABASE_URL,
