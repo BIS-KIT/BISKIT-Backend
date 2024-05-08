@@ -1,25 +1,22 @@
+import os
 import pandas as pd
-from sqlalchemy.orm import Session
+
 from models.utility import Language, Nationality, University, Topic, Tag
 from database.session import SessionLocal
 from core.config import settings
 
+current_directory = os.getcwd()
+file_path = os.path.join(current_directory, "DataSet.xlsx")
 # B4:C147 범위 추출 (0부터 시작하는 인덱스를 기준으로)
 # B는 2번째 열, C는 3번째 열이라고 가정합니다.
 # 1번 시트에서 "B4:C147" 범위의 데이터 가져오기
-language_scope = pd.read_excel("DataSet.xlsx", sheet_name=0, header=None).iloc[
-    4:147, 1:3
-]
+language_scope = pd.read_excel(file_path, sheet_name=0, header=None).iloc[4:147, 1:3]
 
 # 2번 시트에서 "B4:D250" 범위의 데이터 가져오기
-national_scope = pd.read_excel("DataSet.xlsx", sheet_name=1, header=None).iloc[
-    3:250, 1:4
-]
+national_scope = pd.read_excel(file_path, sheet_name=1, header=None).iloc[3:250, 1:4]
 
 # 3번 시트에서 "B4:D250" 범위의 데이터 가져오기
-university_scope = pd.read_excel("DataSet.xlsx", sheet_name=2, header=None).iloc[
-    2:216, 1:8
-]
+university_scope = pd.read_excel(file_path, sheet_name=2, header=None).iloc[2:216, 1:8]
 
 
 def get_nationality():
