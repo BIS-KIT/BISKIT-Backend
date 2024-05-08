@@ -4,9 +4,7 @@ on:
   push:
     branches:
       - release/v1
-  pull_request:
-    branches:
-      - release/v1
+
 
 jobs:
   test:
