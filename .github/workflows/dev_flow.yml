@@ -36,11 +36,12 @@ jobs:
 
 
     steps:
-      - name: Intentionally fail
-        run: exit 1
 
       - name: checkout code
         uses: actions/checkout@v4
+
+      - name: Intentionally fail
+        run: exit 1
 
       - name: Set up Python
         uses: actions/setup-python@v5
