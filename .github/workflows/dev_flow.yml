@@ -144,6 +144,7 @@ jobs:
           port: ${{ secrets.DEV_REMOTE_PORT }}
           script: |
             cd BISKIT-Backend
+            git checkout ${{ secrets.DEV_BRANCH }}
             git pull origin ${{ secrets.DEV_BRANCH }}
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/biskit:latest
             docker compose -f docker-compose.deploy.yml up -d
