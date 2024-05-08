@@ -83,15 +83,90 @@ BISKIT-Backend
 
 ## CI / CD
 
+- Gibhub Action 활용
+   - release/dev or release/prod 브랜치에 PR 시 WorkFlows 트리거 작동
+
 ```yml
 jobs:
-  test: - 환경 세팅 및 pytest
+  test: # 환경 세팅 및 pytest
+    services:
+      maindb:
+        image: postgres:13
+        env:
+          POSTGRES_USER: ${{ secrets.DB_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.DB_ROOT_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.TEST_DB }}
+        ports:
+          - 5432:5432
+      redis:
+        image: redis:6.2.6
+        ports: 
+          - 6379:6379
 
-  push: - Docker Image Build & Push to DockerHub
+      - name: checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Create .env file
+        run: |
+
+      - name: Install dependencies
+        run: |
+
+      - name: Run test
+        run: |
+
+
+  push: # Docker Image Build & Push to DockerHub
     needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v4
 
-  deploy: - Access server with SSH and pull docker image
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/biskit:${{ env.DATE }}
+
+
+  deploy: # Access server with SSH and pull docker image
     needs: push
+
+    steps:
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Remote ssh connect
+        uses: appleboy/ssh-action@v0.1.9
+        with:
+          host: ${{ secrets.DEV_REMOTE_IP }}
+          username: ${{ secrets.DEV_REMOTE_USER }}
+          password: ${{ secrets.DEV_REMOTE_PASSWORD }}
+          port: ${{ secrets.DEV_REMOTE_PORT }}
+          script: |
 ```
 
 ## ERD
