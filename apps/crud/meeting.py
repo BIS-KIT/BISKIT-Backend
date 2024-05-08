@@ -9,6 +9,7 @@ from fastapi import HTTPException
 
 from crud.base import CRUDBase
 from core.redis_driver import redis_driver
+from core.config import settings
 from log import log_error
 import crud
 from models.meeting import (
@@ -239,7 +240,7 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
             self.create_meeting_items(
                 db, update_meeting.id, tag_ids, topic_ids, language_ids
             )
-            if "name" in data:
+            if "name" in data and not settings.DEBUG:
                 self.change_chat_room_name(name=data["name"], chat_id=meeting.chat_id)
 
         except:
