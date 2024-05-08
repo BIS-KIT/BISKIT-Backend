@@ -1,0 +1,8 @@
+FROM nginx:1.25
+
+RUN apt-get update && apt-get install -y gettext-base
+
+RUN rm /etc/nginx/nginx.conf
+COPY nginx_prod.conf /etc/nginx/nginx.conf.template
+
+CMD envsubst '$PROXY_SERVER_IP' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf && nginx -g 'daemon off;'
