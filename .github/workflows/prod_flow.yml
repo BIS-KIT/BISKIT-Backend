@@ -1,12 +1,12 @@
-name: Dev CI-CD Pipeline
+name: Prod CI-CD Pipeline
 
 on:
   push:
     branches:
-      - release/dev
+      - release/v1
   pull_request:
     branches:
-      - release/dev
+      - release/v1
 
 jobs:
   test:
@@ -138,12 +138,12 @@ jobs:
       - name: Remote ssh connect
         uses: appleboy/ssh-action@v0.1.9
         with:
-          host: ${{ secrets.DEV_REMOTE_IP }}
-          username: ${{ secrets.DEV_REMOTE_USER }}
-          password: ${{ secrets.DEV_REMOTE_PASSWORD }}
-          port: ${{ secrets.DEV_REMOTE_PORT }}
+          host: ${{ secrets.PROD_REMOTE_IP }}
+          username: ${{ secrets.PROD_REMOTE_USER }}
+          password: ${{ secrets.PROD_REMOTE_PASSWORD }}
+          port: ${{ secrets.PROD_REMOTE_PORT }}
           script: |
             cd BISKIT-Backend
-            git pull origin ${{ secrets.DEV_BRANCH }}
+            git pull origin ${{ secrets.PROD_BRANCH }}
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/biskit:latest
-            docker compose -f docker-compose.deploy.yml up -d
+            docker compose -f docker-compose.prod.yml up -d
