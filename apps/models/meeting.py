@@ -160,6 +160,7 @@ def increase_participants(mapper, connection, target):
             session.close()
 
 
+
 if not settings.DEBUG:
 
     @event.listens_for(MeetingUser, "after_delete")
@@ -181,3 +182,4 @@ if not settings.DEBUG:
             session.rollback()
         finally:
             session.close()
+
