@@ -17,125 +17,81 @@ BISKIT is a consumable service that helps Korean and foreign students in college
 BISKIT-Backend
 ├─ README.md
 ├─ apps
-│  ├─ __init__.py
 │  ├─ admin : Admin BackOffice 
 │  │  ├─ __init__.py
 │  │  ├─ base.py
 │  │  └─ templates
-│  │     ├─ _macros.html
-│  │     ├─ base.html
-│  │     ├─ content_details.html
-│  │     ├─ create.html
-│  │     ├─ details.html
-│  │     ├─ edit.html
-│  │     ├─ error.html
-│  │     ├─ index.html
-│  │     ├─ layout.html
-│  │     ├─ list.html
-│  │     ├─ modals
-│  │     │  ├─ delete.html
-│  │     │  ├─ details_action_confirmation.html
-│  │     │  └─ list_action_confirmation.html
-│  │     ├─ photo_list.html
-│  │     ├─ report_list.html
-│  │     └─ tag_list.html
 │  ├─ alembic : DB Migrations
-│  │  ├─ README
-│  │  ├─ env.py
-│  │  ├─ script.py.mako
-│  │  └─ versions
-│  │
-│  ├─ alembic.ini
-│  ├─ api 
-│  │  ├─ __init__.py
+│  ├─ api  : EndPoint
 │  │  └─ v1
-│  │     ├─ __init__.py
 │  │     ├─ endpoints
-│  │     │  ├─ admin.py
-│  │     │  ├─ alarm.py
-│  │     │  ├─ chat.py
-│  │     │  ├─ meeting.py
-│  │     │  ├─ profile.py
-│  │     │  ├─ system.py
-│  │     │  ├─ user.py
-│  │     │  └─ utility.py
 │  │     └─ router.py
 │  ├─ core
-│  │  ├─ __init__.py
-│  │  ├─ config.py
-│  │  ├─ redis_driver.py
-│  │  └─ security.py
 │  ├─ crud : Business Logic
-│  │  ├─ __init__.py
-│  │  ├─ alarm.py
-│  │  ├─ base.py
-│  │  ├─ chat.py
-│  │  ├─ meeting.py
-│  │  ├─ profile.py
-│  │  ├─ system.py
-│  │  ├─ user.py
-│  │  └─ utility.py
 │  ├─ database : DB Session Management
-│  │  ├─ __init__.py
-│  │  └─ session.py
 │  ├─ init_data.py : Load initial data from excel
 │  ├─ main.py
-│  ├─ models
-│  │  ├─ __init__.py
-│  │  ├─ alarm.py
-│  │  ├─ base.py
-│  │  ├─ chat.py
-│  │  ├─ meeting.py
-│  │  ├─ profile.py
-│  │  ├─ system.py
-│  │  ├─ user.py
-│  │  └─ utility.py
+│  ├─ models : DB Schema
 │  ├─ requirements
 │  ├─ scheduler_module.py : Scheduler Jobs
-│  ├─ schemas
-│  │  ├─ __init__.py
-│  │  ├─ alarm.py
-│  │  ├─ base.py
-│  │  ├─ chat.py
-│  │  ├─ enum.py
-│  │  ├─ meeting.py
-│  │  ├─ profile.py
-│  │  ├─ system.py
-│  │  ├─ user.py
-│  │  └─ utility.py
-│  ├─ templates
-│  │  └─ email_kr.html
+│  ├─ schemas : Pydantic Schema
 │  ├─ tests
 │  │  ├─ confest.py
 │  │  ├─ fixtures
-│  │  │  ├─ __init__.py
-│  │  │  ├─ alarm_fixture.py
-│  │  │  ├─ base.py
-│  │  │  ├─ meeting_fixture.py
-│  │  │  ├─ profile_fixture.py
-│  │  │  ├─ system_fixture.py
-│  │  │  ├─ user_fixture.py
-│  │  │  ├─ utility_fixture.py
-│  │  │  └─ utils.py
 │  │  └─ v1
-│  │     ├─ test_alarm.py
-│  │     ├─ test_chat.py
-│  │     ├─ test_meeting.py
-│  │     ├─ test_profile.py
-│  │     ├─ test_system.py
-│  │     ├─ test_user.py
-│  │     └─ test_utility.py
-│
-├─ docker-compose.deploy.yml
-├─ docker-compose.local.yml
+├─ docker-compose.deploy.yml : Dev & Prod Server
+├─ docker-compose.local.yml : Local Server
 ├─ dockerfile
-├─ init-user.sh
 ├─ nginx
 │  ├─ dockerfile
 │  └─ nginx.conf
 └─ requirements
    └─ requirements.txt
+```
 
+## Main Feature
+
+### 회원 가입 및 로그인
+
+- JWT 기반
+- 외국인은 휴대폰 인증 불가하여 학생증 및 생년월일 인증
+- 다중 국적 및 사용 언어 선택 지원
+
+### 모임
+
+- 모임 검색 : 다양한 필터링 조건, Full Text Search 구현 & Redis cache
+- 모임 생성, 수정, 삭제
+- 모임 참여 신청, 승인 및 거절
+- 모임 채팅 : FireStore
+- 모임 후기
+
+### 알림
+
+- FCM 기반 알림 기능 구현
+   - 모임 생성 및 삭제
+   - 모임 남은 시간 1시간 전
+   - 모임 참여 승인 및 거절
+   - 학생증 인증 승인 및 거절
+   - 신고 및 누적횟수
+   - 공지 사항
+- 중요 & 기타 알림 설정 및 해제
+
+### 신고
+
+- 유저, 모임, 후기 신고
+- 유저 차단 시 해당 유저 관련 모임 및 후기 필터링
+
+## CI / CD
+
+```yml
+jobs:
+  test: - 환경 세팅 및 pytest
+
+  push: - Docker Image Build & Push to DockerHub
+    needs: test
+
+  deploy: - Access server with SSH and pull docker image
+    needs: push
 ```
 
 ## ERD
