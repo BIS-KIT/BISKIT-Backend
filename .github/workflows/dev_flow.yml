@@ -4,6 +4,8 @@ on:
   pull_request:
     branches:
       - release/dev
+    types:
+      - closed
 
 jobs:
   test:
@@ -125,6 +127,7 @@ jobs:
   deploy:
     needs: push
     runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
 
     steps:
       - name: Login to Docker Hub
