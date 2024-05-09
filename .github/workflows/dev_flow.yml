@@ -1,17 +1,15 @@
 name: Dev CI-CD Pipeline
 
 on:
-  push:
-    branches:
-      - release/dev
   pull_request:
     branches:
       - release/dev
+    types:
+      - closed
 
 jobs:
   test:
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
 
     services:
       maindb:
@@ -99,7 +97,6 @@ jobs:
   push:
     needs: test
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
     steps:
       - name: Set DATE variable
         run: echo "DATE=$(date +'%Y%m%d-%H%M')" >> $GITHUB_ENV
@@ -130,7 +127,7 @@ jobs:
   deploy:
     needs: push
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
+    if: github.event.pull_request.merged == true
 
     steps:
       - name: Login to Docker Hub
