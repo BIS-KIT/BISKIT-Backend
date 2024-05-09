@@ -125,7 +125,6 @@ jobs:
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/biskit:${{ env.DATE }}
 
   deploy:
-    needs: push
     runs-on: ubuntu-latest
     if: github.event.pull_request.merged == true
 
