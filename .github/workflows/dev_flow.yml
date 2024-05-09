@@ -10,6 +10,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == false
 
     services:
       maindb:
@@ -97,6 +98,7 @@ jobs:
   push:
     needs: test
     runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == false
     steps:
       - name: Set DATE variable
         run: echo "DATE=$(date +'%Y%m%d-%H%M')" >> $GITHUB_ENV
@@ -129,12 +131,6 @@ jobs:
     if: github.event.pull_request.merged == true
 
     steps:
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
       - name: Remote ssh connect
         uses: appleboy/ssh-action@v0.1.9
         with:
@@ -146,5 +142,6 @@ jobs:
             cd BISKIT-Backend
             git checkout ${{ secrets.DEV_BRANCH }}
             git pull origin ${{ secrets.DEV_BRANCH }}
+            echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/biskit:latest
             docker compose -f docker-compose.deploy.yml up -d
