@@ -65,5 +65,3 @@ class RedisDriver:
 
 
 redis_driver = RedisDriver(redis_url=f"redis://{settings.REDIS_HOST}")
-
-# PR merge 테스트

@@ -22,7 +22,7 @@ services:
 
   maindb:
     container_name: maindb
-    image: arm64v8/postgres:16rc1
+    image: postgres:16rc1
     restart: always
     volumes:
       - app-db-data:/var/lib/postgresql/data
