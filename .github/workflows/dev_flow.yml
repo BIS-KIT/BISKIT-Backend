@@ -1,14 +1,11 @@
 name: Dev CI-CD Pipeline
 
 on:
-  push:
+  pull_request:
     branches:
-      - main
-  # pull_request:
-  #   branches:
-  #     - release/dev
-  #   types:
-  #     - closed
+      - release/dev
+    types:
+      - closed
 
 jobs:
   # test:
@@ -98,7 +95,7 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
-    # if: github.event.pull_request.merged == true
+    if: github.event.pull_request.merged == true
 
     steps:
       - name: Remote ssh connect
