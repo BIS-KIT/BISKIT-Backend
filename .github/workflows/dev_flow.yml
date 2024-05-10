@@ -33,9 +33,7 @@ jobs:
         ports: 
           - 6379:6379
 
-
     steps:
-
       - name: checkout code
         uses: actions/checkout@v4
 
@@ -95,36 +93,6 @@ jobs:
         run: |
           pytest --rootdir=apps/
 
-  push:
-    runs-on: ubuntu-latest
-    if: github.event.pull_request.merged == true
-    steps:
-      - name: Set DATE variable
-        run: echo "DATE=$(date +'%Y%m%d-%H%M')" >> $GITHUB_ENV
-
-      - name: checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Build and push
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/biskit:${{ env.DATE }}
-
   deploy:
     runs-on: ubuntu-latest
     if: github.event.pull_request.merged == true
@@ -141,6 +109,4 @@ jobs:
             cd BISKIT-Backend
             git checkout ${{ secrets.DEV_BRANCH }}
             git pull origin ${{ secrets.DEV_BRANCH }}
-            echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
-            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/biskit
-            docker compose -f docker-compose.deploy.yml up -d
+            docker compose -f docker-compose.local.yml up -d
