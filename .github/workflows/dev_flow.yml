@@ -106,7 +106,8 @@ jobs:
           password: ${{ secrets.DEV_REMOTE_PASSWORD }}
           port: ${{ secrets.DEV_REMOTE_PORT }}
           script: |
+            ls -al
             cd BISKIT-Backend
-            git checkout ${{ secrets.DEV_BRANCH }}
-            git pull origin ${{ secrets.DEV_BRANCH }}
-            docker compose -f docker-compose.local.yml up -d
+            ip -br addr
+            git branch
+            whoami
