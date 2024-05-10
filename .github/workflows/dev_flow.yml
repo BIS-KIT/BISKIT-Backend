@@ -110,8 +110,6 @@ jobs:
           port: ${{ secrets.DEV_REMOTE_PORT }}
           script: |
             cd /home/ubuntu/BISKIT-Backend
-            pwd
-            git fetch
             git checkout ${{ secrets.DEV_BRANCH }}
             git pull origin ${{ secrets.DEV_BRANCH }}
-            git branch
+            docker restart backends
