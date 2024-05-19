@@ -41,7 +41,7 @@ services:
 
   nginx:
     container_name: nginx
-    build: ./nginx
+    build: ./nginx/prod/
     ports:
       - "8000:8000"
     depends_on:
@@ -49,6 +49,8 @@ services:
     restart: always
     volumes:
       - ./nginx/log:/var/log/nginx
+    environment:
+      - PROXY_SERVER_IP=${PROXY_SERVER_IP}
 
   redis:
     container_name: redis

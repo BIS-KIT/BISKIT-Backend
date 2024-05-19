@@ -1,0 +1,5 @@
+FROM nginx:1.25
+
+COPY ./nginx_dev.conf /etc/nginx/nginx.conf
+
+

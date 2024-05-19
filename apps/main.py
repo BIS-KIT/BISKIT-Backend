@@ -23,11 +23,9 @@ from scheduler_module import (
     user_remove_after_seven,
     meeting_time_alarm,
 )
-from init_data import run_init_data
 
 
-with open("encoded_key.txt", "r") as file:
-    encoded_data = file.read()
+encoded_data = settings.ENCODED_KEY
 
 decoded_data = base64.b64decode(encoded_data).decode("utf-8")
 firebase_config = json.loads(decoded_data)
@@ -46,7 +44,6 @@ app = FastAPI(
     title=settings.PROJECT_NAME,
     docs_url=None,
 )
-app.mount("/media", StaticFiles(directory="media"), name="media")
 
 scheduler = BackgroundScheduler()
 
@@ -85,14 +82,18 @@ async def get_documentation(username: str = Depends(get_admin)):
 
 @app.on_event("startup")
 async def start_event():
-    # 스케줄러 시작 및 작업 추가
-    scheduler.add_job(meeting_active_check, "interval", minutes=5)
+    scheduler.add_job(meeting_active_check, "interval", minutes=30)
     # 일단 삭제 하지 않고 비활성화 상태로둠
     # scheduler.add_job(user_remove_after_seven, "interval", hours=6)
     scheduler.add_job(meeting_time_alarm, "interval", minutes=1)
-    scheduler.start()
 
-    # run_init_data()
+    if scheduler.state == 0:
+        scheduler.start()
+
+    if not settings.DEBUG:
+        from init_data import run_init_data
+
+        run_init_data()
 
     # redis connect
     redis_driver.connect()
