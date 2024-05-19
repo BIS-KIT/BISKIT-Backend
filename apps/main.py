@@ -82,7 +82,7 @@ async def get_documentation(username: str = Depends(get_admin)):
 
 @app.on_event("startup")
 async def start_event():
-    scheduler.add_job(meeting_active_check, "interval", minutes=5)
+    scheduler.add_job(meeting_active_check, "interval", minutes=30)
     # 일단 삭제 하지 않고 비활성화 상태로둠
     # scheduler.add_job(user_remove_after_seven, "interval", hours=6)
     scheduler.add_job(meeting_time_alarm, "interval", minutes=1)

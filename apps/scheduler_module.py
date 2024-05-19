@@ -15,7 +15,7 @@ def meeting_active_check():
 
     deactive_count = 0
     for meeting in all_active_meeting:
-        if meeting.meeting_time + timedelta(days=7) < current_time:
+        if meeting.meeting_time < current_time:
             meeting.is_active = False
             deactive_count += 1
 
