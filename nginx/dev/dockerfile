@@ -1,6 +1,5 @@
 FROM nginx:1.25
 
-RUN rm /etc/nginx/nginx.conf
-COPY nginx_dev.conf /etc/nginx/
+COPY ./nginx_dev.conf /etc/nginx/nginx.conf
 
 

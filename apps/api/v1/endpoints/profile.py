@@ -1,5 +1,5 @@
-import httpx, shutil, re
-from typing import Any, List, Optional, Dict, Annotated
+import requests, re, time
+from typing import List, Annotated
 import random
 import asyncio
 
@@ -155,20 +155,20 @@ def get_random_image():
 
 
 @router.get("/profile/random-nickname")
-async def get_random_nickname(
+def get_random_nickname_with_extenal(
     os_lang: str = "kr",
     db: Session = Depends(get_db),
     token: Annotated[str, Depends(oauth2_scheme)] = None,
 ):
     kr_nick_name, en_nick_name = None, None
-    async with httpx.AsyncClient() as client:
+    with requests.Session() as client:
         while True:
-            response = await client.get(settings.NICKNAME_API)
+            response = client.get(settings.NICKNAME_API)
 
             # API 요청이 성공했는지 확인
             if response.status_code != 200:
                 # 잠시 후에 다시 시도
-                await asyncio.sleep(3)  # 3초 대기
+                time.sleep(3)  # 3초 대기
                 continue
 
             data = response.json()
@@ -184,7 +184,7 @@ async def get_random_nickname(
                 break
 
             # 중복된 경우, 잠시 대기 후 다시 시도
-            await asyncio.sleep(2)  # 2초 대기
+            time.sleep(2)  # 2초 대기
 
     return {"kr_nick_name": kr_nick_name, "en_nick_name": kr_nick_name}
 

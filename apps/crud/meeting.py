@@ -356,7 +356,8 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
         is_count_only: Optional[bool] = False,
         search_word: str = None,
     ) -> List[Meeting]:
-        query = db.query(Meeting).filter(Meeting.is_active == is_active)
+        # query = db.query(Meeting).filter(Meeting.is_active == is_active)
+        query = db.query(Meeting)
         cache_key = redis_driver.generate_cache_key(
             name_space="meetings",
             order_by=order_by,
