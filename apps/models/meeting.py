@@ -66,6 +66,10 @@ class Meeting(ModelBase):
         else:
             return None
 
+    @property
+    def creator_name(self):
+        return self.creator.name
+
 
 class MeetingUser(ModelBase):
     status = Column(String, nullable=True)
@@ -126,6 +130,14 @@ class Review(ModelBase):
         "User", backref=backref("reviews", cascade="all, delete-orphan"), uselist=False
     )
 
+    @property
+    def creator_name(self):
+        return self.creator.name
+
+    @property
+    def meeting_name(self):
+        return self.meeting.name
+
 
 #     review_photos = relationship("ReviewPhoto", back_populates="review")
 
@@ -160,7 +172,6 @@ def increase_participants(mapper, connection, target):
             session.close()
 
 
-
 if not settings.DEBUG:
 
     @event.listens_for(MeetingUser, "after_delete")
@@ -182,4 +193,3 @@ if not settings.DEBUG:
             session.rollback()
         finally:
             session.close()
-

@@ -11,6 +11,7 @@ from models.user import User, AccountDeletionRequest
 from models.profile import StudentVerification
 from models.system import Report, Contact
 from models.utility import Tag, Topic
+from models.meeting import Meeting, Review
 
 import os, secrets
 from pathlib import Path
@@ -123,6 +124,40 @@ class StudentVerificationAdmin(BaseAdmin, model=StudentVerification):
     ]
 
 
+class MeetingAdmin(BaseAdmin, model=Meeting):
+    column_default_sort = ("created_time", True)
+    column_sortable_list = [
+        Meeting.created_time,
+        Meeting.meeting_time,
+        Meeting.is_active,
+    ]
+
+    column_list = [
+        Meeting.id,
+        Meeting.created_time,
+        Meeting.location,
+        Meeting.korean_count,
+        Meeting.foreign_count,
+        Meeting.is_active,
+        "creator_name",
+    ]
+
+
+class ReviewAdmin(BaseAdmin, model=Review):
+    column_default_sort = ("created_time", True)
+    column_sortable_list = [
+        Review.created_time,
+    ]
+
+    column_list = [
+        Review.id,
+        Review.created_time,
+        Review.context,
+        "creator_name",
+        "meeting_name",
+    ]
+
+
 def register_all(admin: Admin):
     admin.add_view(UserAdmin)
     admin.add_view(StudentVerificationAdmin)
@@ -131,6 +166,8 @@ def register_all(admin: Admin):
     admin.add_view(TagAdmin)
     admin.add_view(TopicAdmin)
     admin.add_view(DeletionRequestAdmin)
+    admin.add_view(MeetingAdmin)
+    admin.add_view(ReviewAdmin)
 
 
 class AdminAuth(AuthenticationBackend):
