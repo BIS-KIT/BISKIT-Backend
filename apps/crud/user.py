@@ -26,11 +26,9 @@ from models.meeting import Meeting, MeetingUser, Review
 from models.profile import (
     UserUniversity,
     Profile,
-    StudentVerification,
-    Introduction,
-    AvailableLanguage,
 )
 from schemas import user as user_schmea
+from schemas.enum import ReultStatusEnum
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -465,7 +463,10 @@ class CRUDUser(CRUDBase[User, user_schmea.UserCreate, user_schmea.UserUpdate]):
             db.query(MeetingUser)
             .options(joinedload(MeetingUser.user))
             .join(Meeting)
-            .filter(Meeting.chat_id == chat_id)
+            .filter(
+                Meeting.chat_id == chat_id,
+                MeetingUser.status == ReultStatusEnum.APPROVE,
+            )
         )
         user_dict = {
             mu.user.id: mu.user.fcm_token for mu in meeting_users if mu.user.fcm_token
