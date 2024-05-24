@@ -34,7 +34,9 @@ class Meeting(ModelBase):
 
     image_url = Column(String)
     is_active = Column(Boolean)
+
     university_id = Column(Integer, ForeignKey("university.id"), nullable=True)
+    university = relationship("University")
 
     creator_id = Column(Integer, ForeignKey("user.id"))
     creator = relationship(
@@ -69,6 +71,10 @@ class Meeting(ModelBase):
     @property
     def creator_name(self):
         return self.creator.name
+
+    @property
+    def university_name(self):
+        return self.university.kr_name if self.university_id else None
 
 
 class MeetingUser(ModelBase):
