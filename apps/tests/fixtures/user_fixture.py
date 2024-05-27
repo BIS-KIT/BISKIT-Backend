@@ -22,7 +22,7 @@ def test_user(session, test_nationality, test_university):
         name="이현준",
         birth="2000-12-13",
         gender="male",
-        fcm_token="fJuqDAjjQkOA5bbiaaoWYI:APA91bG2dukCc8pIf024wPICTNLLxDSmBKs76nHPHNLBMCc4ikHrtoo8HqI50CM8fzERUednsmd3pDJxat4jw2OWJ2vfPJi3D8o4pkf96261tdWK-8FsFoLDn2XVUl3wtIgEoHWVFsuB",
+        fcm_token="dX2jZUJjTQKE_N3trPHQNW:APA91bGHlmm5sMqN4f3vXXF-hY_g593GKo9JdiRABeH2rGj9CW-_WbVb8xybLfI3rckHR47rasfd9qMI-dDSmMtk5ofj5ckafCpvOeTojsDKlthnFgKlTq6tLFqFhAicSz6rhPEqJV8p",
     )
     session.add(user)
     session.flush()
