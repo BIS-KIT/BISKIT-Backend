@@ -52,6 +52,7 @@ def create_meeting(
     - **max_participants**: 모임에 참가 가능한 최대 인원
     - **image_url**: 모임 이미지의 URL (Not Required)
     - **is_active**: 모임이 활성 상태인지 여부 (Default = True)
+    - **is_active**: 전체 공개 모임 여부 (Default = True)
     - **custom_tags**: 사용자가 추가하고자하는 태그 목록.
     - **custom_topics**: 사용자가 추가하고자하는 토픽 목록.
     - **creator_id**: 모임을 생성하는 사용자의 ID.
