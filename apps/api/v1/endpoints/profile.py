@@ -160,33 +160,8 @@ def get_random_nickname_with_extenal(
     db: Session = Depends(get_db),
     token: Annotated[str, Depends(oauth2_scheme)] = None,
 ):
-    kr_nick_name, en_nick_name = None, None
-    with requests.Session() as client:
-        while True:
-            response = client.get(settings.NICKNAME_API)
 
-            # API 요청이 성공했는지 확인
-            if response.status_code != 200:
-                # 잠시 후에 다시 시도
-                time.sleep(3)  # 3초 대기
-                continue
-
-            data = response.json()
-
-            kr_nick_name = data.get("words")[0]
-
-            check_exists = crud.profile.get_with_nick_name(
-                db=db, nick_name=kr_nick_name
-            )
-
-            # 중복되지 않은 닉네임이면 break
-            if check_exists is None:
-                break
-
-            # 중복된 경우, 잠시 대기 후 다시 시도
-            time.sleep(2)  # 2초 대기
-
-    return {"kr_nick_name": kr_nick_name, "en_nick_name": kr_nick_name}
+    return {"kr_nick_name": "", "en_nick_name": ""}
 
 
 @router.post("/student-card", response_model=StudentVerificationBase)
