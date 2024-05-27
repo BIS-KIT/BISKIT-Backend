@@ -348,7 +348,8 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
         skip: int,
         limit: int,
         creator_nationality: Optional[str],
-        user_id: int = None,
+        user_id: int,
+        is_public: bool,
         is_active: bool = True,
         tags_ids: Optional[List[int]] = None,
         topics_ids: Optional[List[int]] = None,
@@ -357,7 +358,7 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
         search_word: str = None,
     ) -> List[Meeting]:
         # query = db.query(Meeting).filter(Meeting.is_active == is_active)
-        query = db.query(Meeting)
+        query = db.query(Meeting).filter(Meeting.is_public == is_public)
         cache_key = redis_driver.generate_cache_key(
             name_space="meetings",
             order_by=order_by,
@@ -365,7 +366,7 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
             limit=limit,
             creator_nationality=creator_nationality,
             user_id=user_id,
-            is_active=is_active,
+            is_public=is_public,
             tags_ids=tags_ids,
             topics_ids=topics_ids,
             time_filters=time_filters,
