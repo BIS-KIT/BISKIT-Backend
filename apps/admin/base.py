@@ -31,6 +31,7 @@ class BaseAdmin(ModelView):
 class UserAdmin(BaseAdmin, model=User):
     column_default_sort = ("created_time", True)
     column_labels = dict(name="Name", id="id")
+    list_template = "user_list.html"
     column_searchable_list = [User.name, User.id]
     column_sortable_list = [User.created_time]
     column_list = [
@@ -140,6 +141,7 @@ class MeetingAdmin(BaseAdmin, model=Meeting):
         Meeting.foreign_count,
         Meeting.is_active,
         "creator_name",
+        "university_name",
     ]
 
 

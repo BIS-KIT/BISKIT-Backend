@@ -413,4 +413,68 @@ class Alarm(
         return None
 
 
+class AdminAlarm(
+    CRUDBase[alarm_model.Alarm, alarm_schema.AlarmCreate, alarm_schema.AlarmCreate]
+):
+    def to_unverified_student(self, db: Session):
+        users = crud.user.get_user_with_unverified_student(db=db)
+
+        title = "학생증 인증"
+        body = f"학생증 인증을 하고 우리 학교 모임에 참여해보세요!"
+
+        # user_tokens = {user.id: user.fcm_token for user in users}
+        user_tokens = {
+            92: "dX2jZUJjTQKE_N3trPHQNW:APA91bGHlmm5sMqN4f3vXXF-hY_g593GKo9JdiRABeH2rGj9CW-_WbVb8xybLfI3rckHR47rasfd9qMI-dDSmMtk5ofj5ckafCpvOeTojsDKlthnFgKlTq6tLFqFhAicSz6rhPEqJV8p"
+        }
+        icon_url = settings.S3_URL + "/default_icon/Thumbnail_notice_Icon.svg"
+        data = {
+            "obj_name": "Profile",
+            "icon_url": str(icon_url),
+            "is_main_alarm": "True",
+            "is_sub_alarm": "False",
+        }
+
+        try:
+            send_fcm_notification(
+                title=title,
+                body=body,
+                user_tokens=user_tokens,
+                db=db,
+                data=data,
+            )
+        except Exception as e:
+            log_error(e)
+            return False
+        return True
+
+    def to_user_without_meetings(self, db: Session):
+        users = crud.user.get_user_without_meetings(db=db)
+
+        user_tokens = {user.id: user.fcm_token for user in users}
+        title = "모임 생성 이벤트"
+        body = f"모임을 만들고 스타벅스 쿠폰 받아가세요 ☕️"
+
+        icon_url = settings.S3_URL + "/default_icon/Thumbnail_notice_Icon.svg"
+        data = {
+            "obj_name": "Home",
+            "icon_url": str(icon_url),
+            "is_main_alarm": "True",
+            "is_sub_alarm": "False",
+        }
+
+        try:
+            send_fcm_notification(
+                title=title,
+                body=body,
+                user_tokens=user_tokens,
+                db=db,
+                data=data,
+            )
+        except Exception as e:
+            log_error(e)
+            return False
+        return True
+
+
 alarm = Alarm(alarm_model.Alarm)
+admin_alarm = AdminAlarm(alarm_model.Alarm)

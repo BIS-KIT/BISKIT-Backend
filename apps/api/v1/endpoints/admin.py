@@ -114,3 +114,17 @@ def get_user_in_admin(request: Request, user_id: int, db: Session = Depends(get_
     return templates.TemplateResponse(
         "content_details.html", {"request": request, "obj": user.to_dict()}
     )
+
+
+@router.post("/admin/alarm/card")
+def send_alarm_to_unverified_students(request: Request, db: Session = Depends(get_db)):
+    is_complete = crud.admin_alarm.to_unverified_student(db=db)
+    return RedirectResponse(url="/admin/user/list", status_code=303)
+
+
+@router.post("/admin/alarm/meeting")
+def send_alarm_to_users_without_meetings(
+    request: Request, db: Session = Depends(get_db)
+):
+    is_complete = crud.admin_alarm.to_user_without_meetings(db=db)
+    return RedirectResponse(url="/admin/user/list", status_code=303)
