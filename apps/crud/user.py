@@ -6,7 +6,8 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
 
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import exists, or_
+from sqlalchemy.orm import Session, joinedload, contains_eager
 from passlib.context import CryptContext
 from fastapi import HTTPException
 
@@ -23,10 +24,7 @@ from models.user import (
     AccountDeletionRequest,
 )
 from models.meeting import Meeting, MeetingUser, Review
-from models.profile import (
-    UserUniversity,
-    Profile,
-)
+from models.profile import UserUniversity, Profile, StudentVerification
 from schemas import user as user_schmea
 from schemas.enum import ReultStatusEnum
 
@@ -101,6 +99,43 @@ class CRUDUser(CRUDBase[User, user_schmea.UserCreate, user_schmea.UserUpdate]):
     """
     CRUD operations for User model.
     """
+
+    def get_user_without_meetings(self, db: Session):
+        """
+        아래 조건에 해당되는 사용자들에게 알림
+
+        - 모임을 한번도 생성하지 않은 사용자
+        """
+        users = (
+            db.query(User).filter(~exists().where(Meeting.creator_id == User.id)).all()
+        )
+        return users
+
+    def get_user_with_unverified_student(self, db: Session):
+        """
+        아래 조건에 해당되는 사용자들에게 알림
+
+        - 회원 가입 후 프로필 생성을 하지 않은 사용자
+        - 학생증이 인증되지 않은 사용자
+        """
+        users = (
+            db.query(User)
+            .outerjoin(Profile)
+            .outerjoin(StudentVerification)
+            .options(
+                contains_eager(User.profile).contains_eager(
+                    Profile.student_verification
+                )
+            )
+            .filter(
+                or_(
+                    StudentVerification.verification_status != ReultStatusEnum.APPROVE,
+                    StudentVerification.id == None,
+                )
+            )
+            .all()
+        )
+        return users
 
     def get_deactive_users(self, db: Session):
         deactive_users = db.query(User).filter(User.is_active == False).all()
