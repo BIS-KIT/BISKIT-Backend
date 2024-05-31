@@ -6,7 +6,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 from sqlalchemy_utils import database_exists, create_database
 
-from main import app
+from main import create_app
 from core.config import settings
 from database.session import Base, get_db
 from models.base import ModelBase
@@ -24,6 +24,8 @@ if not database_exists(engine.url):
     create_database(engine.url)
 
 ModelBase.metadata.create_all(bind=engine)
+
+test_app = create_app()
 
 
 @pytest.fixture(scope="function")
@@ -47,10 +49,10 @@ def client(session):
             session.close()
 
     # app에서 사용하는 DB를 오버라이드하는 부분
-    app.dependency_overrides[get_db] = override_get_db
+    test_app.dependency_overrides[get_db] = override_get_db
 
     def get_test_token():
-        with TestClient(app) as client:
+        with TestClient(test_app) as client:
             login_data = {
                 "username": "test@example.com",
                 "password": "test_password",
@@ -61,7 +63,7 @@ def client(session):
             return access_token
 
     # 테스트 클라이언트 생성
-    test_client = TestClient(app)
+    test_client = TestClient(test_app)
 
     # 모든 요청에 인증 토큰 추가
     test_token = get_test_token()

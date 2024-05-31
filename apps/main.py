@@ -25,6 +25,11 @@ from scheduler_module import (
 )
 
 
+def create_app():
+    app = FastAPI()
+    return app
+
+
 encoded_data = settings.ENCODED_KEY
 
 decoded_data = base64.b64decode(encoded_data).decode("utf-8")
@@ -40,10 +45,7 @@ except Exception as e:
 
 load_dotenv()
 
-app = FastAPI(
-    title=settings.PROJECT_NAME,
-    docs_url=None,
-)
+app = create_app()
 
 scheduler = BackgroundScheduler()
 
