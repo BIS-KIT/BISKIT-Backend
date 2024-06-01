@@ -27,6 +27,8 @@ from scheduler_module import (
 
 def create_app():
     app = FastAPI()
+    app.include_router(v1_router, prefix="/v1")
+
     return app
 
 
@@ -58,8 +60,6 @@ admin = Admin(
     authentication_backend=authentication_backend,
 )
 register_all(admin)
-
-app.include_router(v1_router, prefix="/v1")
 
 
 class RequestTimeMiddleware(BaseHTTPMiddleware):
