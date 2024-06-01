@@ -1,7 +1,6 @@
 import factory
 
 from .base import BaseFactory
-from .utility_factory import NationalityFactory
 
 from models import user as user_models
 from crud.user import get_password_hash
@@ -12,7 +11,7 @@ class UserFactory(BaseFactory):
     class Meta:
         model = user_models.User
 
-    email = factory.Sequence(lambda n: f"test{n}@example.com")
+    email = factory.Faker("email")
     password = factory.LazyFunction(lambda: get_password_hash("testpassword"))
     name = factory.Faker("name")
     birth = factory.Faker("date")
@@ -21,6 +20,10 @@ class UserFactory(BaseFactory):
     is_active = True
     is_admin = False
 
+    profile = factory.RelatedFactory(
+        "tests.factories.profile_factory.ProfileFactory", "user"
+    )
+
 
 class UserNationalityFactory(BaseFactory):
 
@@ -28,7 +31,9 @@ class UserNationalityFactory(BaseFactory):
         model = user_models.UserNationality
 
     user = factory.SubFactory(UserFactory)
-    nationality_id = factory.SubFactory(NationalityFactory)
+    nationality_id = factory.SubFactory(
+        "tests.factories.utility_factory.NationalityFactory"
+    )
 
 
 class ConsentFactory(BaseFactory):
