@@ -6,12 +6,8 @@ from ..fixtures.base import TestingSessionLocal
 
 class BaseFactory(SQLAlchemyModelFactory):
     class Meta:
-        abstract = True
+        """Factory configuration."""
 
-    @classmethod
-    def _create(cls, model_class, *args, **kwargs):
-        with TestingSessionLocal.begin() as session:
-            obj = model_class(*args, **kwargs)
-            session.add(obj)
-            session.commit()
-            return obj
+        abstract = True
+        sqlalchemy_session = TestingSessionLocal()
+        sqlalchemy_session_persistence = "commit"
