@@ -10,6 +10,12 @@ def test_user():
 
 
 @pytest.fixture(scope="function")
+def test_user_without_profile():
+    test_user = UserFactory(with_nationality=True, with_profile=False)
+    return test_user
+
+
+@pytest.fixture(scope="function")
 def test_deletion_request():
     deletion_request = DeletionRequestFactory()
     return deletion_request

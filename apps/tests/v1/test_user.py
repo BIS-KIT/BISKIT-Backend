@@ -1,6 +1,6 @@
 import json
 
-from tests.confest import *
+from tests.confest import client, test_user, test_nationality
 from schemas import user as user_schmea
 
 

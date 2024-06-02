@@ -17,10 +17,6 @@ class UserFactory(BaseFactory):
     is_active = True
     is_admin = False
 
-    profile = factory.RelatedFactory(
-        "tests.factories.profile_factory.ProfileFactory", "user"
-    )
-
     class Meta:
         model = user_models.User
 
@@ -39,6 +35,7 @@ class UserFactory(BaseFactory):
                 with_university=True,
                 with_language=True,
                 with_student_card=True,
+                with_introduction=True,
             )
         )
 
