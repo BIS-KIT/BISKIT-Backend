@@ -8,9 +8,6 @@ from crud.user import get_password_hash
 
 class UserFactory(BaseFactory):
 
-    class Meta:
-        model = user_models.User
-
     email = factory.Faker("email")
     password = factory.LazyFunction(lambda: get_password_hash("testpassword"))
     name = factory.Faker("name")
@@ -24,24 +21,53 @@ class UserFactory(BaseFactory):
         "tests.factories.profile_factory.ProfileFactory", "user"
     )
 
+    class Meta:
+        model = user_models.User
+
+    class Params:
+        with_nationality = factory.Trait(
+            user_nationality=factory.RelatedFactory(
+                "tests.factories.user_factory.UserNationalityFactory",
+                "user",
+            )
+        )
+
+        with_profile = factory.Trait(
+            profile=factory.RelatedFactory(
+                "tests.factories.profile_factory.ProfileFactory",
+                "user",
+                with_university=True,
+                with_language=True,
+                with_student_card=True,
+            )
+        )
+
 
 class UserNationalityFactory(BaseFactory):
+
+    user = factory.SubFactory(UserFactory)
+    nationality = factory.SubFactory(
+        "tests.factories.utility_factory.NationalityFactory"
+    )
 
     class Meta:
         model = user_models.UserNationality
 
-    user = factory.SubFactory(UserFactory)
-    nationality_id = factory.SubFactory(
-        "tests.factories.utility_factory.NationalityFactory"
-    )
-
 
 class ConsentFactory(BaseFactory):
-
-    class Meta:
-        model = user_models.Consent
 
     terms_mandatory = True
     terms_optional = True
     terms_push = True
     user = factory.SubFactory(UserFactory)
+
+    class Meta:
+        model = user_models.Consent
+
+
+class DeletionRequestFactory(BaseFactory):
+
+    reason = factory.Faker("word")
+
+    class Meta:
+        model = user_models.AccountDeletionRequest
