@@ -1,37 +1,15 @@
 import pytest
-from datetime import datetime, timedelta
 
-from .base import session
 from .user_fixture import test_user
-from .utility_fixture import test_university, test_language, test_tag, test_topic
-from models import meeting as meeting_models
+from ..factories import MeetingFactory, UserFactory
 
 
 @pytest.fixture(scope="function")
-def test_meeting(
-    session, test_user, test_topic, test_tag, test_language, test_university
-):
-    meeting_time = datetime.now() + timedelta(days=3)
+def test_meeting(session, test_user):
+    participants = [
+        UserFactory(name="test1", with_nationality=True, with_profile=True),
+        UserFactory(name="test2", with_nationality=True, with_profile=True),
+    ]
 
-    meeting = meeting_models.Meeting(
-        name="Meeting fixture",
-        location="Location",
-        description="This is a test meeting.",
-        meeting_time=meeting_time,
-        max_participants=4,
-        current_participants=0,
-        korean_count=0,
-        foreign_count=1,
-        chat_id="pZrYX2j7XVt48iNRk4x8",
-        place_url="http://example.com",
-        x_coord="127.001",
-        y_coord="37.001",
-        image_url="http://example.com",
-        is_active=True,
-        creator_id=test_user.id,
-        university_id=test_university.id,
-    )
-
-    session.add(meeting)
-    session.commit()
+    meeting = MeetingFactory(creator=test_user, meeting_users=participants)
     return meeting
