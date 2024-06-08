@@ -140,6 +140,11 @@ def check_time_conditions(time_filters: List[TimeFilterEnum]):
 
 
 class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
+
+    def __init__(self, model, redis_driver=redis_driver):
+        super().__init__(model)
+        self.redis_driver = redis_driver
+
     def create(self, db: Session, *, obj_in: MeetingCreate) -> Meeting:
         data = obj_in.model_dump()
         tag_ids = data.pop("tag_ids", [])
@@ -180,8 +185,8 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
         self.create_meeting_items(db, new_meeting.id, tag_ids, topic_ids, language_ids)
 
         # meeting 생성되면 meeting 관련 캐시 무효
-        cache_key_list = redis_driver.find_by_name_space(name_space="meetings")
-        redis_driver.delete_keys(key_list=cache_key_list)
+        cache_key_list = self.redis_driver.find_by_name_space(name_space="meetings")
+        self.redis_driver.delete_keys(key_list=cache_key_list)
         return new_meeting
 
     def create_meeting_items(
@@ -359,7 +364,7 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
     ) -> List[Meeting]:
         # query = db.query(Meeting).filter(Meeting.is_active == is_active)
         query = db.query(Meeting).filter(Meeting.is_public == is_public)
-        cache_key = redis_driver.generate_cache_key(
+        cache_key = self.redis_driver.generate_cache_key(
             name_space="meetings",
             order_by=order_by,
             skip=skip,
@@ -374,8 +379,8 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
             search_word=search_word,
         )
 
-        if redis_driver.is_cached(key=cache_key):
-            cached_data = redis_driver.get_value(key=cache_key)
+        if self.redis_driver.is_cached(key=cache_key):
+            cached_data = self.redis_driver.get_value(key=cache_key)
             return_query = query.filter(Meeting.id.in_(cached_data)).all()
 
             return_query.sort(key=lambda x: cached_data.index(x.id))
@@ -448,7 +453,7 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
 
         meeting_ids = [meeting.id for meeting in meeting_list]
 
-        redis_driver.set_value(
+        self.redis_driver.set_value(
             key=cache_key,
             value=json.dumps(meeting_ids),
         )
