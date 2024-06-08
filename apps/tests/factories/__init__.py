@@ -20,3 +20,11 @@ from .utility_factory import (
     TagFactory,
     TopicFactory,
 )
+from .meeting_factory import (
+    MeetingFactory,
+    MeetingUserFactory,
+    MeetingLanguageFactory,
+    MeetingTagFactory,
+    MeetingTopicFactory,
+    ReviewFactory,
+)
