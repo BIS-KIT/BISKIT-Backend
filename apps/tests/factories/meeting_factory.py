@@ -8,8 +8,8 @@ from schemas.enum import ReultStatusEnum
 
 class MeetingFactory(BaseFactory):
 
-    name = factory.faker("name")
-    location = factory.faker("address")
+    name = factory.Faker("name")
+    location = factory.Faker("address")
     description = FuzzyText(length=40)
     description = factory.Faker("paragraph")
     meeting_time = factory.Faker("future_datetime", end_date="+10d")
