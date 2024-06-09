@@ -3,7 +3,7 @@ import factory
 from .base import BaseFactory
 from .user_factory import UserFactory
 from .utility_factory import UniversityFactory, LanguageFactory
-
+from schemas.enum import ReultStatusEnum
 from models import profile as profile_models
 
 
@@ -83,7 +83,7 @@ class IntroductionFactory(BaseFactory):
 class StudentVerificationFactory(BaseFactory):
 
     student_card = factory.Faker("uuid4")
-    verification_status = factory.Iterator(["pending", "approved", "rejected"])
+    verification_status = ReultStatusEnum.APPROVE.name
     profile = factory.SubFactory(ProfileFactory)
 
     class Meta:
