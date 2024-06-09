@@ -29,8 +29,8 @@ class MeetingFactory(BaseFactory):
 
     university = factory.LazyAttribute(
         lambda obj: (
-            obj.creator.user_university.university
-            if obj.creator.user_university
+            obj.creator.profile.user_university.university
+            if obj.creator.profile.user_university
             else None
         )
     )
