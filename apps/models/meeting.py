@@ -34,6 +34,7 @@ class Meeting(ModelBase):
 
     image_url = Column(String)
     is_active = Column(Boolean)
+    is_public = Column(Boolean, default=False)
 
     university_id = Column(Integer, ForeignKey("university.id"), nullable=True)
     university = relationship("University")

@@ -24,6 +24,7 @@ class MeetingBase(BaseModel):
 
     image_url: Optional[str] = None
     is_active: Optional[bool] = True
+    is_public: Optional[bool] = False
 
 
 class MeetingUserBase(BaseModel):
