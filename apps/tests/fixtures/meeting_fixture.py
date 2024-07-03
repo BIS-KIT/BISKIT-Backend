@@ -5,7 +5,7 @@ from ..factories import MeetingFactory, UserFactory
 
 
 @pytest.fixture(scope="function")
-def test_meeting_with_participants(session, test_user):
+def test_meeting_with_participants(test_user):
     participants = [
         UserFactory(name="test1", with_nationality=True, with_profile=True),
         UserFactory(name="test2", with_nationality=True, with_profile=True),
@@ -16,6 +16,7 @@ def test_meeting_with_participants(session, test_user):
 
 
 @pytest.fixture(scope="function")
-def test_meeting_without_participants(session, test_user):
+def test_meeting_without_participants():
+    test_user = UserFactory(with_nationality=True, with_profile=True)
     meeting = MeetingFactory(creator=test_user)
     return meeting
