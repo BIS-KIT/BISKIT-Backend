@@ -382,7 +382,7 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
 
             return return_query, len(return_query)
 
-        if user_id:
+        if user_id and not is_public:
             query = self.filter_by_ban(db, query, user_id)
 
         if creator_nationality:
