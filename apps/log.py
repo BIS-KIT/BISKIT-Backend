@@ -16,8 +16,12 @@ def setup_logger(
     logger = logging.getLogger(logger_name)
     logger.setLevel(level)
 
+    # 로그 디렉토리 자동 생성
+    log_dir = f"{current_directory}/logging"
+    os.makedirs(log_dir, exist_ok=True)
+
     handler = RotatingFileHandler(
-        f"{current_directory}/logging/{logger_name}_log",
+        f"{log_dir}/{logger_name}_log",
         maxBytes=1024 * 1024 * 10,
         backupCount=1,
     )
