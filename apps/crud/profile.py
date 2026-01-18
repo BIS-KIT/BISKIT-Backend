@@ -459,7 +459,7 @@ class CRUDProfile(CRUDBase[Profile, ProfileCreate, ProfileUpdate]):
             self.delete_file_from_s3(profile.profile_photo)
 
         random_str = generate_random_string()
-        file_path = f"/profile_photo/{random_str}_{photo}"
+        file_path = f"profile/{random_str}_{photo}"
         s3_url = self.save_upload_file(photo, file_path)
 
         profile.profile_photo = file_path

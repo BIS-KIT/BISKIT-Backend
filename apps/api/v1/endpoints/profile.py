@@ -89,9 +89,9 @@ def update_profile_photo(
     """
     file_path = None
     if is_profile:
-        file_path = f"profile_photo/{crud.generate_random_string()}_{photo.filename}"
+        file_path = f"profile/{crud.generate_random_string()}_{photo.filename}"
     else:
-        file_path = f"student_card/{crud.generate_random_string()}_{photo.filename}"
+        file_path = f"verification/{crud.generate_random_string()}_{photo.filename}"
 
     try:
         image_url = crud.save_upload_file(upload_file=photo, destination=file_path)

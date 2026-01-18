@@ -167,4 +167,5 @@ media/
 .vscode/
 .git/
 
+.DS_Store
 apps/logging/

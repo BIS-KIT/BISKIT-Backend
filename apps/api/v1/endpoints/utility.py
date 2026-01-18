@@ -191,9 +191,9 @@ def upload_image_to_s3(
     """
     file_path = None
     if image_source == ImageSourceEnum.PROFILE.value:
-        file_path = f"profile_photo/{crud.generate_random_string()}_{photo.filename}"
+        file_path = f"profile/{crud.generate_random_string()}_{photo.filename}"
     elif image_source == ImageSourceEnum.STUDENT_CARD.value:
-        file_path = f"student_card/{crud.generate_random_string()}_{photo.filename}"
+        file_path = f"verification/{crud.generate_random_string()}_{photo.filename}"
     elif image_source == ImageSourceEnum.REVIEW.value:
         file_path = f"review/{crud.generate_random_string()}_{photo.filename}"
     elif image_source == ImageSourceEnum.CHATTING.value:
