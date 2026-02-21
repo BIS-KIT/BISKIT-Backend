@@ -472,6 +472,11 @@ async def certificate_email(
                 "email": cert_in.email,
                 "certification": certification,
             }
+        else:
+            crud.user.remove_email_certification(db=db, db_obj=certi)
+            raise HTTPException(status_code=500, detail="Failed to send email.")
+    except HTTPException:
+        raise
     except Exception as e:
         log_error(e)
         crud.user.remove_email_certification(db=db, db_obj=certi)
@@ -543,6 +548,11 @@ async def certificate_email(
                 "email": cert_in.email,
                 "certification": certification,
             }
+        else:
+            crud.user.remove_email_certification(db=db, db_obj=certi)
+            raise HTTPException(status_code=500, detail="Failed to send email.")
+    except HTTPException:
+        raise
     except IntegrityError:
         raise HTTPException(status_code=409, detail="Email already exists.")
     except Exception as e:
