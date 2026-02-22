@@ -63,7 +63,7 @@ def send_email(certification: int, receiver_email: EmailStr, language_code: str 
             server.sendmail(settings.SMTP_USER, receiver_email, msg.as_string())
         return True
     except Exception as e:
-        log_error(f"Error occurred while sending email: {e}")
+        log_error(e)
         return False
 
 

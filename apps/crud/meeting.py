@@ -490,6 +490,9 @@ class CURDMeeting(CRUDBase[Meeting, MeetingCreate, MeetingUpdateIn]):
         if meeting.current_participants >= meeting.max_participants:
             raise HTTPException(status_code=404, detail="It's full of people.")
 
+        db.commit()
+        db.refresh(join_request)
+
         return join_request
 
     def join_request_reject(self, db: Session, obj_id: int):
